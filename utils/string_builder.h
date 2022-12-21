@@ -24,6 +24,7 @@ inline constexpr str_t str{};
 struct view_t {};
 inline constexpr view_t view{};
 
+// class that allows to fill a string with output operations to a stream
 class string_builder {
 private:
 	::std::ostringstream os_;

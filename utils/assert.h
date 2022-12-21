@@ -41,7 +41,7 @@ namespace utils::detail {
 		UTILS_LOCATED_CHECK(expression, message, location)
 #endif
 
-// Similar to UTILS_ASSERT, but anyway calculates the expression
+// similar to UTILS_ASSERT, but anyway calculates the expression
 #ifdef UTILS_DISABLE_ASSERT
 #	define UTILS_VERIFY(expression, message) UTILS_IGNORE(expression)
 #else
