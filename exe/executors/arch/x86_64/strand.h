@@ -18,31 +18,31 @@ namespace exe::executors {
 // thereby allowing critical data to be in cache all the time
 //
 // Both sending tasks and their execution are wait-free
-class Strand : public IExecutor, private TaskBase {
+class Strand final : public IExecutor, private TaskBase {
 private:
-    struct DummyTask : public TaskBase {
-        DummyTask() noexcept
-        {
-            next_.store(this, ::std::memory_order_relaxed);
-        }
+	struct DummyTask : public TaskBase {
+		DummyTask() noexcept
+		{
+			next_.store(this, ::std::memory_order_relaxed);
+		}
 
-        void run() noexcept override
-        {
-            next_.store(nullptr, ::std::memory_order_relaxed);
-        }
-    };
+		void run() noexcept override
+		{
+			next_.store(nullptr, ::std::memory_order_relaxed);
+		}
+	};
 
 private:
-    IExecutor &executor_;
-    DummyTask dummy_;
-    TaskBase *head_;
-    ::std::atomic<TaskBase *> tail_;
+	IExecutor &executor_;
+	DummyTask dummy_;
+	TaskBase *head_;
+	::std::atomic<TaskBase *> tail_;
 
 public:
 	explicit Strand(IExecutor &e) noexcept
 		: executor_(e)
 		, dummy_()
-        , head_(nullptr)
+		, head_(nullptr)
 		, tail_(&dummy_)
 	{}
 	~Strand() = default;
@@ -54,68 +54,70 @@ public:
 	void operator= (Strand &&) = delete;
 
 public:
-    // wait-free task submission
-    // 
-    // precondition: task && task->next_ == nullptr
+	// wait-free task submission
+	// 
+	// precondition: task && task->next_ == nullptr
 	void execute(TaskBase *task) noexcept override
 	{
-        UTILS_ASSERT(
-            task && !task->next_.load(::std::memory_order_relaxed),
-            "violation of the execute precondition"
-        );
+		UTILS_ASSERT(
+			task && !task->next_.load(::std::memory_order_relaxed),
+			"violation of the execute precondition"
+		);
 
 		auto *prev = tail_.exchange(task);
 
-        auto idle = static_cast<bool>(prev->next_.exchange(task));
+		auto idle = static_cast<bool>(prev->next_.exchange(task));
 		if (idle) {
-            // start a new critical section
-            // (relying on correct synchronization by executor)
-            head_ = prev;
+			// start a new critical section
+			// (relying on correct synchronization by executor)
+			head_ = prev;
 
-            // TODO: exceptions handling
-            try {
-			    executor_.execute(this);
-            } catch (...) {
-                ::utils::abort(
-                    "exception while trying to start "
-                    "a critical section of strand"
-                );
-            }
+			// TODO: exceptions handling
+			try {
+				executor_.execute(this);
+			} catch (...) {
+				::utils::abort(
+					"exception while trying to start "
+					"a critical section of strand"
+				);
+			}
 		}
 	}
 
 private:
-    // wait-free task processing cycle
+	// wait-free task processing cycle
 	void run() noexcept override
 	{
-        auto *curr = head_;
-        auto *next = curr->next_.load(::std::memory_order_relaxed);
+		auto *curr = head_;
+		auto *next = curr->next_.load(::std::memory_order_relaxed);
 
-        do {
-            // at this point curr is the only pointer to its object
-            curr->run();
-            curr = next;
-        } while (
-            // in case of a high load,
-            // we will immediately get the following task
-            (next = curr->next_.load(::std::memory_order_acquire)) ||
+		do {
+			// at this point curr is the only pointer to its object
+			// (after run, curr object doesn't exist)
+			curr->run();
+			curr = next;
+		} while (
+			// in case of a high load,
+			// we will immediately get the following task
+			(next = curr->next_.load(::std::memory_order_acquire)) ||
 
-            (
-                // are there any other tasks?
-                tail_.compare_exchange_strong(
-                    ::utils::temporary(::utils::decay_copy(curr)),
-                    &dummy_
-                ) &&
-                // cmpxchg -> true: there are no other tasks
+			(
+				// are there any other tasks?
+				tail_.compare_exchange_strong(
+					::utils::temporary(::utils::decay_copy(curr)),
+					&dummy_
+				) &&
+				// cmpxchg -> true: there are no other tasks
 
-                // at this point curr is the only pointer to its object
-                (curr->run(), curr = &dummy_),
+				// at this point curr is the only pointer to its object
+				// (after run, curr object doesn't exist)
+				(curr->run(), curr = &dummy_),
 
-                // if the task has not been linked yet, we give control
-                (next = curr->next_.load(::std::memory_order_acquire)) ||
-                (next = curr->next_.exchange(curr))
-            )
-        );
+				// if the task has not been linked yet, we give control
+				(next = curr->next_.load(::std::memory_order_acquire)) ||
+				(next = curr->next_.exchange(curr))
+			)
+		);
 	}
 };
 
