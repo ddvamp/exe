@@ -72,7 +72,7 @@ public:
 			// (relying on correct synchronization by executor)
 			head_ = prev;
 
-			// TODO: exceptions handling
+			// TODO: exception handling
 			try {
 				executor_.execute(this);
 			} catch (...) {
