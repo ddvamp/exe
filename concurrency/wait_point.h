@@ -1,5 +1,5 @@
-#ifndef DDV_WAIT_POINT_H_
-#define DDV_WAIT_POINT_H_ 1
+#ifndef DDV_CONCURRENCY_WAIT_POINT_H_
+#define DDV_CONCURRENCY_WAIT_POINT_H_ 1
 
 #include <atomic>
 #include <condition_variable>
@@ -87,7 +87,7 @@ public:
 		}
 	}
 
-	// wait until the counter drops to zero
+	// wait until the counter drops to zero and acquire data
 	void wait()
 	{
 		auto state = state_.load(::std::memory_order_relaxed);
@@ -167,4 +167,4 @@ private:
 
 } // namespace concurrency
 
-#endif /* DDV_WAIT_POINT_H_ */
+#endif /* DDV_CONCURRENCY_WAIT_POINT_H_ */
