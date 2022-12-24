@@ -173,7 +173,8 @@ public:
 };
 
 // CTAD for alias templates (P1814R0)
-#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if (defined(__GNUC__) || defined(__GNUG__)) && \
+	!defined(__clang__) && !defined(__INTEL_COMPILER)
 
 template <typename Policy>
 struct with_policy {
