@@ -1,6 +1,6 @@
 #include "context/context.h"
 
-#include "utils/abort.h"
+#include "utils/unreachable.h"
 
 namespace context {
 
@@ -8,7 +8,7 @@ void ExecutionContext::exitTo(ExecutionContext &target) noexcept
 {
 	switchTo(target);
 
-	::utils::abort("resuming a completed ExecutionContext");
+	UTILS_UNREACHABLE("resuming a completed ExecutionContext");
 }
 
 } // namespace context

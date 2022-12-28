@@ -1,6 +1,6 @@
 #include "context/arch/x86_64/machine_context.h"
 
-#include "utils/abort.h"
+#include "utils/unreachable.h"
 
 namespace context {
 
@@ -12,7 +12,7 @@ namespace {
 	auto t = static_cast<ITrampoline *>(arg7);
 	t->run();
 
-	::utils::abort("machineContextTrampoline out of bounds");
+	UTILS_UNREACHABLE("machineContextTrampoline out of bounds");
 }
 
 extern "C" void *setupMachineContext(void *stack,
