@@ -18,7 +18,7 @@ void abort(::std::string_view msg, ::std::source_location loc) noexcept
 		<< loc.function_name()
 		<< " with message: "
 		<< msg
-		<< '\n';
+		<< "\nAborting!\n";
 
 	::std::cerr << os.view() << ::std::flush;
 

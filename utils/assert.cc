@@ -13,15 +13,15 @@ void do_assert(::std::string_view expr, ::std::string_view msg,
 	os
 		<< "Assertion '"
 		<< expr
-		<< "' at "
+		<< "' failed at "
 		<< loc.file_name()
 		<< ':'
 		<< loc.line()
 		<< ": "
 		<< loc.function_name()
-		<< " failed with message: "
+		<< " with message: "
 		<< msg
-		<< '\n';
+		<< "\nAborting!\n";
 
 	::std::cerr << os.view() << ::std::flush;
 
