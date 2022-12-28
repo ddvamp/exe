@@ -36,7 +36,6 @@ private:
 	::std::condition_variable counter_is_zero_;
 
 public:
-	WaitPoint() = default;
 	~WaitPoint() = default;
 
 	WaitPoint(WaitPoint const &) = delete;
@@ -46,6 +45,8 @@ public:
 	void operator= (WaitPoint &&) = delete;
 
 public:
+	WaitPoint() = default;
+
 	// increases the counter
 	void add(::std::uint64_t delta = 1) noexcept
 	{

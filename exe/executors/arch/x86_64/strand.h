@@ -39,12 +39,6 @@ private:
 	::std::atomic<TaskBase *> tail_;
 
 public:
-	explicit Strand(IExecutor &e) noexcept
-		: executor_(e)
-		, dummy_()
-		, head_(nullptr)
-		, tail_(&dummy_)
-	{}
 	~Strand() = default;
 
 	Strand(Strand const &) = delete;
@@ -54,6 +48,13 @@ public:
 	void operator= (Strand &&) = delete;
 
 public:
+	explicit Strand(IExecutor &e) noexcept
+		: executor_(e)
+		, dummy_()
+		, head_(nullptr)
+		, tail_(&dummy_)
+	{}
+
 	// wait-free task submission
 	// 
 	// precondition: task && task->next_ == nullptr

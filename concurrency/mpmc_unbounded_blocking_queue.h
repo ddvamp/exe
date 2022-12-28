@@ -26,7 +26,6 @@ private:
 	bool is_closed_ = false;
 
 public:
-	MPMCUnboundedBlockingQueue() = default;
 	~MPMCUnboundedBlockingQueue() = default;
 
 	MPMCUnboundedBlockingQueue(MPMCUnboundedBlockingQueue const &) = delete;
@@ -36,6 +35,8 @@ public:
 	void operator= (MPMCUnboundedBlockingQueue &&) = delete;
 
 public:
+	MPMCUnboundedBlockingQueue() = default;
+
 	template <typename ...Args>
 	requires ::std::constructible_from<T, Args...>
 	bool put(Args &&...args)

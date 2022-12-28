@@ -71,6 +71,7 @@ public:
 	defer(defer &&) = delete;
 	void operator= (defer &&) = delete;
 
+public:
 	explicit defer(T const &act)
 		noexcept (::std::is_nothrow_copy_constructible_v<T>)
 		requires (::std::is_copy_constructible_v<T>)
@@ -116,6 +117,7 @@ public:
 	{}
 	void operator= (scope_guard &&) = delete;
 
+public:
 	explicit scope_guard(T const &act)
 		noexcept (
 			::std::is_nothrow_default_constructible_v<Policy> &&

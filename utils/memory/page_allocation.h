@@ -11,7 +11,6 @@ private:
 	::std::size_t size_ = 0;
 
 public:
-	PageAllocation() = default;
 	~PageAllocation()
 	{
 		release();
@@ -36,6 +35,8 @@ public:
 	}
 
 public:
+	PageAllocation() = default;
+
 	void *start() const noexcept
 	{
 		return start_;
