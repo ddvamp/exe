@@ -4,9 +4,9 @@
 #include "utils/string_builder.h"
 #include "utils/unreachable.h"
 
-namespace utils::detail {
+namespace utils {
 
-void unreachable_debug(::std::string_view msg,
+void unreachable(::std::string_view msg,
 	::std::source_location loc) noexcept
 {
 	string_builder os(1024);
@@ -26,4 +26,4 @@ void unreachable_debug(::std::string_view msg,
 	::std::abort();
 }
 
-} // namespace utils::detail
+} // namespace utils
