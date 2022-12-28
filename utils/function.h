@@ -64,18 +64,18 @@ protected:
 	static constexpr R invoker(void *ptr, Args &&...args)
 		noexcept (nothrow)
 	{
-		return (*static_cast<T *>(ptr))(std::forward<Args>(args)...);
+		return (*static_cast<T *>(ptr))(::std::forward<Args>(args)...);
 	}
 
-	template <typename T, typename U = std::remove_cvref_t<T>>
+	template <typename T, typename U = ::std::remove_cvref_t<T>>
 	inline static constexpr bool enable_constructor =
-		std::is_class_v<U> &&
-		std::is_nothrow_destructible_v<U> &&
-		std::is_constructible_v<U, T> &&
+		::std::is_class_v<U> &&
+		::std::is_nothrow_destructible_v<U> &&
+		::std::is_constructible_v<U, T> &&
 		(
 			nothrow ?
-			std::is_nothrow_invocable_r_v<R, U &, Args...> :
-			std::is_invocable_r_v<R, U &, Args...>
+			::std::is_nothrow_invocable_r_v<R, U &, Args...> :
+			::std::is_invocable_r_v<R, U &, Args...>
 		);
 
 	bool empty() const noexcept
@@ -91,7 +91,7 @@ protected:
 
 	R operator() (Args &&...args) const noexcept (nothrow)
 	{
-		return invoker_(functor_, std::forward<Args>(args)...);
+		return invoker_(functor_, ::std::forward<Args>(args)...);
 	}
 
 	void clear() noexcept
@@ -108,9 +108,9 @@ protected:
 	template <typename Fn> 
 	void construct_fn(Fn &&fn)
 	{
-		using T = std::remove_cvref_t<Fn>;
+		using T = ::std::remove_cvref_t<Fn>;
 
-		functor_ = ::new T(std::forward<Fn>(f));
+		functor_ = ::new T(::std::forward<Fn>(f));
 		invoker_ = invoker<T>;
 		deleter_ = deleter<T>;
 	}
