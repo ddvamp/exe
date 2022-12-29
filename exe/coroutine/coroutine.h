@@ -15,6 +15,10 @@ private:
 	::context::Stack stack_;
 	CoroutineImpl impl_;
 
+#ifndef UTILS_DISABLE_ASSERT
+	bool is_active_ = false;
+#endif
+
 public:
 	explicit Coroutine(Routine routine)
 		: stack_(allocateStack())
