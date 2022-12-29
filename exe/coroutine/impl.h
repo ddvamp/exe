@@ -35,13 +35,7 @@ public:
 		return is_completed_;
 	}
 
-	void resume()
-	{
-		context_.switchTo(context_);
-		if (throwed_exception_) {
-			::std::rethrow_exception(throwed_exception_);
-		}
-	}
+	void resume();
 
 	// internal call functions
 
@@ -52,6 +46,7 @@ public:
 
 	[[noreturn]] void cancel() noexcept
 	{
+		is_completed_ = true;
 		context_.exitTo(context_);
 	}
 
@@ -60,7 +55,6 @@ private:
 	{
 		try {
 			routine_();
-			is_completed_ = true;
 		} catch (...) {
 			throwed_exception_ = ::std::current_exception();
 		}
