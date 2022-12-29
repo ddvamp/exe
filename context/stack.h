@@ -10,7 +10,7 @@ namespace context {
 
 class Stack {
 private:
-	::utils::PageAllocation allocation_;
+	::utils::page_allocation allocation_;
 
 public:
 	~Stack() = default;
@@ -26,14 +26,14 @@ public:
 
 	static Stack allocatePages(::std::size_t count)
 	{
-		auto allocation = ::utils::PageAllocation::allocatePages(count + 1);
-		allocation.protectPages(0, 1);
+		auto allocation = ::utils::page_allocation::allocate_pages(count + 1);
+		allocation.protect_pages(0, 1);
 		return Stack{::std::move(allocation)};
 	}
 
 	static Stack allocateBytes(::std::size_t at_least)
 	{
-		::std::size_t const page_size = ::utils::PageAllocation::pageSize();
+		::std::size_t const page_size = ::utils::page_allocation::page_size();
 
 		::std::size_t pages = at_least / page_size;
 		if (at_least % page_size != 0) {
@@ -54,7 +54,7 @@ public:
 	}
 
 private:
-	Stack(::utils::PageAllocation allocation) noexcept
+	Stack(::utils::page_allocation allocation) noexcept
 		: allocation_(::std::move(allocation))
 	{}
 };

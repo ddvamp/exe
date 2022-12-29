@@ -5,46 +5,42 @@
 
 namespace utils {
 
-class PageAllocation {
+class page_allocation {
 private:
-	void *start_ = nullptr;
+	::std::byte *begin_ = nullptr;
 	::std::size_t size_ = 0;
 
 public:
-	~PageAllocation()
+	~page_allocation()
 	{
 		release();
 	}
 
-	PageAllocation(PageAllocation const &) = delete;
-	void operator= (PageAllocation const &) = delete;
+	page_allocation(page_allocation const &) = delete;
+	void operator= (page_allocation const &) = delete;
 
-	PageAllocation(PageAllocation &&other) noexcept
-		: start_(other.start_)
-		, size_(other.size_)
+	page_allocation(page_allocation &&that) noexcept
 	{
-		other.reset();
+		steal(that);
 	}
-	PageAllocation &operator= (PageAllocation &&other) noexcept
+	page_allocation &operator= (page_allocation &&that) noexcept
 	{
 		release();
-		start_ = other.start_;
-		size_ = other.size_;
-		other.reset();
+		steal(that);
 		return *this;
 	}
 
 public:
-	PageAllocation() = default;
+	page_allocation() = default;
 
-	void *start() const noexcept
+	::std::byte *begin() const noexcept
 	{
-		return start_;
+		return begin_;
 	}
 
-	void *end() const noexcept
+	::std::byte *end() const noexcept
 	{
-		return static_cast<char *>(start_) + size_;
+		return begin_ + size_;
 	}
 
 	::std::size_t size() const noexcept
@@ -52,23 +48,30 @@ public:
 		return size_;
 	}
 
-	static ::std::size_t pageSize() noexcept;
+	static ::std::size_t page_size() noexcept;
 
-	static PageAllocation allocatePages(::std::size_t count) noexcept;
+	static page_allocation allocate_pages(::std::size_t count) noexcept;
 
-	void protectPages(::std::size_t page_offset,
+	void protect_pages(::std::size_t page_offset,
 		::std::size_t page_count) const noexcept;
 
 private:
-	PageAllocation(void *start, ::std::size_t size) noexcept
-		: start_(start)
+	page_allocation(::std::byte *begin, ::std::size_t size) noexcept
+		: begin_(begin)
 		, size_(size)
 	{}
 
 	void reset() noexcept
 	{
-		start_ = nullptr;
+		begin_ = nullptr;
 		size_ = 0;
+	}
+
+	void steal(page_allocation &that) noexcept
+	{
+		begin_ = that.begin_;
+		size_ = that.size_;
+		that.reset();
 	}
 
 	void release() const noexcept;

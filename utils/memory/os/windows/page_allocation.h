@@ -8,7 +8,7 @@ namespace utils {
 
 namespace {
 
-::std::size_t getPageSize() noexcept
+::std::size_t get_page_size() noexcept
 {
 	constexpr ::std::size_t kDefaultPageSize = 4096;
 
@@ -20,7 +20,7 @@ namespace {
 		static_cast<::std::size_t>(info.dwPageSize);
 }
 
-void *allocateMemory(::std::size_t size) noexcept
+void *allocate_memory(::std::size_t size) noexcept
 {
 	auto memory = ::VirtualAlloc(
 		NULL,
@@ -36,7 +36,7 @@ void *allocateMemory(::std::size_t size) noexcept
 	return memory;
 }
 
-void protectMemory(void *address, ::std::size_t size) noexcept
+void protect_memory(void *address, ::std::size_t size) noexcept
 {
 	::DWORD old;
 	auto ret = ::VirtualProtect(address, size, PAGE_NOACCESS, &old);
@@ -46,7 +46,7 @@ void protectMemory(void *address, ::std::size_t size) noexcept
 	}
 }
 
-void releaseMemory(void *address, ::std::size_t) noexcept
+void release_memory(void *address, ::std::size_t) noexcept
 {
 	auto ret = ::VirtualFree(address, 0, MEM_RELEASE);
 

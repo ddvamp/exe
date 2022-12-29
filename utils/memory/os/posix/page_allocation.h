@@ -9,7 +9,7 @@ namespace utils {
 
 namespace {
 
-::std::size_t getPageSize() noexcept
+::std::size_t get_page_size() noexcept
 {
 	constexpr ::std::size_t kDefaultPageSize = 4096;
 
@@ -18,7 +18,7 @@ namespace {
 	return ret == -1 ? kDefaultPageSize : static_cast<::std::size_t>(ret);
 }
 
-void *allocateMemory(::std::size_t size) noexcept
+void *allocate_memory(::std::size_t size) noexcept
 {
 	auto memory = ::mmap(
 		NULL,
@@ -36,7 +36,7 @@ void *allocateMemory(::std::size_t size) noexcept
 	return memory;
 }
 
-void protectMemory(void *address, ::std::size_t size) noexcept
+void protect_memory(void *address, ::std::size_t size) noexcept
 {
 	auto ret = ::mprotect(address, size, PROT_NONE);
 
@@ -45,7 +45,7 @@ void protectMemory(void *address, ::std::size_t size) noexcept
 	}
 }
 
-void releaseMemory(void *address, ::std::size_t size) noexcept
+void release_memory(void *address, ::std::size_t size) noexcept
 {
 	auto ret = ::munmap(address, size);
 

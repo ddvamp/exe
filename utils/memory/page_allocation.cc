@@ -10,39 +10,39 @@
 
 namespace utils {
 
-::std::size_t PageAllocation::pageSize() noexcept
+::std::size_t page_allocation::page_size() noexcept
 {
-	static ::std::size_t const kPageSize = getPageSize();
+	static ::std::size_t const kPageSize = get_page_size();
 	return kPageSize;
 }
 
-static ::std::size_t pagesToBytes(::std::size_t count) noexcept
+static ::std::size_t pages_to_bytes(::std::size_t count) noexcept
 {
-	return count * PageAllocation::pageSize();
+	return count * page_allocation::page_size();
 }
 
-PageAllocation PageAllocation::allocatePages(::std::size_t count) noexcept
+page_allocation page_allocation::allocate_pages(::std::size_t count) noexcept
 {
-	auto size = pagesToBytes(count);
+	auto size = pages_to_bytes(count);
 
-	auto start = allocateMemory(size);
+	auto begin = allocate_memory(size);
 
-	return PageAllocation{start, size};
+	return page_allocation{static_cast<::std::byte *>(begin), size};
 }
 
-void PageAllocation::protectPages(::std::size_t page_offset,
+void page_allocation::protect_pages(::std::size_t page_offset,
 	::std::size_t page_count) const noexcept
 {
-	protectMemory(
-		static_cast<char *>(start_) + pagesToBytes(page_offset),
-		pagesToBytes(page_count)
+	protect_memory(
+		begin_ + pages_to_bytes(page_offset),
+		pages_to_bytes(page_count)
 	);
 }
 
-void PageAllocation::release() const noexcept
+void page_allocation::release() const noexcept
 {
-	if (start_) {
-		releaseMemory(start_, size_);
+	if (begin_) {
+		release_memory(begin_, size_);
 	}
 }
 
