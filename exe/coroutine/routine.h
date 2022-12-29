@@ -1,11 +1,11 @@
 #ifndef DDV_EXE_COROUTINE_ROUTINE_H_
 #define DDV_EXE_COROUTINE_ROUTINE_H_ 1
 
-#include "utils/function.h"
+#include <functional>
 
 namespace exe::coroutine {
 
-using Routine = ::utils::function<void()>;
+using Routine = ::std::move_only_function<void()>;
 
 } // namespace exe::coroutine
 
