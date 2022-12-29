@@ -3,25 +3,18 @@
 
 #include "context/trampoline.h"
 
+#include "utils/memory/view.h"
+
 namespace context {
-
-namespace detail {
-
-extern "C" void switchMachineContext(void *from, void *to) noexcept;
-
-} // namespace detail
 
 class MachineContext {
 private:
 	void *rsp_;
 
 public:
-	void setup(void *stack, ITrampoline *trampoline) noexcept;
+	void setup(::utils::memory_view stack, ITrampoline *trampoline) noexcept;
 
-	void switchTo(MachineContext &target) noexcept
-	{
-		detail::switchMachineContext(&rsp_, &target.rsp_);
-	}
+	void switchTo(MachineContext &target) noexcept;
 };
 
 } // namespace context

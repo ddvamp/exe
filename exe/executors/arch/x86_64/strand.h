@@ -61,7 +61,11 @@ public:
 	void execute(TaskBase *task) noexcept override
 	{
 		UTILS_ASSERT(
-			task && !task->next_.load(::std::memory_order_relaxed),
+			task,
+			"violation of the execute precondition"
+		);
+		UTILS_ASSERT(
+			!task->next_.load(::std::memory_order_relaxed),
 			"violation of the execute precondition"
 		);
 

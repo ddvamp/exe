@@ -48,9 +48,9 @@ public:
 		return allocation_.size();
 	}
 
-	void *bottom() const noexcept
+	::utils::memory_view view() const noexcept
 	{
-		return allocation_.end();
+		return allocation_.view();
 	}
 
 private:

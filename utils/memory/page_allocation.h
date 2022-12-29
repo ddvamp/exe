@@ -3,6 +3,8 @@
 
 #include <cstddef>
 
+#include "utils/memory/view.h"
+
 namespace utils {
 
 class page_allocation {
@@ -46,6 +48,11 @@ public:
 	::std::size_t size() const noexcept
 	{
 		return size_;
+	}
+
+	memory_view view() const noexcept
+	{
+		return {begin_, size_};
 	}
 
 	static ::std::size_t page_size() noexcept;

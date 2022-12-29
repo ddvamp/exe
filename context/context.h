@@ -4,6 +4,8 @@
 #include "context/exceptions_context.h"
 #include "context/machine_context.h"
 
+#include "utils/memory/view.h"
+
 namespace context {
 
 class ExecutionContext {
@@ -21,10 +23,7 @@ public:
 	void operator= (ExecutionContext &&) = delete;
 
 public:
-	ExecutionContext(void *stack, ITrampoline *trampoline) noexcept
-	{
-		machine_ctx_.setup(stack, trampoline);
-	}
+	ExecutionContext(::utils::memory_view stack, ITrampoline *) noexcept;
 
 	// external/internal call
 	void switchTo(ExecutionContext &target) noexcept

@@ -7,7 +7,9 @@ class ITrampoline {
 public:
 	virtual ~ITrampoline() = default;
 
-	virtual void run() noexcept = 0;
+	[[noreturn]] virtual void doRun() noexcept = 0;
+
+	[[noreturn]] void run() noexcept;
 };
 
 } // namespace context
