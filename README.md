@@ -6,7 +6,7 @@
 
 ## Requirements
 1. gcc (trunk)
-2. x86-64
+2. x86-64/sysv/elf
 3. POSIX
 
 ## References
