@@ -1,19 +1,19 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "utils/assert.h"
+#include "utils/debug/assume.h"
 #include "utils/string_builder.h"
 
 namespace utils::detail {
 
-void do_assert(::std::string_view expr, ::std::string_view msg, 
+void do_assume(::std::string_view expr, ::std::string_view msg, 
 	::std::source_location loc) noexcept
 {
 	string_builder os(1024);
 	os
-		<< "Assertion '"
+		<< "Assumption '"
 		<< expr
-		<< "' failed at "
+		<< "' is wrong at "
 		<< loc.file_name()
 		<< ':'
 		<< loc.line()

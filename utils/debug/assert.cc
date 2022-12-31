@@ -1,17 +1,19 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "utils/debug/assert.h"
 #include "utils/string_builder.h"
-#include "utils/unreachable.h"
 
-namespace utils {
+namespace utils::detail {
 
-void unreachable(::std::string_view msg,
+void do_assert(::std::string_view expr, ::std::string_view msg, 
 	::std::source_location loc) noexcept
 {
 	string_builder os(1024);
 	os
-		<< "An unreachable point has been reached at "
+		<< "Assertion '"
+		<< expr
+		<< "' failed at "
 		<< loc.file_name()
 		<< ':'
 		<< loc.line()
@@ -26,4 +28,4 @@ void unreachable(::std::string_view msg,
 	::std::abort();
 }
 
-} // namespace utils
+} // namespace utils::detail
