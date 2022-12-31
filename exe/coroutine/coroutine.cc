@@ -34,7 +34,7 @@ void Coroutine::resume()
 	impl_.resume();
 }
 
-void Coroutine::suspend() noexcept
+/* static */ void Coroutine::suspend() noexcept
 {
 	UTILS_ASSERT(current, "suspend, but not in the coroutine context");
 

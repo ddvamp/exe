@@ -14,7 +14,7 @@ thread_local ThreadPool *current_pool = nullptr;
 
 } // namespace
 
-ThreadPool *ThreadPool::current() noexcept
+/* static */ ThreadPool *ThreadPool::current() noexcept
 {
 	return current_pool;
 }
@@ -61,7 +61,7 @@ ThreadPool::ThreadPool(::std::size_t workers)
 	}
 }
 
-void ThreadPool::execute(TaskBase *task)
+/* virtual */ void ThreadPool::execute(TaskBase *task)
 {
 	UTILS_ASSERT(task, "thread pool got nullptr instead of a task");
 	UTILS_VERIFY(

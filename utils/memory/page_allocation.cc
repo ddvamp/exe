@@ -13,13 +13,13 @@
 
 namespace utils {
 
-::std::size_t page_allocation::page_size() noexcept
+/* static */ ::std::size_t page_allocation::page_size() noexcept
 {
 	static ::std::size_t const kPageSize = get_page_size();
 	return kPageSize;
 }
 
-::std::size_t page_allocation::max_pages() noexcept
+/* static */ ::std::size_t page_allocation::max_pages() noexcept
 {
 	static ::std::size_t const kMaxPages =
 		(::std::numeric_limits<::std::size_t>::max)() /
@@ -33,7 +33,8 @@ static ::std::size_t pages_to_bytes(::std::size_t count) noexcept
 }
 
 // precondition: count != 0 && count <= max_pages()
-page_allocation page_allocation::allocate_pages(::std::size_t count)
+/* static */ page_allocation
+	page_allocation::allocate_pages(::std::size_t count)
 {
 	UTILS_ASSERT(count != 0, "0 pages request");
 	UTILS_ASSERT(count <= max_pages(), "too many pages");
