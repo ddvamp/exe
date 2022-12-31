@@ -3,7 +3,7 @@
 #include "exe/executors/tp/thread_pool.h"
 
 #include "utils/abort.h"
-#include "utils/assert.h"
+#include "utils/debug.h"
 #include "utils/utility.h"
 
 namespace exe::executors::tp {
@@ -38,7 +38,7 @@ void ThreadPool::workLoop()
 			wp_.done();
 		}
 	} catch (...) {
-		::utils::abort("exception inside thread pool");
+		UTILS_ABORT("exception inside thread pool");
 	}
 }
 

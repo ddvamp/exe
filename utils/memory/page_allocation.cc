@@ -1,7 +1,7 @@
 #include <exception>
 #include <limits>
 
-#include "utils/assert.h"
+#include "utils/debug.h"
 
 #include "utils/memory/page_allocation.h"
 

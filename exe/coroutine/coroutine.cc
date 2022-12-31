@@ -2,7 +2,7 @@
 
 #include "exe/coroutine/coroutine.h"
 
-#include "utils/assert.h"
+#include "utils/debug.h"
 #include "utils/defer.h"
 
 namespace exe::coroutine {
@@ -15,9 +15,9 @@ thread_local Coroutine *current = nullptr;
 
 void Coroutine::resume()
 {
-#ifndef UTILS_DISABLE_ASSERT
-	UTILS_CHECK(!is_active_, "resume, but the coroutine is already active");
+	UTILS_ASSERT(!is_active_, "resume, but the coroutine is already active");
 
+#ifndef UTILS_DISABLE_ASSERT
 	auto _ = ::utils::defer{
 		[&flag = is_active_ = true]() noexcept {
 			flag = false;

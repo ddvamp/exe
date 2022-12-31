@@ -3,18 +3,12 @@
 
 #include "exe/executors/executor.h"
 
-#include "utils/assert.h"
-
 namespace exe::executors {
 
 // executes task immediately at place
 class InlineExecutor : public IExecutor {
 public:
-	void execute(TaskBase *task) noexcept override
-	{
-		UTILS_ASSERT(task, "inline executor got nullptr instead of a task");
-		task->run();
-	}
+	void execute(TaskBase *task) noexcept override;
 };
 
 [[nodiscard]] inline IExecutor &getInlineExecutor() noexcept

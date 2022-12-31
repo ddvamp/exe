@@ -5,8 +5,6 @@
 
 #include "exe/executors/executor.h"
 
-#include "utils/abort.h"
-#include "utils/assert.h"
 #include "utils/utility.h"
 
 namespace exe::executors {
@@ -58,36 +56,7 @@ public:
 	// wait-free task submission
 	// 
 	// precondition: task && task->next_ == nullptr
-	void execute(TaskBase *task) noexcept override
-	{
-		UTILS_ASSERT(
-			task,
-			"violation of the execute precondition"
-		);
-		UTILS_ASSERT(
-			!task->next_.load(::std::memory_order_relaxed),
-			"violation of the execute precondition"
-		);
-
-		auto *prev = tail_.exchange(task);
-
-		auto idle = static_cast<bool>(prev->next_.exchange(task));
-		if (idle) {
-			// start a new critical section
-			// (relying on correct synchronization by executor)
-			head_ = prev;
-
-			// TODO: exception handling
-			try {
-				executor_.execute(this);
-			} catch (...) {
-				::utils::abort(
-					"exception while trying to start "
-					"a critical section of strand"
-				);
-			}
-		}
-	}
+	void execute(TaskBase *task) noexcept override;
 
 private:
 	// wait-free task processing cycle

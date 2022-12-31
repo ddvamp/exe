@@ -7,7 +7,8 @@
 #include <mutex>
 #include <new>
 
-#include "utils/assert.h"
+#include "utils/debug.h"
+#include "utils/macro.h"
 
 namespace concurrency {
 
