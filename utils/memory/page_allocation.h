@@ -56,11 +56,15 @@ public:
 	}
 
 	static ::std::size_t page_size() noexcept;
+	static ::std::size_t max_pages() noexcept;
 
-	static page_allocation allocate_pages(::std::size_t count) noexcept;
+	// precondition: count != 0 && count <= max_pages()
+	static page_allocation allocate_pages(::std::size_t count);
 
+	// precondition: page_count != 0 &&
+	// protected memory in the range [begin_, begin_ + size_)
 	void protect_pages(::std::size_t page_offset,
-		::std::size_t page_count) const noexcept;
+		::std::size_t page_count) const;
 
 private:
 	page_allocation(::std::byte *begin, ::std::size_t size) noexcept

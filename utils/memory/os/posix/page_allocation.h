@@ -1,9 +1,14 @@
+// This file is for internal use and is not intended for direct inclusion
+
+#include <cerrno>
 #include <cstddef>
+#include <exception>
 
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "utils/abort.h"
+#include "utils/assert.h"
+#include "utils/unreachable.h"
 
 namespace utils {
 
@@ -11,14 +16,12 @@ namespace {
 
 ::std::size_t get_page_size() noexcept
 {
-	constexpr ::std::size_t kDefaultPageSize = 4096;
-
 	auto ret = ::sysconf(_SC_PAGE_SIZE);
 
-	return ret == -1 ? kDefaultPageSize : static_cast<::std::size_t>(ret);
+	return static_cast<::std::size_t>(ret);
 }
 
-void *allocate_memory(::std::size_t size) noexcept
+void *allocate_memory(::std::size_t size)
 {
 	auto memory = ::mmap(
 		NULL,
@@ -29,8 +32,20 @@ void *allocate_memory(::std::size_t size) noexcept
 		0
 	);
 
-	if (memory == MAP_FAILED) {
-		abort("mmap memory allocate failure");
+	if (memory == MAP_FAILED) [[unlikely]] {
+		switch (errno) {
+		// size is 0, too large, or not aligned on a page boundary
+		case EINVAL:
+
+		// no memory is available,
+		// the process's maximum number of mappings would have been exceeded,
+		// or the process's RLIMIT_DATA limit would have been exceeded
+		case ENOMEM:
+			throw std::bad_alloc{};
+
+		default:
+			UTILS_UNREACHABLE("mmap memory allocation error");
+		}
 	}
 
 	return memory;
@@ -40,18 +55,25 @@ void protect_memory(void *address, ::std::size_t size) noexcept
 {
 	auto ret = ::mprotect(address, size, PROT_NONE);
 
-	if (ret != 0) {
-		abort("mprotect memory protect failure");
+	if (ret != 0) [[unlikely]] {
+		switch (errno) {
+		// internal kernel structures could not be allocated,
+		// or changing the protection of a memory region would result in
+		// the total number of mappings with distinct attributes
+		case ENOMEM: 
+			throw std::bad_alloc{};
+
+		default:
+			UTILS_UNREACHABLE("mprotect memory protect error");
+		}
 	}
 }
 
 void release_memory(void *address, ::std::size_t size) noexcept
 {
-	auto ret = ::munmap(address, size);
+	[[maybe_unused]] auto ret = ::munmap(address, size);
 
-	if (ret != 0) {
-		abort("munmap memory release failure");
-	}
+	UTILS_ASSERT(ret == 0, "munmap memory release error");
 }
 
 } // namespace

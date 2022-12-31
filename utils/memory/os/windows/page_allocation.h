@@ -1,3 +1,5 @@
+// This file is for internal use and is not intended for direct inclusion
+
 #include <cstddef>
 
 #include <Windows.h>
@@ -10,14 +12,10 @@ namespace {
 
 ::std::size_t get_page_size() noexcept
 {
-	constexpr ::std::size_t kDefaultPageSize = 4096;
-
 	::SYSTEM_INFO info;
 	::GetSystemInfo(&info);
 
-	return info.dwPageSize <= 0 ?
-		kDefaultPageSize :
-		static_cast<::std::size_t>(info.dwPageSize);
+	return static_cast<::std::size_t>(info.dwPageSize);
 }
 
 void *allocate_memory(::std::size_t size) noexcept
