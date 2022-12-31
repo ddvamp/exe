@@ -5,12 +5,10 @@
 
 #include "utils/memory/page_allocation.h"
 
-#if __has_include(<Windows.h>)
-#	include "utils/memory/os/windows/page_allocation.h"
-#elif __has_include(<unistd.h>)
+#if __has_include(<unistd.h>)
 #	include "utils/memory/os/posix/page_allocation.h"
 #else
-#	error "unsupported environment (not Windows nor POSIX-compliant)"
+#	error "not POSIX-compliant environment"
 #endif
 
 namespace utils {
