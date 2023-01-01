@@ -194,10 +194,10 @@ struct with_policy {
 };
 
 template <typename T>
-using scope_success = scope_guard<T, detail::defer::success_guard_policy>;
+using scope_success = scope_guard<T, detail::success_guard_policy>;
 
 template <typename T>
-using scope_failure = scope_guard<T, detail::defer::failure_guard_policy>;
+using scope_failure = scope_guard<T, detail::failure_guard_policy>;
 
 #else
 
@@ -231,6 +231,42 @@ template <typename T>
 scope_failure(T) -> scope_failure<T>;
 
 #endif
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+// changes val to new_val and creates an RAII-object
+// to undo this at the end of the scope 
+template <typename T, typename U = T>
+constexpr auto rollback_exchange(T &val, U &&new_val)
+	noexcept (
+		::std::is_nothrow_move_constructible_v<T> &&
+		::std::is_nothrow_assignable_v<T &, U> &&
+		::std::is_nothrow_destructible_v<T>
+	)
+	requires (
+		::std::is_object_v<T> &&
+		!::std::is_const_v<T> &&
+
+		::std::is_move_constructible_v<T> &&
+		::std::is_move_assignable_v<T> &&
+		::std::is_destructible_v<T> &&
+
+		::std::is_assignable_v<T &, U>
+	)
+{
+	return defer{
+		[old_val = ::std::exchange(val, ::std::forward<U>(new_val)), &val]()
+			noexcept (
+				::std::is_nothrow_move_assignable_v<T> &&
+				::std::is_nothrow_destructible_v<T>
+			)
+		{
+			val = ::std::move(old_val);
+		}
+	};
+}
 
 } // namespace utils
 
