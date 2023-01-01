@@ -239,7 +239,7 @@ scope_failure(T) -> scope_failure<T>;
 // changes val to new_val and creates an RAII-object
 // to undo this at the end of the scope 
 template <typename T, typename U = T>
-constexpr auto rollback_exchange(T &val, U &&new_val)
+auto rollback_exchange(T &val, U &&new_val)
 	noexcept (
 		::std::is_nothrow_move_constructible_v<T> &&
 		::std::is_nothrow_assignable_v<T &, U> &&
