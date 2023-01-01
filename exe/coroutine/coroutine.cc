@@ -15,9 +15,9 @@ thread_local Coroutine *current = nullptr;
 
 void Coroutine::resume()
 {
-	UTILS_ASSERT(!is_active_, "resume, but the coroutine is already active");
-
 #ifndef UTILS_DISABLE_ASSERT
+	UTILS_CHECK(!is_active_, "resume, but the coroutine is already active");
+
 	auto _ = ::utils::defer{
 		[&flag = is_active_ = true]() noexcept {
 			flag = false;

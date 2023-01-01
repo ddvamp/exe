@@ -17,24 +17,26 @@ namespace utils::detail {
 
 } // namespace utils::detail
 
+// runtime check with passing an error message and location
+#define UTILS_CHECK(expression, ...)								\
+	do {															\
+		if (!(expression)) [[unlikely]] {							\
+			::utils::detail::do_assert(#expression, __VA_ARGS__);	\
+		}															\
+	} while (false)
+
 // debug assert with passing an error message and location
 #ifdef UTILS_DISABLE_DEBUG
-#	define UTILS_ASSERT(...) UTILS_NOTHING
+#	define UTILS_ASSERT(expression, ...) UTILS_NOTHING
 #else
-#	define UTILS_ASSERT(expression, ...)								\
-		do {															\
-			if (!(expression)) [[unlikely]] {							\
-				::utils::detail::do_assert(#expression, __VA_ARGS__);	\
-			}															\
-		} while (false)
+#	define UTILS_ASSERT(expression, ...) UTILS_CHECK(expression, __VA_ARGS__)
 #endif
 
 // similar to UTILS_ASSERT, but anyway calculates the expression
 #ifdef UTILS_DISABLE_DEBUG
 #	define UTILS_VERIFY(expression, ...) UTILS_IGNORE(expression)
 #else
-#	define UTILS_VERIFY(expression, ...) \
-		UTILS_ASSERT(expression, __VA_ARGS__)
+#	define UTILS_VERIFY(expression, ...) UTILS_CHECK(expression, __VA_ARGS__)
 #endif
 
 #endif /* DDV_UTILS_DEBUG_ASSERT_H_ */
