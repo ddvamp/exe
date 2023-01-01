@@ -14,7 +14,7 @@ template <typename T>
 concept suitable_for_deferred_action =
 	::std::is_class_v<T> &&
 	::std::is_move_constructible_v<T> &&
-	::std::is_nothrow_destructible_v<T> &&
+	::std::is_destructible_v<T> &&
 	::std::is_invocable_v<T &> &&
 	::std::is_void_v<::std::invoke_result_t<T &>>;
 
@@ -23,7 +23,7 @@ concept guard_policy = requires (Policy const &p)
 {
 	{ p.should_be_activated() } noexcept -> ::std::same_as<bool>;
 	requires ::std::is_default_constructible_v<Policy>;
-	requires ::std::is_nothrow_destructible_v<Policy>;
+	requires ::std::is_destructible_v<Policy>;
 };
 
 struct default_guard_policy {
@@ -60,7 +60,11 @@ protected:
 	[[no_unique_address]] T action_;
 
 public:
-	~defer() noexcept (::std::is_nothrow_invocable_v<T &>)
+	~defer()
+		noexcept (
+			::std::is_nothrow_invocable_v<T &> &&
+			::std::is_nothrow_destructible_v<T>
+		)
 	{
 		action_();
 	}
@@ -96,7 +100,12 @@ protected:
 	[[no_unique_address]] T action_;
 
 public:
-	~scope_guard() noexcept (::std::is_nothrow_invocable_v<T &>)
+	~scope_guard()
+		noexcept (
+			::std::is_nothrow_invocable_v<T &> &&
+			::std::is_nothrow_destructible_v<T> &&
+			::std::is_nothrow_destructible_v<Policy>
+		)
 	{
 		if (should_be_activated()) {
 			action_();
