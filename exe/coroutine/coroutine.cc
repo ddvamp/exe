@@ -18,18 +18,10 @@ void Coroutine::resume()
 #ifndef UTILS_DISABLE_ASSERT
 	UTILS_CHECK(!is_active_, "resume, but the coroutine is already active");
 
-	auto _ = ::utils::defer{
-		[&flag = is_active_ = true]() noexcept {
-			flag = false;
-		}
-	};
+	auto _ = ::utils::rollback_exchange(is_active_, true);
 #endif
 
-	auto rollback = ::utils::defer{
-		[prev = ::std::exchange(current, this)]() noexcept {
-			current = prev;
-		}
-	};
+	auto rollback = ::utils::rollback_exchange(current, this);
 
 	impl_.resume();
 }
