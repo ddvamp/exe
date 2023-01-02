@@ -1,25 +1,25 @@
-#ifndef DDV_EXE_COROUTINE_DEVELOP_IMPL_H_
-#define DDV_EXE_COROUTINE_DEVELOP_IMPL_H_ 1
+#ifndef DDV_EXE_FIBERS_CORE_COROUTINE_H_
+#define DDV_EXE_FIBERS_CORE_COROUTINE_H_ 1
 
 #include <utility>
 
 #include "context/context.h"
 
-#include "exe/coroutine/develop/routine.h"
+#include "exe/fibers/core/routine.h"
 
 #include "utils/memory/view.h"
 
-namespace exe::coroutine {
+namespace exe::fibers {
 
-// The basis for suspended executions
-class CoroutineImpl : public ::context::ITrampoline {
+// The basis for suspended execution of fibers
+class Coroutine : public ::context::ITrampoline {
 private:
-	Routine routine_;
+	FiberRoutine routine_;
 	::context::ExecutionContext context_;
 	bool is_completed_;
 
 public:
-	CoroutineImpl(Routine routine, ::utils::memory_view stack) noexcept
+	Coroutine(FiberRoutine routine, ::utils::memory_view stack) noexcept
 		: routine_(::std::move(routine))
 		, context_(stack, this)
 		, is_completed_(false)
@@ -56,6 +56,6 @@ private:
 	}
 };
 
-} // namespace exe::coroutine
+} // namespace exe::fibers
 
-#endif /* DDV_EXE_COROUTINE_DEVELOP_IMPL_H_ */
+#endif /* DDV_EXE_FIBERS_CORE_COROUTINE_H_ */
