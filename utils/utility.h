@@ -51,40 +51,41 @@ struct overloaded : Ts... { using Ts::operator()...; };
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// Class that allows to defer the creation of an object
-// until it is actually needed, and forward only a reference to its instance
-// 
-// Attention: the class object lives only until the end of the full expression
-template <typename ResultType = void, typename Callable, typename ...Args>
+// Class that allows to delay the execution of a functor for
+// initializing an object until it is actually created
+//
+// During initialization, type deduction should not take place,
+// since the type of the builder itself will be deduced
+template <typename Fn>
 requires (
-	::std::is_invocable_r_v<ResultType, Callable, Args...> &&
-	!::std::is_void_v<::std::invoke_result_t<Callable, Args...>>
+	::std::is_class_v<Fn> &&
+	::std::is_move_constructible_v<Fn> &&
+	::std::is_destructible_v<Fn> &&
+	::std::is_invocable_v<Fn &> &&
+	!::std::is_void_v<::std::invoke_result_t<Fn &>>
 )
-[[nodiscard]] inline constexpr auto builder(
-	Callable &&fn, Args &&...args) noexcept
-{
-	using R = ::std::conditional_t<
-		::std::is_void_v<ResultType>,
-		::std::invoke_result_t<Callable, Args...>,
-		ResultType
-	>;
+class builder {
+private:
+	[[no_unique_address]] Fn fn_;
 
-	struct builder_t {
-		[[nodiscard]] inline constexpr operator R ()
-			noexcept (::std::is_nothrow_invocable_r_v<R, Callable, Args...> )
-		{
-			return ::std::apply(fn_, ::std::move(args_));
-		}
+public:
+	explicit builder(Fn const &fn)
+		noexcept (::std::is_nothrow_copy_constructible_v<Fn>)
+		requires (::std::is_copy_constructible_v<Fn>)
+		: fn_(fn)
+	{}
 
-		[[no_unique_address]] Callable &&fn_;
-		[[no_unique_address]] ::std::tuple<Args &&...> args_;
-	};
+	explicit builder(Fn &&fn)
+		noexcept (::std::is_nothrow_move_constructible_v<Fn>)
+		: fn_(::std::move(fn))
+	{}
 
-	return builder_t{
-		.fn_ = ::std::forward<Callable>(fn),
-		.args_ = ::std::forward_as_tuple(::std::forward<Args>(args)...),
-	};
-}
+	[[nodiscard]] operator decltype(auto) ()
+		noexcept (::std::is_nothrow_invocable_v<Fn &>)
+	{
+		return fn_();
+	}
+};
 
 } // namespace utils
 
