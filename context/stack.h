@@ -18,8 +18,8 @@ public:
 	Stack(Stack const &) = delete;
 	void operator= (Stack const &) = delete;
 
-	Stack(Stack &&that) noexcept = default;
-	Stack &operator= (Stack &&that) noexcept = default;
+	Stack(Stack &&) noexcept = default;
+	Stack &operator= (Stack &&) noexcept = default;
 
 public:
 	Stack() noexcept = default;

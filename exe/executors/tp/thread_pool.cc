@@ -65,12 +65,12 @@ ThreadPool::ThreadPool(::std::size_t workers)
 {
 	UTILS_ASSERT(task, "thread pool got nullptr instead of a task");
 	UTILS_VERIFY(
-		tasks_.put(::utils::builder(
+		tasks_.put(::utils::builder{
 			[&w = wp_, task]() noexcept {
 				w.add();
 				return task;
 			}
-		)),
+		}),
 		"using a thread pool after stop"
 	);
 }
