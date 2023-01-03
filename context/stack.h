@@ -22,7 +22,7 @@ public:
 	Stack &operator= (Stack &&) noexcept = default;
 
 public:
-	Stack() noexcept = default;
+	Stack() = default;
 
 	static Stack allocatePages(::std::size_t count)
 	{
