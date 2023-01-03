@@ -36,7 +36,7 @@ public:
 		return allocateNewStack();
 	}
 
-	void release(Stack &stack)
+	void deallocate(Stack &stack)
 	{
 		UTILS_ASSERT(stack.allocationSize() != 0, "stack in moved-from state");
 
@@ -62,9 +62,9 @@ Stack allocateStack()
 	return allocator.allocate();
 }
 
-void releaseStack(Stack &&stack)
+void deallocateStack(Stack &&stack)
 {
-	allocator.release(stack);
+	allocator.deallocate(stack);
 }
 
 } // namespace exe::fibers
