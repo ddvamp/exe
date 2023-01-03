@@ -10,6 +10,7 @@
 
 namespace exe::coroutine {
 
+// stackful coroutine
 class Coroutine {
 private:
 	::context::Stack stack_;

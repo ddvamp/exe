@@ -4,6 +4,7 @@
 
 #include "exe/fibers/core/stack.h"
 
+#include "utils/abort.h"
 #include "utils/debug.h"
 #include "utils/defer.h"
 
@@ -36,13 +37,16 @@ public:
 		return allocateNewStack();
 	}
 
-	void deallocate(Stack &stack)
+	// TODO: harmful noexcept
+	void deallocate(Stack &stack) noexcept try
 	{
 		UTILS_ASSERT(stack.allocationSize() != 0, "stack in moved-from state");
 
 		::std::lock_guard lock{m_};
 
 		pool_.push(::std::move(stack));
+	} catch (...) {
+		UTILS_ABORT("too bad");
 	}
 
 private:
@@ -62,7 +66,7 @@ Stack allocateStack()
 	return allocator.allocate();
 }
 
-void deallocateStack(Stack &&stack)
+void deallocateStack(Stack &&stack) noexcept
 {
 	allocator.deallocate(stack);
 }

@@ -9,7 +9,7 @@ class ITask {
 public:
 	virtual ~ITask() = default;
 
-	// The user must take care of passing arguments, returning values,
+	// the user must take care of passing arguments, returning values,
 	// and handling exceptions himself
 	virtual void run() noexcept = 0;
 };

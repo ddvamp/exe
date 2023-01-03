@@ -9,22 +9,33 @@ namespace exe::fibers {
 
 using executors::IExecutor;
 
-// start fiber on the executor
-void go(IExecutor &where, FiberRoutine);
+// Start fiber on the executor
+//
+// Precondition: bool(routine) == true
+void go(IExecutor &where, FiberRoutine routine);
 
 // start fiber on the executor of current fiber
-void go(FiberRoutine);
+//
+// Precondition: bool(routine) == true
+void go(FiberRoutine routine);
 
 namespace self {
 
+[[nodiscard]] IExecutor &getExecutor() noexcept;
+
 // For synchronization primitives
 // Do not use directly
-void suspend(IAwaiter *) noexcept;
+void suspend(IAwaiter &) noexcept;
 
+// reschedule the current fiber
 void yield();
 
-// reschedule current fiber and activate the next
+// reschedule the current fiber and activate the next one if it is valid
+// otherwise, the call is equivalent to yield
 void switchTo(FiberHandle next) noexcept;
+
+// reschedule current fiber on executor
+void teleportTo(IExecutor &executor);
 
 } // namespace self
 

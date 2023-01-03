@@ -5,7 +5,7 @@
 
 namespace exe::fibers {
 
-// Class for managing a fiber from user code
+// Class for managing a fiber in awaiters
 // 
 // The behavior is undefined if more than one or none
 // of all copies of the same handler are used for fiber execution
@@ -28,10 +28,14 @@ public:
 		return fiber_;
 	}
 
-	// schedule execution on the executor set on fiber
+	// Schedule execution on the executor set on fiber
+	//
+	// Precondition: isValid() == true
 	void schedule() noexcept;
 
-	// execute fiber immediately
+	// Execute fiber immediately
+	//
+	// Precondition: isValid() == true
 	void resume() noexcept;
 
 private:
@@ -40,6 +44,7 @@ private:
 	{}
 
 	Fiber *release() noexcept;
+	Fiber *releaseChecked() noexcept;
 };
 
 } // namespace exe::fibers
