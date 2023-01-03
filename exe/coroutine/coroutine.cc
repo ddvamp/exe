@@ -16,7 +16,7 @@ thread_local Coroutine *current = nullptr;
 void Coroutine::resume()
 {
 #ifndef UTILS_DISABLE_ASSERT
-	UTILS_CHECK(!is_active_, "resume, but the coroutine is already active");
+	UTILS_CHECK(!is_active_, "coroutine is already active");
 
 	auto _ = ::utils::rollback_exchange(is_active_, true);
 #endif
@@ -28,7 +28,7 @@ void Coroutine::resume()
 
 /* static */ void Coroutine::suspend() noexcept
 {
-	UTILS_ASSERT(current, "suspend, but not in the coroutine context");
+	UTILS_ASSERT(current, "not in the coroutine context");
 
 	current->impl_.suspend();
 }
