@@ -15,7 +15,7 @@ private:
 	::context::Stack stack_;
 	CoroutineImpl impl_;
 
-#ifndef UTILS_DISABLE_ASSERT
+#ifndef UTILS_DISABLE_DEBUG
 	bool is_active_ = false;
 #endif
 

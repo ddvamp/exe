@@ -18,7 +18,7 @@ private:
 	::concurrency::MPMCUnboundedBlockingQueue<TaskBase *> tasks_;
 	::concurrency::WaitPoint wp_;
 
-#ifndef UTILS_DISABLE_ASSERT
+#ifndef UTILS_DISABLE_DEBUG
 	bool joined_ = false;
 #endif
 

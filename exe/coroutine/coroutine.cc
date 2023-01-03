@@ -15,7 +15,7 @@ thread_local Coroutine *current = nullptr;
 
 void Coroutine::resume()
 {
-#ifndef UTILS_DISABLE_ASSERT
+#ifndef UTILS_DISABLE_DEBUG
 	UTILS_CHECK(!is_active_, "coroutine is already active");
 
 	auto _ = ::utils::rollback_exchange(is_active_, true);

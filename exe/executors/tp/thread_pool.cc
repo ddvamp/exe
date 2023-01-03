@@ -44,9 +44,11 @@ void ThreadPool::workLoop()
 
 void ThreadPool::join()
 {
-	UTILS_ASSERT(!joined_, "thread pool already stopped");
+#ifndef UTILS_DISABLE_DEBUG
+	UTILS_CHECK(!joined_, "thread pool already stopped");
 	
 	joined_ = true;
+#endif
 
 	for (auto &w : workers_) {
 		w.join();
