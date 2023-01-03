@@ -166,26 +166,6 @@ Fiber *createFiber(FiberRoutine &&routine, IExecutor *executor)
 
 /* API */
 
-// Start fiber on the executor
-//
-// Precondition: bool(routine) == true
-void go(IExecutor &executor, FiberRoutine routine)
-{
-	UTILS_ASSERT(routine, "empty routine for fiber");
-
-	auto *fiber = createFiber(::std::move(routine), &executor);
-
-	fiber->schedule();
-}
-
-// Start fiber on the executor of current fiber
-//
-// Precondition: bool(routine) == true
-void go(FiberRoutine routine)
-{
-	go(self::getExecutor(), ::std::move(routine));
-}
-
 namespace self {
 
 IExecutor &getExecutor() noexcept
@@ -222,5 +202,25 @@ void teleportTo(IExecutor &executor)
 }
 
 } // namespace self
+
+// Start fiber on the executor
+//
+// Precondition: bool(routine) == true
+void go(IExecutor &executor, FiberRoutine routine)
+{
+	UTILS_ASSERT(routine, "empty routine for fiber");
+
+	auto *fiber = createFiber(::std::move(routine), &executor);
+
+	fiber->schedule();
+}
+
+// Start fiber on the executor of current fiber
+//
+// Precondition: bool(routine) == true
+void go(FiberRoutine routine)
+{
+	go(self::getExecutor(), ::std::move(routine));
+}
 
 } // namespace exe::fibers
