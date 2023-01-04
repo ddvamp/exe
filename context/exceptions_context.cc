@@ -15,6 +15,14 @@ void ExceptionsContext::switchTo(ExceptionsContext &target) noexcept
 	constexpr auto kStateSize = sizeof(exceptions_state_buf_);
 
 	auto *this_thread_exceptions = ::__cxxabiv1::__cxa_get_globals();
+
+	decltype(exceptions_state_buf_) tmp;
+
+	::std::memcpy(
+		tmp,
+		target.exceptions_state_buf_,
+		kStateSize
+	);
 	::std::memcpy(
 		exceptions_state_buf_,
 		this_thread_exceptions,
@@ -22,7 +30,7 @@ void ExceptionsContext::switchTo(ExceptionsContext &target) noexcept
 	);
 	::std::memcpy(
 		this_thread_exceptions,
-		target.exceptions_state_buf_,
+		tmp,
 		kStateSize
 	);
 }
