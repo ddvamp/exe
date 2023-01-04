@@ -50,7 +50,7 @@ switchMachineContext:
 	stmxcsr	-0x8(%rsp)		# save the MXCSR register state
 	fnstenv	-0x28(%rsp)		# save x87 FPU environment
 
-	# switch stack
+	# switch stack (with aliasing prevention)
 	movq	(%rsi), %r11	# load target stack pointer
 	movq	%rsp, (%rdi)	# save current stack pointer
 	movq	%r11, %rsp		# restore target stack pointer

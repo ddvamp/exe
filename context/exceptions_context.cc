@@ -18,21 +18,10 @@ void ExceptionsContext::switchTo(ExceptionsContext &target) noexcept
 
 	decltype(exceptions_state_buf_) tmp;
 
-	::std::memcpy(
-		tmp,
-		target.exceptions_state_buf_,
-		kStateSize
-	);
-	::std::memcpy(
-		exceptions_state_buf_,
-		this_thread_exceptions,
-		kStateSize
-	);
-	::std::memcpy(
-		this_thread_exceptions,
-		tmp,
-		kStateSize
-	);
+	// prevent aliasing
+	::std::memcpy(tmp, target.exceptions_state_buf_, kStateSize);
+	::std::memcpy(exceptions_state_buf_, this_thread_exceptions, kStateSize);
+	::std::memcpy(this_thread_exceptions, tmp, kStateSize);
 }
 
 } // namespace context

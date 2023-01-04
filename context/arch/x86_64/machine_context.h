@@ -12,8 +12,11 @@ private:
 	void *rsp_;
 
 public:
+	// set initial context
 	void setup(::utils::memory_view stack, ITrampoline *trampoline) noexcept;
 
+	// save current context in this and reset target context
+	// (this and target are allowed to be aliased)
 	void switchTo(MachineContext &target) noexcept;
 };
 
