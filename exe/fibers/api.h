@@ -33,7 +33,7 @@ void yield();
 
 // reschedule current fiber and activate next one if it is valid
 // otherwise, the call is equivalent to yield
-void switchTo(FiberHandle next) noexcept;
+void switchTo(FiberHandle &&next) noexcept;
 
 // reschedule current fiber on executor
 void teleportTo(IExecutor &executor);

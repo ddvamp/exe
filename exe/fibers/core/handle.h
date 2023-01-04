@@ -5,15 +5,25 @@
 
 namespace exe::fibers {
 
-// Class for managing a fiber in awaiters
-// 
-// The behavior is undefined if more than one or none
-// of all copies of the same handler are used for fiber execution
+// Class for managing fiber in awaiters
 class [[nodiscard]] FiberHandle {
 private:
 	friend class Fiber;
 
 	Fiber *fiber_ = nullptr;
+
+public:
+	// precondition: isValid() == false
+	~FiberHandle();
+
+	FiberHandle(FiberHandle const &) = delete;
+	void operator= (FiberHandle const &) = delete;
+
+	FiberHandle(FiberHandle &&that) noexcept
+		: fiber_(that.release())
+	{}
+	// precondition: isValid() == false
+	FiberHandle &operator= (FiberHandle &&) noexcept;
 
 public:
 	FiberHandle() = default;
@@ -28,15 +38,15 @@ public:
 		return fiber_;
 	}
 
-	// Schedule execution on the executor set on fiber
+	// Schedule execution on executor set on fiber
 	//
 	// Precondition: isValid() == true
-	void schedule() noexcept;
+	void schedule() && noexcept;
 
 	// Execute fiber immediately
 	//
 	// Precondition: isValid() == true
-	void resume() noexcept;
+	void resume() && noexcept;
 
 private:
 	explicit FiberHandle(Fiber *fiber) noexcept

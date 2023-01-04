@@ -19,34 +19,36 @@ thread_local Fiber *current = nullptr;
 
 class YieldAwaiter : public ISuspendingAwaiter {
 public:
-	void awaitSuspend(FiberHandle h) noexcept override
+	void awaitSuspend(FiberHandle &&h) noexcept override
 	{
-		h.schedule();
+		::std::move(h).schedule();
 	}
 };
 
 class SwitchAwaiter : public IAwaiter {
 private:
-	FiberHandle target_;
+	FiberHandle &target_;
 
 public:
-	explicit SwitchAwaiter(FiberHandle target) noexcept
+	explicit SwitchAwaiter(FiberHandle &target) noexcept
 		: target_(target)
 	{}
 
-	void awaitSuspend(FiberHandle) noexcept override
+	void awaitSuspend(FiberHandle &&) noexcept override
 	{
 		// nothing
 	}
 
-	FiberHandle awaitSymmetricSuspend(FiberHandle from) override
+	FiberHandle awaitSymmetricSuspend(FiberHandle &&from) override
 	{
 		// prevents race condition
-		auto target = target_;
+		auto clean_up = ::utils::defer{
+			[&from]() noexcept {
+				::std::move(from).schedule();
+			}
+		};
 
-		from.schedule();
-
-		return target;
+		return ::std::move(target_);
 	}
 };
 
@@ -176,7 +178,7 @@ void yield() noexcept
 	suspend(awaiter);
 }
 
-void switchTo(FiberHandle next) noexcept
+void switchTo(FiberHandle &&next) noexcept
 {
 	SwitchAwaiter awaiter{next};
 	suspend(awaiter);

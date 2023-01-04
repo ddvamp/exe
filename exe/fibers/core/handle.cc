@@ -7,30 +7,38 @@
 
 namespace exe::fibers {
 
-// Schedule execution on the executor set on fiber
-//
-// Precondition: isValid() == true
-void FiberHandle::schedule() noexcept
+FiberHandle::~FiberHandle()
+{
+	UTILS_ASSERT(!isValid(), "fiber is lost");
+}
+
+FiberHandle &FiberHandle::operator= (FiberHandle &&that) noexcept
+{
+	UTILS_ASSERT(!isValid(), "fiber is lost");
+
+	fiber_ = that.release();
+
+	return *this;
+}
+
+void FiberHandle::schedule() && noexcept
 {
 	releaseChecked()->schedule();
 }
 
-// Execute fiber immediately
-//
-// Precondition: isValid() == true
-void FiberHandle::resume() noexcept
+void FiberHandle::resume() && noexcept
 {
 	releaseChecked()->resume();
 }
 
 Fiber *FiberHandle::release() noexcept
 {
-	return std::exchange(fiber_, nullptr);
+	return ::std::exchange(fiber_, nullptr);
 }
 
 Fiber *FiberHandle::releaseChecked() noexcept
 {
-	UTILS_ASSERT(isValid(), "handle is in moved-from state");
+	UTILS_ASSERT(isValid(), "fiber is missing");
 
 	return release();
 }
