@@ -9,7 +9,7 @@ using Stack = ::context::Stack;
 
 [[nodiscard]] Stack allocateStack();
 
-void deallocateStack(Stack &&stack);
+void deallocateStack(Stack &&stack) noexcept;
 
 } // namespace exe::fibers
 
