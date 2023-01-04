@@ -6,10 +6,7 @@ namespace exe::coroutine {
 
 void CoroutineImpl::resume()
 {
-	UTILS_ASSERT(
-		!is_completed_,
-		"resume, but the coroutine has already been completed"
-	);
+	UTILS_ASSERT(!isCompleted(), "resuming a completed coroutine");
 
 	context_.switchTo(context_);
 	if (throwed_exception_) {

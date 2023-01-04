@@ -28,16 +28,17 @@ public:
 		, is_completed_(false)
 	{}
 
-	// external call functions
+	/* external call functions */
 
-	bool isCompleted() const noexcept
+	[[nodiscard]] bool isCompleted() const noexcept
 	{
 		return is_completed_;
 	}
 
+	// precondition: isCompleted() == false
 	void resume();
 
-	// internal call functions
+	/* internal call functions */
 
 	void suspend() noexcept
 	{
