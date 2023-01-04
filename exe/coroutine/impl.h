@@ -8,6 +8,7 @@
 
 #include "exe/coroutine/routine.h"
 
+#include "utils/defer.h"
 #include "utils/memory/view.h"
 
 namespace exe::coroutine {
@@ -17,38 +18,50 @@ class CoroutineImpl : public ::context::ITrampoline {
 private:
 	Routine routine_;
 	::context::ExecutionContext context_;
-	::std::exception_ptr throwed_exception_;
-	bool is_completed_;
+	::std::exception_ptr throwed_exception_ = nullptr;
+	bool is_active_ = false;
+	bool is_completed_ = false;
 
 public:
-	CoroutineImpl(Routine routine, ::utils::memory_view stack) noexcept
+	CoroutineImpl(Routine &&routine, ::utils::memory_view stack) noexcept
 		: routine_(::std::move(routine))
 		, context_(stack, this)
-		, throwed_exception_(nullptr)
-		, is_completed_(false)
 	{}
 
-	/* external call functions */
+	[[nodiscard]] bool isActive() const noexcept
+	{
+		return is_active_;
+	}
 
 	[[nodiscard]] bool isCompleted() const noexcept
 	{
 		return is_completed_;
 	}
 
-	// precondition: isCompleted() == false
-	void resume();
+	/* external call functions */
+
+	void resume()
+	{
+		auto clean_up = ::utils::rollback_exchange(is_active_, true);
+
+		context_.switchToSaved();
+
+		if (throwed_exception_) {
+			::std::rethrow_exception(throwed_exception_);
+		}
+	}
 
 	/* internal call functions */
 
 	void suspend() noexcept
 	{
-		context_.switchTo(context_);
+		context_.switchToSaved();
 	}
 
 	[[noreturn]] void cancel() noexcept
 	{
 		is_completed_ = true;
-		context_.exitTo(context_);
+		context_.exitToSaved();
 	}
 
 private:

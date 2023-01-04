@@ -10,29 +10,35 @@
 
 namespace exe::coroutine {
 
-// stackful coroutine
-class Coroutine {
+// Stackful subroutine for non-preemptive multitasking,
+// that allow execution to be suspended and resumed
+class [[nodiscard]] Coroutine {
 private:
 	::context::Stack stack_;
 	CoroutineImpl impl_;
 
-#ifndef UTILS_DISABLE_DEBUG
-	bool is_active_ = false;
-#endif
-
 public:
-	explicit Coroutine(Routine routine)
-		: stack_(allocateStack())
-		, impl_(::std::move(routine), stack_.view())
-	{}
+	// precondition: bool(routine) == true
+	explicit Coroutine(Routine &&routine);
 
-	bool isCompleted() const noexcept
+	[[nodiscard]] bool isActive() const noexcept
+	{
+		return impl_.isActive();
+	}
+
+	[[nodiscard]] bool isCompleted() const noexcept
 	{
 		return impl_.isCompleted();
 	}
 
+	// Entry point
+	// 
+	// Precondition: isCompleted() == false && isActive() == false
 	void resume();
 
+	// Exit point
+	//
+	// Precondition: coroutine context
 	static void suspend() noexcept;
 
 private:
@@ -43,6 +49,11 @@ private:
 	}
 };
 
+/* API */
+
+// Exit point
+//
+// Precondition: coroutine context
 void suspend() noexcept;
 
 } // namespace exe::coroutine

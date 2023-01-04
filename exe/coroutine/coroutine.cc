@@ -11,17 +11,31 @@ namespace {
 
 thread_local Coroutine *current = nullptr;
 
+// debug checking of ctor precondition
+Routine &check(Routine &routine) noexcept
+{
+	UTILS_ASSERT(bool(routine), "empty routine on coroutine creation");
+
+	return routine;
+}
+
 } // namespace
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+explicit Coroutine::Coroutine(Routine &&routine)
+	: stack_(allocateStack())
+	, impl_(::std::move(check(routine)), stack_.view())
+{}
 
 void Coroutine::resume()
 {
-#ifndef UTILS_DISABLE_DEBUG
-	UTILS_CHECK(!is_active_, "coroutine is already active");
+	UTILS_ASSERT(!isCompleted(), "resuming a completed coroutine");
+	UTILS_ASSERT(!isActive(), "coroutine is already active");
 
-	auto _ = ::utils::rollback_exchange(is_active_, true);
-#endif
-
-	auto rollback = ::utils::rollback_exchange(current, this);
+	auto clean_up = ::utils::rollback_exchange(current, this);
 
 	impl_.resume();
 }
