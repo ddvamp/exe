@@ -10,6 +10,13 @@ namespace exe::fibers {
 
 namespace {
 
+thread_local Fiber *current = nullptr;
+
+[[nodiscard]] bool amIFiber() noexcept
+{
+	return current;
+}
+
 class YieldAwaiter : public ISuspendingAwaiter {
 public:
 	void awaitSuspend(FiberHandle h) noexcept override
@@ -19,6 +26,9 @@ public:
 };
 
 class SwitchAwaiter : public IAwaiter {
+private:
+	FiberHandle target_;
+
 public:
 	explicit SwitchAwaiter(FiberHandle target) noexcept
 		: target_(target)
@@ -38,21 +48,14 @@ public:
 
 		return target;
 	}
-
-private:
-	FiberHandle target_;
 };
-
-thread_local Fiber *current = nullptr;
-
-[[nodiscard]] bool amIFiber() noexcept
-{
-	return current;
-}
 
 } // namespace
 
-// precondition: in fiber context
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 /* static */ Fiber &Fiber::self() noexcept
 {
 	UTILS_ASSERT(amIFiber(), "not in the fiber context");
@@ -65,10 +68,8 @@ Fiber::Fiber(FiberRoutine &&routine, ::context::Stack &&stack,
 	: stack_(::std::move(stack))
 	, coroutine_(::std::move(routine), stack_.view())
 	, executor_(executor)
-	, awaiter_(nullptr)
 {}
 
-// schedule execution on the executor set on fiber
 void Fiber::schedule() noexcept
 {
 	// TODO: exception handling
@@ -79,7 +80,6 @@ void Fiber::schedule() noexcept
 	}
 }
 
-// execute fiber immediately
 void Fiber::resume() noexcept
 {
 	run();
@@ -92,7 +92,6 @@ void Fiber::suspend(IAwaiter *awaiter) noexcept
 	stop();
 }
 
-// reschedule current fiber on executor
 void Fiber::teleportTo(IExecutor *executor) noexcept
 {
 	executor_ = executor;
@@ -107,12 +106,6 @@ void Fiber::releaseResources() noexcept
 
 void Fiber::step() noexcept
 {
-#ifndef UTILS_DISABLE_DEBUG
-	UTILS_CHECK(!is_active_, "fiber is already active");
-
-	auto _ = ::utils::rollback_exchange(is_active_, true);
-#endif
-
 	auto rollback = ::utils::rollback_exchange(current, this);
 
 	coroutine_.resume();
@@ -136,7 +129,7 @@ Fiber *Fiber::doRun() noexcept
 	return next.release();
 }
 
-void Fiber::run() noexcept
+/* virtual */ void Fiber::run() noexcept
 {
 	auto next = this;
 
@@ -154,7 +147,6 @@ void Fiber::stop() noexcept
 	coroutine_.suspend();
 }
 
-// create an self-ownership fiber
 Fiber *createFiber(FiberRoutine &&routine, IExecutor *executor)
 {
 	return new Fiber{::std::move(routine), allocateStack(), executor};
@@ -173,29 +165,23 @@ IExecutor &getExecutor() noexcept
 	return *Fiber::self().getExecutor();
 }
 
-// For synchronization primitives
-// Do not use directly
 void suspend(IAwaiter &awaiter) noexcept
 {
 	Fiber::self().suspend(&awaiter);
 }
 
-// reschedule the current fiber
 void yield() noexcept
 {
 	YieldAwaiter awaiter;
 	suspend(awaiter);
 }
 
-// reschedule the current fiber and activate the next one if it is valid
-// otherwise, the call is equivalent to yield
 void switchTo(FiberHandle next) noexcept
 {
 	SwitchAwaiter awaiter{next};
 	suspend(awaiter);
 }
 
-// reschedule current fiber on executor
 void teleportTo(IExecutor &executor)
 {
 	Fiber::self().teleportTo(&executor);
@@ -203,22 +189,16 @@ void teleportTo(IExecutor &executor)
 
 } // namespace self
 
-// Start fiber on the executor
-//
-// Precondition: bool(routine) == true
-void go(IExecutor &executor, FiberRoutine routine)
+void go(IExecutor &executor, FiberRoutine &&routine)
 {
-	UTILS_ASSERT(routine, "empty routine for fiber");
+	UTILS_ASSERT(bool(routine), "empty routine for fiber");
 
 	auto *fiber = createFiber(::std::move(routine), &executor);
 
 	fiber->schedule();
 }
 
-// Start fiber on the executor of current fiber
-//
-// Precondition: bool(routine) == true
-void go(FiberRoutine routine)
+void go(FiberRoutine &&routine)
 {
 	go(self::getExecutor(), ::std::move(routine));
 }

@@ -1,6 +1,8 @@
 #ifndef DDV_EXE_FIBERS_CORE_FIBER_H_
 #define DDV_EXE_FIBERS_CORE_FIBER_H_ 1
 
+#include "exe/executors/executor.h"
+#include "exe/executors/task.h"
 #include "exe/fibers/api.h"
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/coroutine.h"
@@ -14,14 +16,10 @@ private:
 	::context::Stack stack_;
 	Coroutine coroutine_;
 	IExecutor *executor_;
-	IAwaiter *awaiter_;
-
-#ifndef UTILS_DISABLE_DEBUG
-	bool is_active_ = false;
-#endif
+	IAwaiter *awaiter_ = nullptr;
 
 public:
-	// precondition: in fiber context
+	// reference to currently active fiber
 	[[nodiscard]] static Fiber &self() noexcept;
 
 	Fiber(FiberRoutine &&, ::context::Stack &&, IExecutor *) noexcept;
@@ -31,7 +29,7 @@ public:
 		return executor_;
 	}
 
-	// schedule execution on the executor set on fiber
+	// schedule execution on executor set on fiber
 	void schedule() noexcept;
 
 	// execute fiber immediately

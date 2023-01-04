@@ -9,16 +9,17 @@ namespace exe::fibers {
 
 using executors::IExecutor;
 
-// Start fiber on the executor
+// Start fiber on where
 //
 // Precondition: bool(routine) == true
-void go(IExecutor &where, FiberRoutine routine);
+void go(IExecutor &where, FiberRoutine &&routine);
 
-// start fiber on the executor of current fiber
+// Start fiber on executor of current fiber
 //
-// Precondition: bool(routine) == true
-void go(FiberRoutine routine);
+// Precondition: fiber context && bool(routine) == true
+void go(FiberRoutine &&routine);
 
+// precondition: fiber context
 namespace self {
 
 [[nodiscard]] IExecutor &getExecutor() noexcept;
@@ -27,10 +28,10 @@ namespace self {
 // Do not use directly
 void suspend(IAwaiter &) noexcept;
 
-// reschedule the current fiber
+// reschedule current fiber
 void yield();
 
-// reschedule the current fiber and activate the next one if it is valid
+// reschedule current fiber and activate next one if it is valid
 // otherwise, the call is equivalent to yield
 void switchTo(FiberHandle next) noexcept;
 

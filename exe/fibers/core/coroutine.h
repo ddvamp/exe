@@ -11,40 +11,42 @@
 
 namespace exe::fibers {
 
-// The basis for suspended execution of fibers
+// Basis for suspended execution of fibers
 class Coroutine : public ::context::ITrampoline {
 private:
 	FiberRoutine routine_;
 	::context::ExecutionContext context_;
-	bool is_completed_;
+	bool is_completed_ = false;
 
 public:
-	Coroutine(FiberRoutine routine, ::utils::memory_view stack) noexcept
+	Coroutine(FiberRoutine &&routine, ::utils::memory_view stack) noexcept
 		: routine_(::std::move(routine))
 		, context_(stack, this)
-		, is_completed_(false)
 	{}
 
-	// external call functions
-
-	bool isCompleted() const noexcept
+	[[nodiscard]] bool isCompleted() const noexcept
 	{
 		return is_completed_;
 	}
 
-	void resume() noexcept;
+	/* external call functions */
 
-	// internal call functions
+	void resume() noexcept
+	{
+		context_.switchToSaved();
+	}
+
+	/* internal call functions */
 
 	void suspend() noexcept
 	{
-		context_.switchTo(context_);
+		context_.switchToSaved();
 	}
 
 	[[noreturn]] void cancel() noexcept
 	{
 		is_completed_ = true;
-		context_.exitTo(context_);
+		context_.exitToSaved();
 	}
 
 private:
