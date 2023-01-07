@@ -3,13 +3,15 @@
 
 namespace context {
 
+// entry point for context
 class ITrampoline {
 public:
 	virtual ~ITrampoline() = default;
 
-	[[noreturn]] virtual void doRun() noexcept = 0;
-
 	[[noreturn]] void run() noexcept;
+
+private:
+	[[noreturn]] virtual void doRun() noexcept = 0;
 };
 
 } // namespace context

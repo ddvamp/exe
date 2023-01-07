@@ -8,6 +8,7 @@
 
 namespace context {
 
+// Execution context = machine context (registers state) + exceptions context
 class ExecutionContext {
 private:
 	MachineContext machine_ctx_;
@@ -23,6 +24,10 @@ public:
 	void operator= (ExecutionContext &&) = delete;
 
 public:
+	// empty slot for current context saving
+	ExecutionContext() = default;
+
+	// initializes new context with stack using trampoline
 	ExecutionContext(::utils::memory_view stack, ITrampoline *trampoline)
 		noexcept
 	{
