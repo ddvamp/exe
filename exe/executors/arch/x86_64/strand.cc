@@ -2,22 +2,15 @@
 
 #include "utils/abort.h"
 #include "utils/debug.h"
+#include "utils/utility.h"
 
 namespace exe::executors {
 
-// wait-free task submission
-// 
-// precondition: task && task->next_ == nullptr
 /* virtual */ void Strand::execute(TaskBase *task) noexcept
 {
-	UTILS_ASSERT(
-		task,
-		"violation of the execute precondition"
-	);
-	UTILS_ASSERT(
-		!task->next_.load(::std::memory_order_relaxed),
-		"violation of the execute precondition"
-	);
+	UTILS_ASSERT(bool(task), "nullptr instead of a task");
+	
+	task->next_.store(nullptr, ::std::memory_order_relaxed);
 
 	auto *prev = tail_.exchange(task);
 
@@ -37,6 +30,40 @@ namespace exe::executors {
 			);
 		}
 	}
+}
+
+/* virtual */ void Strand::run() noexcept
+{
+	auto *curr = head_;
+	auto *next = curr->next_.load(::std::memory_order_relaxed);
+
+	do {
+		// at this point curr is the only pointer to its object
+		// (after run, curr object doesn't exist)
+		curr->run();
+		curr = next;
+	} while (
+		// in case of a high load,
+		// we will immediately get the following task
+		(next = curr->next_.load(::std::memory_order_acquire)) ||
+
+		(
+			// are there any other tasks?
+			tail_.compare_exchange_strong(
+				::utils::temporary(::utils::decay_copy(curr)),
+				&dummy_
+			) &&
+			// cmpxchg -> true: there are no other tasks
+
+			// at this point curr is the only pointer to its object
+			// (after run, curr object doesn't exist)
+			(curr->run(), curr = &dummy_),
+
+			// if the task has not been linked yet, we give control
+			(next = curr->next_.load(::std::memory_order_acquire)) ||
+			(next = curr->next_.exchange(curr))
+		)
+	);
 }
 
 } // namespace exe::executors
