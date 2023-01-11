@@ -1,8 +1,6 @@
 #ifndef DDV_RESULT_RESULT_H_
 #define DDV_RESULT_RESULT_H_ 1
 
-#include <expected>
-
 #include <exception>
 #include <functional>
 #include <initializer_list>

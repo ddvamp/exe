@@ -1,5 +1,3 @@
-#include <exception>
-
 namespace utils {
 
 template <typename T>
