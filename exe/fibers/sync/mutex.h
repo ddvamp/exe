@@ -100,45 +100,52 @@ private:
 		return ::std::move(info->handle_);
 	}
 
-	[[nodiscard]] FiberHandle takeNextFiber(Node *next) noexcept
+	[[nodiscard]] FiberHandle takeNextFiberFromHead() noexcept
 	{
-		head_ = next;
+		Node *node;
 
 		if (
-			(next = head_->next_.load(::std::memory_order_acquire)) ||
+			(node = head_->next_.load(::std::memory_order_acquire)) ||
 			
 			tail_.compare_exchange_strong(
 				::utils::temporary(::utils::decay_copy(head_)),
-				next = &dummy_,
+				node = &dummy_,
 				::std::memory_order_release,
 				::std::memory_order_relaxed
 			) ||
 			
-			(next = head_->next_.load(::std::memory_order_acquire)) ||
+			(node = head_->next_.load(::std::memory_order_acquire)) ||
 
 			!head_->next_.compare_exchange_strong(
-				next,
+				node,
 				head_,
 				::std::memory_order_release,
 				::std::memory_order_acquire
 			)
 		) {
-			return exchangeHeadFor(next);
+			return exchangeHeadFor(node);
 		}
 
 		return FiberHandle::invalid();
 	}
 
+	[[nodiscard]] FiberHandle takeNextFiber(Node *next) noexcept
+	{
+		head_ = next;
+
+		return takeNextFiberFromHead();
+	}
+
 	[[nodiscard]] FiberHandle lockImpl(FiberInfo *fiber) noexcept
 	{
-		auto prev = tail_.exchange(fiber, ::std::memory_order_acq_rel);
+		auto node = tail_.exchange(fiber, ::std::memory_order_acq_rel);
 
-		if (!prev) [[unlikely]] {
+		if (!node) [[unlikely]] {
 			return takeNextFiber(fiber);
 		}
 			
 		if (
-			prev->next_.compare_exchange_strong(
+			node->next_.compare_exchange_strong(
 				::utils::temporary(static_cast<Node *>(nullptr)),
 				fiber,
 				::std::memory_order_release,
@@ -148,8 +155,8 @@ private:
 			return FiberHandle::invalid();
 		}
 
-		if (prev == &dummy_) [[likely]] {
-			prev->next_.store(nullptr, ::std::memory_order_relaxed);
+		if (node == &dummy_) [[likely]] {
+			dummy_.next_.store(nullptr, ::std::memory_order_relaxed);
 			return takeNextFiber(fiber);
 		}
 
@@ -160,35 +167,38 @@ private:
 
 	[[nodiscard]] FiberHandle unlockImpl() noexcept
 	{
-		auto next = head_;
+		Node *node;
 
 		if (
-			next != &dummy_ ||
+			head_ != &dummy_ ||
 
 			(
-				(next = head_->next_.load(::std::memory_order_acquire)) ||
+				(node = dummy_.next_.load(::std::memory_order_acquire)) ||
 
 				!tail_.compare_exchange_strong(
-					::utils::temporary(::utils::decay_copy(head_)),
+					::utils::temporary(::utils::decay_copy(&dummy_)),
 					nullptr,
 					::std::memory_order_release,
 					::std::memory_order_relaxed
 				) &&
-
 				(
-					(next = head_->next_.load(::std::memory_order_acquire)) ||
+					(node = dummy_.next_.load(::std::memory_order_acquire)) ||
 
-					!head_->next_.compare_exchange_strong(
-						next,
-						head_,
+					!dummy_.next_.compare_exchange_strong(
+						node,
+						&dummy_,
 						::std::memory_order_release,
 						::std::memory_order_acquire
 					)
 				)
 			) &&
-			(head_->next_.store(nullptr, ::std::memory_order_relaxed), true)
+			(
+				dummy_.next_.store(nullptr, ::std::memory_order_relaxed),
+				head_ = node,
+				true
+			)
 		) {
-			return takeNextFiber(next);
+			return takeNextFiberFromHead();
 		}
 
 		return FiberHandle::invalid();
