@@ -1,5 +1,5 @@
-#ifndef DDV_FIBERS_SYNC_MUTEX_H_
-#define DDV_FIBERS_SYNC_MUTEX_H_ 1
+#ifndef DDV_EXE_FIBERS_SYNC_MUTEX_H_
+#define DDV_EXE_FIBERS_SYNC_MUTEX_H_ 1
 
 #include <atomic>
 #include <mutex>
@@ -25,7 +25,7 @@ private:
 		Mutex *m_;
 
 	public:
-		LockAwaiter(Mutex *m) noexcept
+		explicit LockAwaiter(Mutex *m) noexcept
 			: m_(m)
 		{}
 
@@ -34,7 +34,7 @@ private:
 			// nothing
 		}
 
-		FiberHandle awaitSymmetricSuspend(
+		[[nodiscard]] FiberHandle awaitSymmetricSuspend(
 			FiberHandle &&current) noexcept override
 		{
 			info_.handle_ = ::std::move(current);
@@ -197,4 +197,4 @@ private:
 
 } // namespace exe::fibers
 
-#endif /* DDV_FIBERS_SYNC_MUTEX_H_ */
+#endif /* DDV_EXE_FIBERS_SYNC_MUTEX_H_ */

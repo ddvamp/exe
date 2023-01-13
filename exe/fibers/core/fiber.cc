@@ -39,7 +39,7 @@ public:
 		// nothing
 	}
 
-	FiberHandle awaitSymmetricSuspend(FiberHandle &&from) override
+	[[nodiscard]] FiberHandle awaitSymmetricSuspend(FiberHandle &&from) override
 	{
 		// prevents race condition
 		auto clean_up = ::utils::defer{

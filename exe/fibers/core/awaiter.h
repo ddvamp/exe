@@ -12,12 +12,12 @@ public:
 	virtual ~IAwaiter() = default;
 
 	virtual void awaitSuspend(FiberHandle &&) = 0;
-	virtual FiberHandle awaitSymmetricSuspend(FiberHandle &&) = 0;
+	[[nodiscard]] virtual FiberHandle awaitSymmetricSuspend(FiberHandle &&) = 0;
 };
 
 class ISuspendingAwaiter : public IAwaiter {
 public:
-	FiberHandle awaitSymmetricSuspend(FiberHandle &&h) override
+	[[nodiscard]] FiberHandle awaitSymmetricSuspend(FiberHandle &&h) override
 	{
 		awaitSuspend(::std::move(h));
 		return FiberHandle::invalid();
