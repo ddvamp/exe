@@ -13,8 +13,12 @@
 
 namespace exe::fibers {
 
+class CondVar;
+
 class Mutex {
 private:
+	friend class CondVar;
+
 	struct FiberInfo : ::utils::intrusive_concurrent_forward_list_node<> {
 		FiberHandle handle_;
 	};
