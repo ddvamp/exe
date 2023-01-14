@@ -23,7 +23,7 @@ namespace concurrency {
 // happens before the wait call
 class WaitPoint {
 private:
-	constexpr static ::std::uint64_t helping_bit = 0x8000'0000;
+	inline static constexpr ::std::uint64_t helping_bit = 0x8000'0000;
 
 	// [  32bit  |   bit   |  31bit  ]
 	// [ version | helping | counter ]
@@ -75,10 +75,7 @@ public:
 			"not underflow the 31-bit counter"
 		);
 
-		state += delta;
-
-		// notify if needed
-		if (isTransientState(state) && tryToProgress(state)) {
+		if (isNotifyNeeded(state + delta)) {
 			::std::lock_guard lock{m_};
 
 			if (there_are_waiters_) {
@@ -106,11 +103,9 @@ public:
 		);
 
 		if (getCounter(state) != 0) [[likely]] {
-			auto const waiting_state = state | helping_bit;
-
 			::std::unique_lock lock{m_};
 
-			while (needToWait(waiting_state)) {
+			while (isWaitNeeded(state | helping_bit)) {
 				there_are_waiters_ = true;
 				counter_is_zero_.wait(lock);
 			}
@@ -144,14 +139,19 @@ private:
 		return static_cast<::std::uint32_t>(state >> 32) != version;
 	}
 
+	bool isNotifyNeeded(::std::uint64_t state) noexcept
+	{
+		return isTransientState(state) && tryToProgress(state);
+	}
+
 	// We need to keep waiting if for state_
 	// version corresponds, helping bit is set and counter is non-zero,
 	// or version is one more, helping bit isn't set, and counter is zero
 	// 
 	// It is checked in one comparison by bit magic/manipulation
-	bool needToWait(::std::uint64_t const waiting_state) const noexcept
+	bool isWaitNeeded(::std::uint64_t const waiting_state) const noexcept
 	{
-		auto constexpr counter_cleaning_mask = 0xFFFF'FFFF'8000'0000ull;
+		constexpr auto counter_cleaning_mask = 0xFFFF'FFFF'8000'0000ull;
 
 		auto state = state_.load(::std::memory_order_relaxed);
 
@@ -161,7 +161,7 @@ private:
 
 	static ::std::uint64_t getCounter(::std::uint64_t state) noexcept
 	{
-		auto constexpr counter_mask = 0x7FFF'FFFFull;
+		constexpr auto counter_mask = 0x7FFF'FFFFull;
 
 		return state & counter_mask;
 	}
