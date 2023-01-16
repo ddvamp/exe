@@ -19,7 +19,7 @@ namespace concurrency {
 // The counter increment and wait operations are independent
 // (WaitPoint is not one-time),
 // so you can wait without even adding new tasks. However, if WaitPoint is
-// used to wait for specific tasks to complete, the add call should be
+// used to wait for specific tasks to complete, the add call should
 // happens before the wait call
 class WaitPoint {
 private:
