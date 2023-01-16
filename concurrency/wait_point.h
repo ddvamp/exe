@@ -86,7 +86,7 @@ public:
 		}
 	}
 
-	// wait until the counter drops to zero and acquire data
+	// waits until the counter drops to zero and acquire data
 	void wait()
 	{
 		auto state = state_.load(::std::memory_order_relaxed);
