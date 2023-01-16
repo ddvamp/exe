@@ -62,8 +62,8 @@ public:
 		);
 	}
 
-	// reduces the counter, releases data and,
-	// if the counter has reached zero, tries to notify
+	// reduces the counter, releases data,
+	// and if the counter has reached zero, tries to notify
 	void done(::std::uint64_t delta = 1)
 	{
 		// reducing logically
