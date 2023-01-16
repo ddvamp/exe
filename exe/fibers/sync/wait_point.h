@@ -17,6 +17,9 @@ namespace exe::fibers {
 // which are expressed as a 32-bit counter
 // Formally, the wait ends when the counter reaches zero
 // 
+// The add call should happens before the corresponding done call
+// (otherwise, we get a negative counter)
+// 
 // The counter increment and wait operations are independent
 // (WaitPoint is not one-time),
 // so you can wait without even adding new tasks. However, if WaitPoint is

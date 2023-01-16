@@ -17,6 +17,9 @@ namespace exe::fibers {
 // which are expressed as a 64-bit counter
 // Formally, the wait ends when the counter reaches zero
 // 
+// The add call should happens before the corresponding done call
+// (otherwise, we get a negative counter)
+// 
 // The add calls should happens before the wait calls
 //
 // WaitGroup can be reused. In this case, all current wait calls should
