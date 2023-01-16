@@ -24,6 +24,12 @@
 		- wait group ([описание](https://gobyexample.com/waitgroups))
 		- wait point (обобщенная wait group)
 
+## Third-party libraries
+- concurrency - библиотека примитивов синхронизации потоков
+- context - контекст исполнения для stackful корутин/файберов
+- result - упрощенная реализация C++23 std::expected для представления значения или пойманного исключения (value or std::exception_ptr)
+- utils - std-like библиотека общих утилит
+
 ## References
 
 - [Репозиторий курса](https://gitlab.com/Lipovsky/concurrency-course)
