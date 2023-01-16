@@ -21,6 +21,8 @@
 		- mutex
 		- shared mutex
 		- condition variable
+		- wait group ([описание](https://gobyexample.com/waitgroups))
+		- wait point (обобщенная wait group)
 
 ## References
 
