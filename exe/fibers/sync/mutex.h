@@ -49,9 +49,9 @@ private:
 
 	using Node = FiberInfo::Node;
 
-	Node dummy_;
-	Node *head_ = &dummy_;
-	::std::atomic<Node *> tail_ = nullptr;
+	Node dummy_{&dummy_};
+	Node *head_ = &dummy_; // known next owner or dummy
+	::std::atomic<Node *> tail_ = &dummy_; // last added or dummy
 
 public:
 	~Mutex() = default;
@@ -63,14 +63,14 @@ public:
 	void operator= (Mutex &&) = delete;
 
 public:
-	Mutex() noexcept = default;
+	Mutex() = default;
 
 	[[nodiscard]] bool try_lock() noexcept
 	{
-		return !tail_.load(::std::memory_order_relaxed) &&
-			tail_.compare_exchange_strong(
-				::utils::temporary(static_cast<Node *>(nullptr)),
-				&dummy_,
+		return dummy_.next_.load(::std::memory_order_relaxed) == &dummy_ &&
+			dummy_.next_.compare_exchange_strong(
+				::utils::temporary(&dummy_),
+				nullptr,
 				::std::memory_order_acquire,
 				::std::memory_order_relaxed
 			);
@@ -78,8 +78,8 @@ public:
 
 	void lock() noexcept
 	{
-		if (!try_lock()) {
-			LockAwaiter awaiter{this};
+		if (!try_lock()) [[unlikely]] {
+			auto awaiter = LockAwaiter{this};
 			self::suspend(awaiter);
 		}
 	}
@@ -94,7 +94,8 @@ public:
 	}
 
 private:
-	[[nodiscard]] FiberHandle exchangeHeadFor(Node *next) noexcept
+	// sets new known next owner and returns FiberHandle of previous one
+	FiberHandle replaceKnownNextOwner(Node *next) noexcept
 	{
 		auto curr = ::std::exchange(head_, next);
 
@@ -104,12 +105,40 @@ private:
 		return ::std::move(info->handle_);
 	}
 
-	[[nodiscard]] FiberHandle takeNextFiberFromHead() noexcept
+	// Puts fiber node in queue
+	// If lock has passed to current THREAD in the process, returns false
+	bool giveNodeOrGetControl(Node *node) noexcept
 	{
-		Node *node;
+		return !tail_.exchange(node, ::std::memory_order_acq_rel)
+			->	next_.exchange(node, ::std::memory_order_acq_rel);
+	}
 
-		if (
-			(node = head_->next_.load(::std::memory_order_acquire)) ||
+	// Gets fiber node from queue (following known next owner or dummy)
+	// Otherwise, if there isn't one yet, passes control and returns nullptr
+	Node *getNodeOrGiveControl() const noexcept
+	{
+		// be optimistic
+		auto node = head_->next_.load(::std::memory_order_acquire);
+			
+		if (!node) {
+			head_->next_.compare_exchange_strong(
+				node,
+				head_,
+				::std::memory_order_release,
+				::std::memory_order_acquire
+			);
+		}
+
+		return node;
+	}
+	
+	// Gets exclusive ownership of known next owner and returns his FiberHandle
+	// Otherwise, passes control and returns invalid FiberHandle
+	FiberHandle getFiberFromKnownNextOwner() noexcept
+	{
+		if (auto node = head_->next_.load(::std::memory_order_acquire);
+			// be optimistic
+			node ||
 			
 			tail_.compare_exchange_strong(
 				::utils::temporary(::utils::decay_copy(head_)),
@@ -118,91 +147,53 @@ private:
 				::std::memory_order_relaxed
 			) ||
 			
-			(node = head_->next_.load(::std::memory_order_acquire)) ||
-
-			!head_->next_.compare_exchange_strong(
-				node,
-				head_,
-				::std::memory_order_release,
-				::std::memory_order_acquire
-			)
+			(node = getNodeOrGiveControl())
 		) {
-			return exchangeHeadFor(node);
+			return replaceKnownNextOwner(node);
 		}
 
 		return FiberHandle::invalid();
 	}
 
-	[[nodiscard]] FiberHandle takeNextFiber(Node *next) noexcept
+	// sets known next owner instead of dummy and tries to get his FiberHandle
+	FiberHandle getFiberFrom(Node *next) noexcept
 	{
+		// cleanup
+		dummy_.next_.store(nullptr, ::std::memory_order_relaxed);
+
 		head_ = next;
 
-		return takeNextFiberFromHead();
+		return getFiberFromKnownNextOwner();
 	}
 
-	[[nodiscard]] FiberHandle lockImpl(FiberInfo *fiber) noexcept
+	bool isNextOwnerKnown() const noexcept
 	{
-		auto node = tail_.exchange(fiber, ::std::memory_order_acq_rel);
+		return head_ != &dummy_;
+	}
 
-		if (!node) [[unlikely]] {
-			return takeNextFiber(fiber);
-		}
-			
-		if (
-			node->next_.compare_exchange_strong(
-				::utils::temporary(static_cast<Node *>(nullptr)),
-				fiber,
-				::std::memory_order_release,
-				::std::memory_order_acquire
-			)
-		) [[likely]] {
+	FiberHandle lockImpl(FiberInfo *node) noexcept
+	{
+		if (giveNodeOrGetControl(node)) [[likely]] {
 			return FiberHandle::invalid();
 		}
 
-		if (node == &dummy_) [[likely]] {
-			dummy_.next_.store(nullptr, ::std::memory_order_relaxed);
-			return takeNextFiber(fiber);
+		if (isNextOwnerKnown()) [[unlikely]] {
+			replaceKnownNextOwner(node).schedule();
+
+			return FiberHandle::invalid();
 		}
 
-		exchangeHeadFor(fiber).schedule();
-
-		return FiberHandle::invalid();
+		return getFiberFrom(node); // ~ getNodeOrGiveControl
 	}
 
-	[[nodiscard]] FiberHandle unlockImpl() noexcept
+	FiberHandle unlockImpl() noexcept
 	{
-		Node *node;
+		if (isNextOwnerKnown()) [[unlikely]] {
+			return getFiberFromKnownNextOwner(); // ~ getNodeOrGiveControl
+		}
 
-		if (
-			head_ != &dummy_ ||
-
-			(
-				(node = dummy_.next_.load(::std::memory_order_acquire)) ||
-
-				!tail_.compare_exchange_strong(
-					::utils::temporary(::utils::decay_copy(&dummy_)),
-					nullptr,
-					::std::memory_order_release,
-					::std::memory_order_relaxed
-				) &&
-				(
-					(node = dummy_.next_.load(::std::memory_order_acquire)) ||
-
-					!dummy_.next_.compare_exchange_strong(
-						node,
-						&dummy_,
-						::std::memory_order_release,
-						::std::memory_order_acquire
-					)
-				)
-			) &&
-			(
-				dummy_.next_.store(nullptr, ::std::memory_order_relaxed),
-				head_ = node,
-				true
-			)
-		) {
-			return takeNextFiberFromHead();
+		if (auto node = getNodeOrGiveControl(); node) [[unlikely]] {
+			return getFiberFrom(node); // ~ getNodeOrGiveControl
 		}
 
 		return FiberHandle::invalid();
