@@ -19,10 +19,48 @@ private:
 	::std::atomic<Node *> tail_ = &dummy_;
 
 public:
+	// for case of high contention
+	class Guard {
+	private:
+		QueueSpinlock &lock_;
+		Node node_;
+
+	public:
+		explicit Guard(QueueSpinlock &lock) noexcept
+			: lock_(lock)
+		{
+			lock_.lockInit(node_);
+		}
+
+		~Guard()
+		{
+			lock_.unlockFini(node_);
+		}
+
+		Guard(Guard const &) = delete;
+		void operator= (Guard const &) = delete;
+
+		Guard(Guard &&) = delete;
+		void operator= (Guard &&) = delete;
+	};
+
+public:
 	void lock() noexcept
 	{
 		auto node = Node{};
 
+		lockInit(node);
+		lockFini(node);
+	}
+
+	void unlock() noexcept
+	{
+		head_->free_.store(true, ::std::memory_order_release);
+	}
+
+private:
+	void lockInit(Node &node) noexcept
+	{
 		if (
 			auto prev = tail_.exchange(&node, ::std::memory_order_acq_rel);
 			prev == &dummy_
@@ -35,7 +73,10 @@ public:
 
 			while (!node.free_.load(::std::memory_order_acquire));
 		}
+	}
 
+	void lockFini(Node &node) noexcept
+	{
 		if (
 			!(head_ = node.next_.load(::std::memory_order_acquire)) &&
 
@@ -50,9 +91,10 @@ public:
 		}
 	}
 
-	void unlock() noexcept
+	void unlockFini(Node &node) noexcept
 	{
-		head_->free_.store(true, ::std::memory_order_release);
+		lockFini(node);
+		unlock();
 	}
 };
 
