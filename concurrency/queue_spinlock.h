@@ -61,10 +61,9 @@ public:
 private:
 	void lockInit(Node &node) noexcept
 	{
-		if (
-			auto prev = tail_.exchange(&node, ::std::memory_order_acq_rel);
-			prev == &dummy_
-		) [[likely]] {
+		auto prev = tail_.exchange(&node, ::std::memory_order_acq_rel);
+
+		if (prev == &dummy_) [[likely]] {
 			while (!dummy_.free_.load(::std::memory_order_acquire));
 
 			dummy_.free_.store(false, ::std::memory_order_relaxed);
