@@ -156,26 +156,26 @@ protected:
 
 	[[nodiscard]] StateRef<T> release() noexcept
 	{
-		check();
+		UTILS_RUN(check);
 		return ::std::move(state_);
 	}
 
 	[[nodiscard]] State &getState() noexcept
 	{
-		check();
+		UTILS_RUN(check);
 		return *state_;
 	}
 
 	[[nodiscard]] State const &getState() const noexcept
 	{
-		check();
+		UTILS_RUN(check);
 		return *state_;
 	}
 
 private:
-	void check() const noexcept
+	[[maybe_unused]] void check() const noexcept
 	{
-		UTILS_ASSERT(state_, "HoldState does not hold shared state");
+		UTILS_CHECK(state_, "HoldState does not hold shared state");
 	}
 };
 
