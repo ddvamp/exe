@@ -7,9 +7,9 @@
 
 // run function on debug
 #ifdef UTILS_DISABLE_DEBUG
-#	define UTILS_RUN(function) UTILS_NOTHING
+#	define UTILS_RUN(function, ...) UTILS_NOTHING
 #else
-#	define UTILS_RUN(function) function()
+#	define UTILS_RUN(function, ...) function(__VA_ARGS__)
 #endif
 
 #endif /* DDV_UTILS_DEBUG_RUN_H_ */
