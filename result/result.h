@@ -803,7 +803,7 @@ public:
 
 		if (is_ok_) {
 			if constexpr (::std::is_void_v<R>) {
-				::std::invoke(::std::forward<<F>(f), value_);
+				::std::invoke(::std::forward<F>(f), value_);
 				return result<R>();
 			} else {
 				return result<R>(invoke_place, ::std::forward<F>(f), value_);
@@ -829,7 +829,7 @@ public:
 
 		if (is_ok_) {
 			if constexpr (::std::is_void_v<R>) {
-				::std::invoke(::std::forward<<F>(f), value_);
+				::std::invoke(::std::forward<F>(f), value_);
 				return result<R>();
 			} else {
 				return result<R>(invoke_place, ::std::forward<F>(f), value_);
@@ -855,7 +855,7 @@ public:
 
 		if (is_ok_) {
 			if constexpr (::std::is_void_v<R>) {
-				::std::invoke(::std::forward<<F>(f), ::std::move(value_));
+				::std::invoke(::std::forward<F>(f), ::std::move(value_));
 				return result<R>();
 			} else {
 				return result<R>(
@@ -885,7 +885,7 @@ public:
 
 		if (is_ok_) {
 			if constexpr (::std::is_void_v<R>) {
-				::std::invoke(::std::forward<<F>(f), ::std::move(value_));
+				::std::invoke(::std::forward<F>(f), ::std::move(value_));
 				return result<R>();
 			} else {
 				return result<R>(
