@@ -133,6 +133,11 @@ private:
 	using State = SharedState<T>;
 
 protected:
+	using Result = State::Result;
+	using Callback = State::Callback;
+	using IExecutor = State::IExecutor;
+
+protected:
 	StateRef<T> state_;
 
 protected:
