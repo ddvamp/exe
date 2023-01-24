@@ -688,21 +688,14 @@ public:
 		requires (
 			::std::is_copy_constructible_v<T> &&
 			::std::is_invocable_v<F, E &> &&
-			is_result_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, E &>>
-			> &&
 			::std::is_same_v<
-				typename ::std::remove_cvref_t<
-					::std::invoke_result_t<F, E &>
-				>::value_type,
-				T
+				::std::remove_cvref_t<::std::invoke_result_t<F, E &>>,
+				result
 			>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, E &>>;
-
 		return is_ok_ ?
-			R(value_place, value_) :
+			result(value_place, value_) :
 			::std::invoke(::std::forward<F>(f), error_);
 	}
 
@@ -715,21 +708,14 @@ public:
 		requires (
 			::std::is_copy_constructible_v<T> &&
 			::std::is_invocable_v<F, E const &> &&
-			is_result_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, E const &>>
-			> &&
 			::std::is_same_v<
-				typename ::std::remove_cvref_t<
-					::std::invoke_result_t<F, E const &>
-				>::value_type,
-				T
+				::std::remove_cvref_t<::std::invoke_result_t<F, E const &>>,
+				result
 			>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, E const &>>;
-
 		return is_ok_ ?
-			R(value_place, value_) :
+			result(value_place, value_) :
 			::std::invoke(::std::forward<F>(f), error_);
 	}
 
@@ -742,21 +728,14 @@ public:
 		requires (
 			::std::is_move_constructible_v<T> &&
 			::std::is_invocable_v<F, E> &&
-			is_result_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, E>>
-			> &&
 			::std::is_same_v<
-				typename ::std::remove_cvref_t<
-					::std::invoke_result_t<F, E>
-				>::value_type,
-				T
+				::std::remove_cvref_t<::std::invoke_result_t<F, E>>,
+				result
 			>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, E>>;
-
 		return is_ok_ ?
-			R(value_place, ::std::move(value_)) :
+			result(value_place, ::std::move(value_)) :
 			::std::invoke(::std::forward<F>(f), ::std::move(error_));
 	}
 
@@ -769,21 +748,14 @@ public:
 		requires (
 			::std::is_move_constructible_v<T> &&
 			::std::is_invocable_v<F, E const> &&
-			is_result_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, E const>>
-			> &&
 			::std::is_same_v<
-				typename ::std::remove_cvref_t<
-					::std::invoke_result_t<F, E const>
-				>::value_type,
-				T
+				::std::remove_cvref_t<::std::invoke_result_t<F, E const>>,
+				result
 			>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, E const>>;
-
 		return is_ok_ ?
-			R(value_place, ::std::move(value_)) :
+			result(value_place, ::std::move(value_)) :
 			::std::invoke(::std::forward<F>(f), ::std::move(error_));
 	}
 
