@@ -46,10 +46,10 @@ struct invoke_traits {
 
 template <typename F, typename ...Args>
 requires requires {
-	typename result<::std::remove_cv_t<::std::invoke_result_t<F, Args...>>>;	
+	typename result<::std::remove_cvref_t<::std::invoke_result_t<F, Args...>>>;	
 }
 struct invoke_traits<F, Args...> {
-	using type = result<::std::remove_cv_t<::std::invoke_result_t<F, Args...>>>;
+	using type = result<::std::remove_cvref_t<::std::invoke_result_t<F, Args...>>>;
 	using is_invocable = ::std::true_type;
 	using is_nothrow_invocable = ::std::is_nothrow_invocable<F, Args...>;
 };

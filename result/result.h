@@ -767,11 +767,11 @@ public:
 		requires (
 			::std::is_invocable_v<F, T &> &&
 			suitable_for_result<
-				::std::remove_cv_t<::std::invoke_result_t<F, T &>>
+				::std::remove_cvref_t<::std::invoke_result_t<F, T &>>
 			>
 		)
 	{
-		using R = ::std::remove_cv_t<::std::invoke_result_t<F, T &>>;
+		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T &>>;
 
 		if (is_ok_) {
 			if constexpr (::std::is_void_v<R>) {
@@ -793,11 +793,11 @@ public:
 		requires (
 			::std::is_invocable_v<F, T const &> &&
 			suitable_for_result<
-				::std::remove_cv_t<::std::invoke_result_t<F, T const &>>
+				::std::remove_cvref_t<::std::invoke_result_t<F, T const &>>
 			>
 		)
 	{
-		using R = ::std::remove_cv_t<::std::invoke_result_t<F, T const &>>;
+		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T const &>>;
 
 		if (is_ok_) {
 			if constexpr (::std::is_void_v<R>) {
@@ -819,11 +819,11 @@ public:
 		requires (
 			::std::is_invocable_v<F, T> &&
 			suitable_for_result<
-				::std::remove_cv_t<::std::invoke_result_t<F, T>>
+				::std::remove_cvref_t<::std::invoke_result_t<F, T>>
 			>
 		)
 	{
-		using R = ::std::remove_cv_t<::std::invoke_result_t<F, T>>;
+		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T>>;
 
 		if (is_ok_) {
 			if constexpr (::std::is_void_v<R>) {
@@ -849,11 +849,11 @@ public:
 		requires (
 			::std::is_invocable_v<F, T const> &&
 			suitable_for_result<
-				::std::remove_cv_t<::std::invoke_result_t<F, T const>>
+				::std::remove_cvref_t<::std::invoke_result_t<F, T const>>
 			>
 		)
 	{
-		using R = ::std::remove_cv_t<::std::invoke_result_t<F, T const>>;
+		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T const>>;
 
 		if (is_ok_) {
 			if constexpr (::std::is_void_v<R>) {
