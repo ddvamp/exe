@@ -13,6 +13,13 @@
 
 namespace utils {
 
+namespace detail {
+
+template <typename F, typename ...Args>
+using result_ = ::std::remove_cvref_t<::std::invoke_result_t<F, Args...>>;
+
+} // namespace detail
+
 using error = ::std::exception_ptr;
 
 struct value_place_t {
@@ -620,14 +627,14 @@ public:
 		noexcept (::std::is_nothrow_invocable_v<F, T &>)
 		requires (
 			::std::is_invocable_v<F, T &> &&
-			is_result_v<::std::remove_cvref_t<::std::invoke_result_t<F, T &>>>
+			is_result_v<detail::result_<F, T &>>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T &>>;
+		using Res = detail::result_<F, T &>;
 
 		return is_ok_ ?
-			::std::invoke(::std::forward<F>(f), value_) :
-			R(error_place, error_);
+			Res(::std::invoke(::std::forward<F>(f), value_)) :
+			Res(error_place, error_);
 	}
 
 	template <typename F>
@@ -635,16 +642,14 @@ public:
 		noexcept (::std::is_nothrow_invocable_v<F, T const &>)
 		requires (
 			::std::is_invocable_v<F, T const &> &&
-			is_result_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, T const &>>
-			>
+			is_result_v<detail::result_<F, T const &>>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T const &>>;
+		using Res = detail::result_<F, T const &>;
 
 		return is_ok_ ?
-			::std::invoke(::std::forward<F>(f), value_) :
-			R(error_place, error_);
+			Res(::std::invoke(::std::forward<F>(f), value_)) :
+			Res(error_place, error_);
 	}
 
 	template <typename F>
@@ -652,14 +657,14 @@ public:
 		noexcept (::std::is_nothrow_invocable_v<F, T>)
 		requires (
 			::std::is_invocable_v<F, T> &&
-			is_result_v<::std::remove_cvref_t<::std::invoke_result_t<F, T>>>
+			is_result_v<detail::result_<F, T>>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T>>;
+		using Res = detail::result_<F, T>;
 
 		return is_ok_ ?
-			::std::invoke(::std::forward<F>(f), ::std::move(value_)) :
-			R(error_place, ::std::move(error_));
+			Res(::std::invoke(::std::forward<F>(f), ::std::move(value_))) :
+			Res(error_place, ::std::move(error_));
 	}
 
 	template <typename F>
@@ -667,16 +672,14 @@ public:
 		noexcept (::std::is_nothrow_invocable_v<F, T const>)
 		requires (
 			::std::is_invocable_v<F, T const> &&
-			is_result_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, T const>>
-			>
+			is_result_v<detail::result_<F, T const>>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T const>>;
+		using Res = detail::result_<F, T const>;
 
 		return is_ok_ ?
-			::std::invoke(::std::forward<F>(f), ::std::move(value_)) :
-			R(error_place, ::std::move(error_));
+			Res(::std::invoke(::std::forward<F>(f), ::std::move(value_))) :
+			Res(error_place, ::std::move(error_));
 	}
 
 	template <typename F>
@@ -688,15 +691,14 @@ public:
 		requires (
 			::std::is_copy_constructible_v<T> &&
 			::std::is_invocable_v<F, E &> &&
-			::std::is_same_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, E &>>,
-				result
-			>
+			::std::is_same_v<detail::result_<F, E &>, result>
 		)
 	{
+		using Res = result;
+
 		return is_ok_ ?
-			result(value_place, value_) :
-			::std::invoke(::std::forward<F>(f), error_);
+			Res(value_place, value_) :
+			Res(::std::invoke(::std::forward<F>(f), error_));
 	}
 
 	template <typename F>
@@ -708,15 +710,14 @@ public:
 		requires (
 			::std::is_copy_constructible_v<T> &&
 			::std::is_invocable_v<F, E const &> &&
-			::std::is_same_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, E const &>>,
-				result
-			>
+			::std::is_same_v<detail::result_<F, E const &>, result>
 		)
 	{
+		using Res = result;
+
 		return is_ok_ ?
-			result(value_place, value_) :
-			::std::invoke(::std::forward<F>(f), error_);
+			Res(value_place, value_) :
+			Res(::std::invoke(::std::forward<F>(f), error_));
 	}
 
 	template <typename F>
@@ -728,15 +729,14 @@ public:
 		requires (
 			::std::is_move_constructible_v<T> &&
 			::std::is_invocable_v<F, E> &&
-			::std::is_same_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, E>>,
-				result
-			>
+			::std::is_same_v<detail::result_<F, E>, result>
 		)
 	{
+		using Res = result;
+
 		return is_ok_ ?
-			result(value_place, ::std::move(value_)) :
-			::std::invoke(::std::forward<F>(f), ::std::move(error_));
+			Res(value_place, ::std::move(value_)) :
+			Res(::std::invoke(::std::forward<F>(f), ::std::move(error_)));
 	}
 
 	template <typename F>
@@ -748,127 +748,78 @@ public:
 		requires (
 			::std::is_move_constructible_v<T> &&
 			::std::is_invocable_v<F, E const> &&
-			::std::is_same_v<
-				::std::remove_cvref_t<::std::invoke_result_t<F, E const>>,
-				result
-			>
+			::std::is_same_v<detail::result_<F, E const>, result>
 		)
 	{
+		using Res = result;
+
 		return is_ok_ ?
-			result(value_place, ::std::move(value_)) :
-			::std::invoke(::std::forward<F>(f), ::std::move(error_));
+			Res(value_place, ::std::move(value_)) :
+			Res(::std::invoke(::std::forward<F>(f), ::std::move(error_)));
 	}
 
 	template <typename F>
 	[[nodiscard]] auto transform(F &&f) &
-		noexcept (
-			::std::is_nothrow_invocable_v<F, T &>
-		)
+		noexcept (::std::is_nothrow_invocable_v<F, T &>)
 		requires (
 			::std::is_invocable_v<F, T &> &&
-			suitable_for_result<
-				::std::remove_cvref_t<::std::invoke_result_t<F, T &>>
-			>
+			suitable_for_result<detail::result_<F, T &>>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T &>>;
+		using R = detail::result_<F, T &>;
+		using Res = result<R>;
 
-		if (is_ok_) {
-			if constexpr (::std::is_void_v<R>) {
-				::std::invoke(::std::forward<F>(f), value_);
-				return result<R>();
-			} else {
-				return result<R>(invoke_place, ::std::forward<F>(f), value_);
-			}
-		} else {
-			return result<R>(error_place, error_);
-		}
+		return is_ok_ ?
+			Res(invoke_place, ::std::forward<F>(f), value_) :
+			Res(error_place, error_);
 	}
 
 	template <typename F>
 	[[nodiscard]] auto transform(F &&f) const &
-		noexcept (
-			::std::is_nothrow_invocable_v<F, T const &>
-		)
+		noexcept (::std::is_nothrow_invocable_v<F, T const &>)
 		requires (
 			::std::is_invocable_v<F, T const &> &&
-			suitable_for_result<
-				::std::remove_cvref_t<::std::invoke_result_t<F, T const &>>
-			>
+			suitable_for_result<detail::result_<F, T const &>>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T const &>>;
+		using R = detail::result_<F, T const &>;
+		using Res = result<R>;
 
-		if (is_ok_) {
-			if constexpr (::std::is_void_v<R>) {
-				::std::invoke(::std::forward<F>(f), value_);
-				return result<R>();
-			} else {
-				return result<R>(invoke_place, ::std::forward<F>(f), value_);
-			}
-		} else {
-			return result<R>(error_place, error_);
-		}
+		return is_ok_ ?
+			Res(invoke_place, ::std::forward<F>(f), value_) :
+			Res(error_place, error_);
 	}
 
 	template <typename F>
 	[[nodiscard]] auto transform(F &&f) &&
-		noexcept (
-			::std::is_nothrow_invocable_v<F, T>
-		)
+		noexcept (::std::is_nothrow_invocable_v<F, T>)
 		requires (
 			::std::is_invocable_v<F, T> &&
-			suitable_for_result<
-				::std::remove_cvref_t<::std::invoke_result_t<F, T>>
-			>
+			suitable_for_result<detail::result_<F, T>>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T>>;
+		using R = detail::result_<F, T>;
+		using Res = result<R>;
 
-		if (is_ok_) {
-			if constexpr (::std::is_void_v<R>) {
-				::std::invoke(::std::forward<F>(f), ::std::move(value_));
-				return result<R>();
-			} else {
-				return result<R>(
-					invoke_place,
-					::std::forward<F>(f),
-					::std::move(value_)
-				);
-			}
-		} else {
-			return result<R>(error_place, ::std::move(error_));
-		}
+		return is_ok_ ?
+			Res(invoke_place, ::std::forward<F>(f), ::std::move(value_)) :
+			Res(error_place, ::std::move(error_));
 	}
 
 	template <typename F>
 	[[nodiscard]] auto transform(F &&f) const &&
-		noexcept (
-			::std::is_nothrow_invocable_v<F, T const>
-		)
+		noexcept (::std::is_nothrow_invocable_v<F, T const>)
 		requires (
 			::std::is_invocable_v<F, T const> &&
-			suitable_for_result<
-				::std::remove_cvref_t<::std::invoke_result_t<F, T const>>
-			>
+			suitable_for_result<detail::result_<F, T const>>
 		)
 	{
-		using R = ::std::remove_cvref_t<::std::invoke_result_t<F, T const>>;
+		using R = detail::result_<F, T const>;
+		using Res = result<R>;
 
-		if (is_ok_) {
-			if constexpr (::std::is_void_v<R>) {
-				::std::invoke(::std::forward<F>(f), ::std::move(value_));
-				return result<R>();
-			} else {
-				return result<R>(
-					invoke_place,
-					::std::forward<F>(f),
-					::std::move(value_)
-				);
-			}
-		} else {
-			return result<R>(error_place, ::std::move(error_));
-		}
+		return is_ok_ ?
+			Res(invoke_place, ::std::forward<F>(f), ::std::move(value_)) :
+			Res(error_place, ::std::move(error_));
 	}
 
 private:
@@ -1134,6 +1085,16 @@ public:
 	{
 		UTILS_ASSERT(!is_ok_, "result stores a value");
 		return ::std::move(error_);
+	}
+
+private:
+	template <typename F, typename ...Args>
+	result(invoke_place_t, F &&f, Args &&...args)
+		noexcept (::std::is_nothrow_invocable_v<F, Args...>)
+		requires (::std::is_invocable_v<F, Args...>)
+		: is_ok_(true)
+	{
+		::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
 	}
 };
 
