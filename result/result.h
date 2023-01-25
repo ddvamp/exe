@@ -631,7 +631,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto and_then(F &&f) &
+	auto and_then(F &&f) &
 		noexcept (::std::is_nothrow_invocable_v<F, T &>)
 		requires (
 			::std::is_invocable_v<F, T &> &&
@@ -646,7 +646,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto and_then(F &&f) const &
+	auto and_then(F &&f) const &
 		noexcept (::std::is_nothrow_invocable_v<F, T const &>)
 		requires (
 			::std::is_invocable_v<F, T const &> &&
@@ -661,7 +661,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto and_then(F &&f) &&
+	auto and_then(F &&f) &&
 		noexcept (::std::is_nothrow_invocable_v<F, T>)
 		requires (
 			::std::is_invocable_v<F, T> &&
@@ -676,7 +676,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto and_then(F &&f) const &&
+	auto and_then(F &&f) const &&
 		noexcept (::std::is_nothrow_invocable_v<F, T const>)
 		requires (
 			::std::is_invocable_v<F, T const> &&
@@ -691,7 +691,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto or_else(F &&f) &
+	auto or_else(F &&f) &
 		noexcept (
 			::std::is_nothrow_copy_constructible_v<T> &&
 			::std::is_nothrow_invocable_v<F, E &>
@@ -710,7 +710,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto or_else(F &&f) const &
+	auto or_else(F &&f) const &
 		noexcept (
 			::std::is_nothrow_copy_constructible_v<T> &&
 			::std::is_nothrow_invocable_v<F, E const &>
@@ -729,7 +729,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto or_else(F &&f) &&
+	auto or_else(F &&f) &&
 		noexcept (
 			::std::is_nothrow_move_constructible_v<T> &&
 			::std::is_nothrow_invocable_v<F, E>
@@ -748,7 +748,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto or_else(F &&f) const &&
+	auto or_else(F &&f) const &&
 		noexcept (
 			::std::is_nothrow_move_constructible_v<T> &&
 			::std::is_nothrow_invocable_v<F, E const>
@@ -767,7 +767,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto transform(F &&f) &
+	auto transform(F &&f) &
 		noexcept (::std::is_nothrow_invocable_v<F, T &>)
 		requires (
 			::std::is_invocable_v<F, T &> &&
@@ -783,7 +783,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto transform(F &&f) const &
+	auto transform(F &&f) const &
 		noexcept (::std::is_nothrow_invocable_v<F, T const &>)
 		requires (
 			::std::is_invocable_v<F, T const &> &&
@@ -799,7 +799,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto transform(F &&f) &&
+	auto transform(F &&f) &&
 		noexcept (::std::is_nothrow_invocable_v<F, T>)
 		requires (
 			::std::is_invocable_v<F, T> &&
@@ -815,7 +815,7 @@ public:
 	}
 
 	template <typename F>
-	[[nodiscard]] auto transform(F &&f) const &&
+	auto transform(F &&f) const &&
 		noexcept (::std::is_nothrow_invocable_v<F, T const>)
 		requires (
 			::std::is_invocable_v<F, T const> &&
