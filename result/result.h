@@ -239,11 +239,7 @@ public:
 		!::std::is_convertible_v<result<U> &, T> &&
 		!::std::is_convertible_v<result<U> const &, T> &&
 		!::std::is_convertible_v<result<U>, T> &&
-		!::std::is_convertible_v<result<U> const, T> &&
-		!::std::is_constructible_v<E, result<U> &> &&
-		!::std::is_constructible_v<E, result<U> const &> &&
-		!::std::is_constructible_v<E, result<U>> &&
-		!::std::is_constructible_v<E, result<U> const>;
+		!::std::is_convertible_v<result<U> const, T>;
 
 
 	template <typename U>
@@ -254,14 +250,8 @@ public:
 			::std::is_constructible_v<T, U const &> &&
 			allow_unwrapping<U>
 		)
-		: is_ok_(that.is_ok_)
-	{
-		if (is_ok_) {
-			::new (::std::addressof(value_)) T(that.value_);
-		} else {
-			::new (::std::addressof(error_)) E(that.error_);
-		}
-	}
+		: result(that.is_ok_ ? result(that.value_) : result(that.error_))
+	{}
 
 	template <typename U>
 	explicit (!::std::is_convertible_v<U, T>) result(result<U> &&that)
@@ -270,14 +260,12 @@ public:
 			::std::is_constructible_v<T, U> &&
 			allow_unwrapping<U>
 		)
-		: is_ok_(that.is_ok_)
-	{
-		if (is_ok_) {
-			::new (::std::addressof(value_)) T(::std::move(that.value_));
-		} else {
-			::new (::std::addressof(error_)) E(::std::move(that.error_));
-		}
-	}
+		: result(
+			that.is_ok_ ?
+			result(::std::move(that.value_)) :
+			result(::std::move(that.error_))
+		)
+	{}
 
 	template <typename U = T>
 	explicit (!::std::is_convertible_v<U, T>) result(U &&value)
@@ -978,6 +966,16 @@ public:
 		: is_ok_(true)
 	{}
 
+	template <typename U>
+	explicit result(result<U> const &that) noexcept
+		: result(that.is_ok_ ? result() : result(that.error_))
+	{}
+
+	template <typename U>
+	explicit result(result<U> &&that) noexcept
+		: result(that.is_ok_ ? result() : result(::std::move(that.error_)))
+	{}
+
 	result(E const &error) noexcept
 		: error_(error)
 		, is_ok_(false)
@@ -991,6 +989,15 @@ public:
 	explicit result(value_place_t) noexcept
 		: is_ok_(true)
 	{}
+	
+	template <typename F, typename ...Args>
+	result(invoke_place_t, F &&f, Args &&...args)
+		noexcept (::std::is_nothrow_invocable_v<F, Args...>)
+		requires (::std::is_invocable_v<F, Args...>)
+		: is_ok_(true)
+	{
+		::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
+	}
 
 	result &operator= (E const &error) noexcept
 	{
@@ -1290,15 +1297,6 @@ public:
 	}
 
 private:
-	template <typename F, typename ...Args>
-	result(invoke_place_t, F &&f, Args &&...args)
-		noexcept (::std::is_nothrow_invocable_v<F, Args...>)
-		requires (::std::is_invocable_v<F, Args...>)
-		: is_ok_(true)
-	{
-		::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
-	}
-
 	[[noreturn]] void throw_exception() const
 	{
 		if (error_) {
