@@ -44,12 +44,6 @@ struct value_place_t {
 
 inline constexpr value_place_t value_place{};
 
-struct error_place_t {
-	explicit error_place_t() = default;
-};
-
-inline constexpr error_place_t error_place{};
-
 struct invoke_place_t {
 	explicit invoke_place_t() = default;
 };
@@ -71,7 +65,6 @@ concept suitable_non_void_for_result =
 		::std::remove_cv_t<T>,
 		error,
 		value_place_t,
-		error_place_t,
 		invoke_place_t
 	>;
 
@@ -87,7 +80,7 @@ concept suitable_for_result =
 // result contains value or error
 // 
 // T must be a type other than
-// error, result_place_t, error_place_t or invoke_place_t that meets
+// error, result_place_t or invoke_place_t that meets
 // the Cpp17Destructible requirements, or be cv void
 template <suitable_for_result T>
 class [[nodiscard]] result;
@@ -276,7 +269,6 @@ public:
 				result,
 				E,
 				value_place_t,
-				error_place_t,
 				invoke_place_t
 			> &&
 			::std::is_constructible_v<T, U>
@@ -630,7 +622,7 @@ public:
 
 		return is_ok_ ?
 			Res(::std::invoke(::std::forward<F>(f), value_)) :
-			Res(error_place, error_);
+			Res(error_);
 	}
 
 	template <typename F>
@@ -645,7 +637,7 @@ public:
 
 		return is_ok_ ?
 			Res(::std::invoke(::std::forward<F>(f), value_)) :
-			Res(error_place, error_);
+			Res(error_);
 	}
 
 	template <typename F>
@@ -660,7 +652,7 @@ public:
 
 		return is_ok_ ?
 			Res(::std::invoke(::std::forward<F>(f), ::std::move(value_))) :
-			Res(error_place, ::std::move(error_));
+			Res(::std::move(error_));
 	}
 
 	template <typename F>
@@ -675,7 +667,7 @@ public:
 
 		return is_ok_ ?
 			Res(::std::invoke(::std::forward<F>(f), ::std::move(value_))) :
-			Res(error_place, ::std::move(error_));
+			Res(::std::move(error_));
 	}
 
 	template <typename F>
@@ -767,7 +759,7 @@ public:
 
 		return is_ok_ ?
 			Res(invoke_place, ::std::forward<F>(f), value_) :
-			Res(error_place, error_);
+			Res(error_);
 	}
 
 	template <typename F>
@@ -783,7 +775,7 @@ public:
 
 		return is_ok_ ?
 			Res(invoke_place, ::std::forward<F>(f), value_) :
-			Res(error_place, error_);
+			Res(error_);
 	}
 
 	template <typename F>
@@ -799,7 +791,7 @@ public:
 
 		return is_ok_ ?
 			Res(invoke_place, ::std::forward<F>(f), ::std::move(value_)) :
-			Res(error_place, ::std::move(error_));
+			Res(::std::move(error_));
 	}
 
 	template <typename F>
@@ -815,7 +807,7 @@ public:
 
 		return is_ok_ ?
 			Res(invoke_place, ::std::forward<F>(f), ::std::move(value_)) :
-			Res(error_place, ::std::move(error_));
+			Res(::std::move(error_));
 	}
 
 private:
@@ -1131,7 +1123,7 @@ public:
 
 		return is_ok_ ?
 			Res(::std::invoke(::std::forward<F>(f))) :
-			Res(error_place, error_);
+			Res(error_);
 	}
 
 	template <typename F>
@@ -1146,7 +1138,7 @@ public:
 
 		return is_ok_ ?
 			Res(::std::invoke(::std::forward<F>(f))) :
-			Res(error_place, error_);
+			Res(error_);
 	}
 
 	template <typename F>
@@ -1161,7 +1153,7 @@ public:
 
 		return is_ok_ ?
 			Res(::std::invoke(::std::forward<F>(f))) :
-			Res(error_place, ::std::move(error_));
+			Res(::std::move(error_));
 	}
 
 	template <typename F>
@@ -1176,7 +1168,7 @@ public:
 
 		return is_ok_ ?
 			Res(::std::invoke(::std::forward<F>(f))) :
-			Res(error_place, ::std::move(error_));
+			Res(::std::move(error_));
 	}
 
 	template <typename F>
@@ -1252,7 +1244,7 @@ public:
 
 		return is_ok_ ?
 			Res(invoke_place, ::std::forward<F>(f)) :
-			Res(error_place, error_);
+			Res(error_);
 	}
 
 	template <typename F>
@@ -1268,7 +1260,7 @@ public:
 
 		return is_ok_ ?
 			Res(invoke_place, ::std::forward<F>(f)) :
-			Res(error_place, error_);
+			Res(error_);
 	}
 
 	template <typename F>
@@ -1284,7 +1276,7 @@ public:
 
 		return is_ok_ ?
 			Res(invoke_place, ::std::forward<F>(f)) :
-			Res(error_place, ::std::move(error_));
+			Res(::std::move(error_));
 	}
 
 	template <typename F>
@@ -1300,7 +1292,7 @@ public:
 
 		return is_ok_ ?
 			Res(invoke_place, ::std::forward<F>(f)) :
-			Res(error_place, ::std::move(error_));
+			Res(::std::move(error_));
 	}
 
 private:
