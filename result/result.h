@@ -884,6 +884,13 @@ private:
 	}
 };
 
+template <typename F, typename ...Args>
+result(invoke_place_t, F &&, Args &&...) -> result<detail::result_<F, Args...>>;
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 template <typename T>
 requires (::std::is_void_v<T>)
 class [[nodiscard]] result<T> {
