@@ -839,13 +839,14 @@ private:
 			error_.~E();
 			::new (::std::addressof(value_)) T(::std::forward<Args>(args)...);
 		} else if constexpr (::std::is_nothrow_move_constructible_v<T>) {
-			T tmp(::std::forward<Args>(args)...);
+			auto tmp = T(::std::forward<Args>(args)...);
 			error_.~E();
 			::new (::std::addressof(value_)) T(::std::move(tmp));
 		} else {
 			auto rollback = scope_guard{
-				[err = ::std::move(error_), this]() noexcept {
-					::new (::std::addressof(error_)) E(::std::move(err));
+				[err = ::std::move(error_), where = ::std::addressof(error_)]
+				() noexcept {
+					::new (where) E(::std::move(err));
 				}
 			};
 
@@ -858,14 +859,14 @@ private:
 	void reinit_swap(result &that)
 		noexcept (::std::is_nothrow_move_constructible_v<T>)
 	{
-		E tmp(::std::move(error_));
+		auto tmp = E(::std::move(error_));
 
 		if constexpr (::std::is_nothrow_move_constructible_v<T>) {
 			::new (::std::addressof(value_)) T(::std::move(that.value_));
 		} else {
 			auto rollback = scope_guard{
-				[&tmp, this]() noexcept {
-					::new (::std::addressof(error_)) E(::std::move(tmp));
+				[&tmp, where = ::std::addressof(error_)]() noexcept {
+					::new (where) E(::std::move(tmp));
 				}
 			};
 			::new (::std::addressof(value_)) T(::std::move(that.value_));
