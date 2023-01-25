@@ -81,68 +81,20 @@ inline constexpr bool is_nothrow_invocable_v =
 ////////////////////////////////////////////////////////////////////////////////
 
 
-namespace detail {
-
-struct invoker_result {
-	template <typename F, typename ...Args>
-	inline static auto call(F &&f, Args &&...args) noexcept
-	{	
-		using result = invoke_result_t<F, Args...>;
-
-		if constexpr (is_nothrow_invocable_v<F, Args...>) {
-			return result(
-				invoke_place,
-				::std::forward<F>(f),
-				::std::forward<Args>(args)...
-			);
-		} else try {
-			return result(
-				invoke_place,
-				::std::forward<F>(f),
-				::std::forward<Args>(args)...
-			);
-		} catch (...) {
-			return result(error_place, ::std::current_exception());
-		}
-	}
-};
-
-struct invoker_status {
-	template <typename F, typename ...Args>
-	inline static auto call(F &&f, Args &&...args) noexcept
-	{	
-		if constexpr (is_nothrow_invocable_v<F, Args...>) {
-			::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
-			return status(value_place);
-		} else try {
-			::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
-			return status(value_place);
-		} catch (...) {
-			return status(error_place, ::std::current_exception());
-		}
-	}
-};
-
-template <typename T>
-struct invoker : invoker_result {};
-
-template <>
-struct invoker<status> : invoker_status {};
-
-} // namespace detail
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
 template <typename F, typename ...Args>
-inline invoke_result_t<F, Args...> invoke(F &&f, Args &&...args) noexcept
+invoke_result_t<F, Args...> invoke(F &&f, Args &&...args) noexcept
 	requires (is_invocable_v<F, Args...>)
 {
-	return detail::invoker<invoke_result_t<F, Args...>>::call(
-		::std::forward<F>(f),
-		::std::forward<Args>(args)...
-	);
+	if constexpr (is_nothrow_invocable_v<F, Args...>) {
+		return
+			{invoke_place, ::std::forward<F>(f), ::std::forward<Args>(args)...};
+	} else try {
+		return
+			{invoke_place, ::std::forward<F>(f), ::std::forward<Args>(args)...};
+	} catch (...) {
+		return
+			::std::current_exception();
+	}
 }
 
 } // namespace utils
