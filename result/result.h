@@ -1104,6 +1104,190 @@ public:
 		return ::std::move(error_);
 	}
 
+	template <typename F>
+	auto and_then(F &&f) &
+		noexcept (::std::is_nothrow_invocable_v<F>)
+		requires (
+			::std::is_invocable_v<F> &&
+			is_result_v<detail::result_<F>>
+		)
+	{
+		using Res = detail::result_<F>;
+
+		return is_ok_ ?
+			Res(::std::invoke(::std::forward<F>(f))) :
+			Res(error_place, error_);
+	}
+
+	template <typename F>
+	auto and_then(F &&f) const &
+		noexcept (::std::is_nothrow_invocable_v<F>)
+		requires (
+			::std::is_invocable_v<F> &&
+			is_result_v<detail::result_<F>>
+		)
+	{
+		using Res = detail::result_<F>;
+
+		return is_ok_ ?
+			Res(::std::invoke(::std::forward<F>(f))) :
+			Res(error_place, error_);
+	}
+
+	template <typename F>
+	auto and_then(F &&f) &&
+		noexcept (::std::is_nothrow_invocable_v<F>)
+		requires (
+			::std::is_invocable_v<F> &&
+			is_result_v<detail::result_<F>>
+		)
+	{
+		using Res = detail::result_<F>;
+
+		return is_ok_ ?
+			Res(::std::invoke(::std::forward<F>(f))) :
+			Res(error_place, ::std::move(error_));
+	}
+
+	template <typename F>
+	auto and_then(F &&f) const &&
+		noexcept (::std::is_nothrow_invocable_v<F>)
+		requires (
+			::std::is_invocable_v<F> &&
+			is_result_v<detail::result_<F>>
+		)
+	{
+		using Res = detail::result_<F>;
+
+		return is_ok_ ?
+			Res(::std::invoke(::std::forward<F>(f))) :
+			Res(error_place, ::std::move(error_));
+	}
+
+	template <typename F>
+	auto or_else(F &&f) &
+		noexcept (::std::is_nothrow_invocable_v<F, E &>)
+		requires (
+			::std::is_invocable_v<F, E &> &&
+			::std::is_same_v<detail::result_<F, E &>, result>
+		)
+	{
+		using Res = result;
+
+		return is_ok_ ?
+			Res() :
+			Res(::std::invoke(::std::forward<F>(f), error_));
+	}
+
+	template <typename F>
+	auto or_else(F &&f) const &
+		noexcept (::std::is_nothrow_invocable_v<F, E const &>)
+		requires (
+			::std::is_invocable_v<F, E const &> &&
+			::std::is_same_v<detail::result_<F, E const &>, result>
+		)
+	{
+		using Res = result;
+
+		return is_ok_ ?
+			Res() :
+			Res(::std::invoke(::std::forward<F>(f), error_));
+	}
+
+	template <typename F>
+	auto or_else(F &&f) &&
+		noexcept (::std::is_nothrow_invocable_v<F, E>)
+		requires (
+			::std::is_invocable_v<F, E> &&
+			::std::is_same_v<detail::result_<F, E>, result>
+		)
+	{
+		using Res = result;
+
+		return is_ok_ ?
+			Res() :
+			Res(::std::invoke(::std::forward<F>(f), ::std::move(error_)));
+	}
+
+	template <typename F>
+	auto or_else(F &&f) const &&
+		noexcept (::std::is_nothrow_invocable_v<F, E const>)
+		requires (
+			::std::is_invocable_v<F, E const> &&
+			::std::is_same_v<detail::result_<F, E const>, result>
+		)
+	{
+		using Res = result;
+
+		return is_ok_ ?
+			Res() :
+			Res(::std::invoke(::std::forward<F>(f), ::std::move(error_)));
+	}
+
+	template <typename F>
+	auto transform(F &&f) &
+		noexcept (::std::is_nothrow_invocable_v<F>)
+		requires (
+			::std::is_invocable_v<F> &&
+			suitable_for_result<detail::result_<F>>
+		)
+	{
+		using R = detail::result_<F>;
+		using Res = result<R>;
+
+		return is_ok_ ?
+			Res(invoke_place, ::std::forward<F>(f)) :
+			Res(error_place, error_);
+	}
+
+	template <typename F>
+	auto transform(F &&f) const &
+		noexcept (::std::is_nothrow_invocable_v<F>)
+		requires (
+			::std::is_invocable_v<F> &&
+			suitable_for_result<detail::result_<F>>
+		)
+	{
+		using R = detail::result_<F>;
+		using Res = result<R>;
+
+		return is_ok_ ?
+			Res(invoke_place, ::std::forward<F>(f)) :
+			Res(error_place, error_);
+	}
+
+	template <typename F>
+	auto transform(F &&f) &&
+		noexcept (::std::is_nothrow_invocable_v<F>)
+		requires (
+			::std::is_invocable_v<F> &&
+			suitable_for_result<detail::result_<F>>
+		)
+	{
+		using R = detail::result_<F>;
+		using Res = result<R>;
+
+		return is_ok_ ?
+			Res(invoke_place, ::std::forward<F>(f)) :
+			Res(error_place, ::std::move(error_));
+	}
+
+	template <typename F>
+	auto transform(F &&f) const &&
+		noexcept (::std::is_nothrow_invocable_v<F>)
+		requires (
+			::std::is_invocable_v<F> &&
+			suitable_for_result<detail::result_<F>>
+		)
+	{
+		using R = detail::result_<F>;
+		using Res = result<R>;
+
+		return is_ok_ ?
+			Res(invoke_place, ::std::forward<F>(f)) :
+			Res(error_place, ::std::move(error_));
+	}
+
 private:
 	template <typename F, typename ...Args>
 	result(invoke_place_t, F &&f, Args &&...args)
