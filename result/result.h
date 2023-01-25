@@ -867,7 +867,7 @@ private:
 		if constexpr (!::std::is_trivially_destructible_v<T>) {
 			that.value_.~T();
 		}
-		::new (&that.error_) E(::std::move(tmp));
+		::new (::std::addressof(that.error_)) E(::std::move(tmp));
 	}
 
 	void throw_exception() const
@@ -1006,7 +1006,7 @@ public:
 	{
 		if (is_ok_ != that.is_ok_) {
 			if (!is_ok_) {
-				::new (&that.error_) E(::std::move(error_));
+				::new (::std::addressof(that.error_)) E(::std::move(error_));
 				error_.~E();
 			} else {
 				::new (::std::addressof(error_)) E(::std::move(that.error_));
