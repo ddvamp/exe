@@ -20,7 +20,23 @@ using result_ = ::std::remove_cvref_t<::std::invoke_result_t<F, Args...>>;
 
 } // namespace detail
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 using error = ::std::exception_ptr;
+
+class bad_result_access : public ::std::exception {
+public:
+	[[nodiscard]] char const *what() const noexcept override
+	{
+		return "utils::result does not contain a value, as well as an error";
+	}
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 struct value_place_t {
 	explicit value_place_t() = default;
@@ -528,38 +544,30 @@ public:
 
 	[[nodiscard]] T const &value() const &
 	{
-		if (is_ok_) {
-			return value_;
-		}
-
-		throw_exception();
+		throw_if_error();
+		
+		return value_;
 	}
 
 	[[nodiscard]] T &value() &
 	{
-		if (is_ok_) {
-			return value_;
-		}
-
-		throw_exception();
+		throw_if_error();
+		
+		return value_;
 	}
 
 	[[nodiscard]] T const &&value() const &&
 	{
-		if (is_ok_) {
-			return ::std::move(value_);
-		}
+		throw_if_error();
 
-		throw_exception();
+		return ::std::move(value_);
 	}
 
 	[[nodiscard]] T &&value() &&
 	{
-		if (is_ok_) {
-			return ::std::move(value_);
-		}
+		throw_if_error();
 
-		throw_exception();
+		return ::std::move(value_);
 	}
 
 	[[nodiscard]] E const &error() const & noexcept
@@ -870,9 +878,20 @@ private:
 		::new (::std::addressof(that.error_)) E(::std::move(tmp));
 	}
 
-	void throw_exception() const
+	[[noreturn]] void throw_exception() const
 	{
-		::std::rethrow_exception(::std::move(error_));
+		if (error_) {
+			::std::rethrow_exception(error_);
+		} else {
+			throw bad_result_access{};
+		}
+	}
+
+	void throw_if_error() const
+	{
+		if (!is_ok_) {
+			throw_exception();
+		}
 	}
 };
 
@@ -1058,9 +1077,7 @@ public:
 
 	void value() const
 	{
-		if (!is_ok_) {
-			error_.throw_exception();
-		}
+		throw_if_error();
 	}
 
 	[[nodiscard]] E const &error() const & noexcept
@@ -1095,6 +1112,22 @@ private:
 		: is_ok_(true)
 	{
 		::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
+	}
+
+	[[noreturn]] void throw_exception() const
+	{
+		if (error_) {
+			::std::rethrow_exception(error_);
+		} else {
+			throw bad_result_access{};
+		}
+	}
+
+	void throw_if_error() const
+	{
+		if (!is_ok_) {
+			throw_exception();
+		}
 	}
 };
 
