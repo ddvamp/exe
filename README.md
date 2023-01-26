@@ -9,11 +9,11 @@
 2. x86-64/sysv/elf
 3. POSIX
 
-## Features
+## Content
 - [executors](https://github.com/ddvamp/exe/tree/main/exe/executors)
 	- inline (выполняет задачи на месте)
 	- blocking static thread pool
-	- strand ([описание](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
+	- strand ([сериализует задачи вместо потоков](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
 - [stackful coroutine](https://github.com/ddvamp/exe/tree/main/exe/coroutine)
 - [fibers](https://github.com/ddvamp/exe/tree/main/exe/fibers)
     - API & implementation
@@ -21,11 +21,14 @@
 		- mutex
 		- shared mutex
 		- condition variable
-		- wait group ([описание](https://gobyexample.com/waitgroups))
+		- wait group ([дождаться окончание задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
 		- wait point (обобщенная wait group)
+- [future & promise](https://github.com/ddvamp/exe/tree/main/exe/futures/)
+	- future (будущее значение)
+	- promise (место записи будущего значения)
 
 ## Third-party libraries
-- concurrency - библиотека примитивов синхронизации потоков
+- concurrency - библиотека средств синхронизации потоков
 - context - контекст исполнения для stackful корутин/файберов
 - result - упрощенная реализация C++23 std::expected для представления значения или пойманного исключения (value or std::exception_ptr)
 - utils - std-like библиотека общих утилит
