@@ -12,20 +12,30 @@
 ## Content
 - [executors](https://github.com/ddvamp/exe/tree/main/exe/executors)
 	- inline (выполняет задачи на месте)
-	- blocking static thread pool
+	- blocking static threadpool
+	- [ ] fast work-stealing threadpool
 	- strand ([сериализует задачи вместо потоков](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
-- [stackful coroutine](https://github.com/ddvamp/exe/tree/main/exe/coroutine)
+- [stackful coroutines](https://github.com/ddvamp/exe/tree/main/exe/coroutine)
+- [ ] stackless coroutines
 - [fibers](https://github.com/ddvamp/exe/tree/main/exe/fibers)
     - API & implementation
 	- synchronization primitives
 		- mutex
 		- shared mutex
 		- condition variable
-		- wait group ([дождаться окончание задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
+		- wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
 		- wait point (обобщенная wait group)
-- [future & promise](https://github.com/ddvamp/exe/tree/main/exe/futures/)
+		- [ ] channels
+			- [ ] implementation
+			- [ ] select
+	- [ ] futures support
+- [futures & promises](https://github.com/ddvamp/exe/tree/main/exe/futures/)
 	- future (будущее значение)
-	- promise (место записи будущего значения)
+	- promise (обещание будущего значения)
+	- [ ] combinators
+		- [ ] all
+		- [ ] first_of
+	- [ ] await
 
 ## Third-party libraries
 - concurrency - библиотека средств синхронизации потоков
