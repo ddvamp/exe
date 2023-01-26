@@ -277,12 +277,7 @@ public:
 		, is_ok_(true)
 	{}
 
-	result(E const &error) noexcept
-		: error_(error)
-		, is_ok_(false)
-	{}
-
-	result(E &&error) noexcept
+	result(E error) noexcept
 		: error_(::std::move(error))
 		, is_ok_(false)
 	{}
@@ -348,21 +343,7 @@ public:
 		return *this;
 	}
 
-	result &operator= (E const &error) noexcept
-	{
-		if (is_ok_) {
-			if constexpr (!::std::is_trivially_destructible_v<T>) {
-				value_.~T();
-			}
-			::new (::std::addressof(error_)) E(error);
-		} else {
-			error_ = error;
-		}
-
-		return *this;
-	}
-
-	result &operator= (E &&error) noexcept
+	result &operator= (E error) noexcept
 	{
 		if (is_ok_) {
 			if constexpr (!::std::is_trivially_destructible_v<T>) {
@@ -849,6 +830,7 @@ private:
 					::new (where) E(::std::move(tmp));
 				}
 			};
+
 			::new (::std::addressof(value_)) T(::std::move(that.value_));
 			rollback.disable();
 		}
@@ -975,12 +957,7 @@ public:
 		: result(that.is_ok_ ? result() : result(::std::move(that.error_)))
 	{}
 
-	result(E const &error) noexcept
-		: error_(error)
-		, is_ok_(false)
-	{}
-
-	result(E &&error) noexcept
+	result(E error) noexcept
 		: error_(::std::move(error))
 		, is_ok_(false)
 	{}
@@ -998,18 +975,7 @@ public:
 		::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...);
 	}
 
-	result &operator= (E const &error) noexcept
-	{
-		if (is_ok_) {
-			::new (::std::addressof(error_)) E(error);
-		} else {
-			error_ = error;
-		}
-
-		return *this;
-	}
-
-	result &operator= (E &&error) noexcept
+	result &operator= (E error) noexcept
 	{
 		if (is_ok_) {
 			::new (::std::addressof(error_)) E(::std::move(error));
