@@ -23,7 +23,7 @@ namespace exe::futures::detail {
 // 
 // Allows you to pass result from Promise to Future
 // and callback in the opposite direction,
-// as well as to determine where callback will be called
+// as well as to specify where callback will be called
 template <typename T>
 class SharedState
 	: public executors::TaskBase
@@ -31,27 +31,27 @@ class SharedState
 public:
 	using Result = ::utils::result<T>;
 	using Callback = futures::Callback<T>;
-	using IExecutor = executors::IExecutor;
 
 private:
 	::concurrency::Rendezvous rendezvous_;
 	::std::optional<Result> result_;
 	Callback callback_;
-	IExecutor *executor_;
+	executors::IExecutor *executor_;
 	::std::shared_ptr<SharedState> self_;
 
 public:
-	static ::std::shared_ptr<SharedState> create(IExecutor &where)
+	[[nodiscard]] static ::std::shared_ptr<SharedState> create(
+		executors::IExecutor &where)
 	{
 		return ::std::make_shared<SharedState>(&where);
 	}
 
-	void setExecutor(IExecutor &where) noexcept
+	void setExecutor(executors::IExecutor &where) noexcept
 	{
 		executor_ = &where;
 	}
 
-	[[nodiscard]] IExecutor &getExecutor() const noexcept
+	[[nodiscard]] executors::IExecutor &getExecutor() const noexcept
 	{
 		return *executor_;
 	}
@@ -60,6 +60,14 @@ public:
 	[[nodiscard]] bool hasResult() const noexcept
 	{
 		return rendezvous_.isLatecomer();
+	}
+
+	// returns true if execution of callback was scheduled
+	[[nodiscard]] bool setResult(Result const &result)
+		noexcept (::std::is_nothrow_copy_constructible_v<Result>)
+	{
+		result_.emplace(result);
+		return inform();
 	}
 
 	// returns true if execution of callback was scheduled
@@ -83,13 +91,13 @@ public:
 	Result getReadyResult()
 		noexcept (::std::is_nothrow_move_constructible_v<Result>)
 	{
-		UTILS_ASSERT(hasResult(), "shared state has not a result");
+		UTILS_ASSERT(hasResult(), "shared state has no result");
 
 		return *::std::move(result_);
 	}
 
 private:
-	explicit SharedState(IExecutor *where) noexcept
+	explicit SharedState(executors::IExecutor *where) noexcept
 		: executor_(where)
 	{}
 
@@ -135,13 +143,14 @@ private:
 protected:
 	using Result = State::Result;
 	using Callback = State::Callback;
-	using IExecutor = State::IExecutor;
 
-protected:
 	StateRef<T> state_;
 
 protected:
-	~HoldState() = default;
+	~HoldState()
+	{
+		UTILS_ASSERT(!hasState(), "destruction of unused HoldState");
+	}
 
 	HoldState(HoldState const &) = delete;
 	void operator= (HoldState const &) = delete;
@@ -157,6 +166,11 @@ protected:
 	[[nodiscard]] bool hasState() const noexcept
 	{
 		return state_;
+	}
+
+	void reset() noexcept
+	{
+		state_.reset();
 	}
 
 	[[nodiscard]] StateRef<T> release() noexcept
@@ -180,7 +194,7 @@ protected:
 private:
 	[[maybe_unused]] void check() const noexcept
 	{
-		UTILS_CHECK(state_, "HoldState does not hold shared state");
+		UTILS_CHECK(hasState(), "HoldState does not hold shared state");
 	}
 };
 
