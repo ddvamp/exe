@@ -4,19 +4,14 @@
 
 Написан с использованием C++23
 
-## Requirements
-1. gcc (trunk)
-2. x86-64/sysv/elf
-3. POSIX
-
 ## Content
 - [executors](https://github.com/ddvamp/exe/tree/main/exe/executors)
 	- inline (выполняет задачи на месте)
 	- blocking static threadpool
-	- [ ] fast work-stealing threadpool
+	- **[X]** fast work-stealing threadpool
 	- strand ([сериализует задачи вместо потоков](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
 - [stackful coroutines](https://github.com/ddvamp/exe/tree/main/exe/coroutine)
-- [ ] stackless coroutines
+- **[X]** stackless coroutines
 - [fibers](https://github.com/ddvamp/exe/tree/main/exe/fibers)
     - API & implementation
 	- synchronization primitives
@@ -25,17 +20,26 @@
 		- condition variable
 		- wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
 		- wait point (обобщенная wait group)
-		- [ ] channels
-			- [ ] implementation
-			- [ ] select
-	- [ ] futures support
+		- **[X]** channels
+			- **[X]** implementation
+			- **[X]** select
+	- **[X]** futures support
 - [futures & promises](https://github.com/ddvamp/exe/tree/main/exe/futures/)
 	- future (будущее значение)
 	- promise (обещание будущего значения)
-	- [ ] combinators
-		- [ ] all
-		- [ ] first_of
-	- [ ] await
+	- **[X]** combinators
+		- **[X]** all
+		- **[X]** first_of
+	- **[X]** await
+
+## Requirements
+1. C++23
+2. gcc (trunk)
+3. x86-64/sysv/elf
+4. POSIX
+
+## Configuration
+Для отключения отладочных проверок внутри фреймворка необходимо передать флаг -DUTILS_DISABLE_DEBUG
 
 ## Third-party libraries
 - concurrency - библиотека средств синхронизации потоков
@@ -43,7 +47,7 @@
 - result - упрощенная реализация C++23 std::expected для представления значения или пойманного исключения (value or std::exception_ptr)
 - utils - std-like библиотека общих утилит
 
-## References
+## Links
 
 - [Репозиторий курса](https://gitlab.com/Lipovsky/concurrency-course)
 
