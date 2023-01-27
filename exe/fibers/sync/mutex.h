@@ -79,7 +79,7 @@ public:
 	void lock() noexcept
 	{
 		if (!try_lock()) [[unlikely]] {
-			auto awaiter = LockAwaiter{this};
+			LockAwaiter awaiter{this};
 			self::suspend(awaiter);
 		}
 	}

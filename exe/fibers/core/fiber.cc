@@ -193,9 +193,9 @@ void teleportTo(IExecutor &executor)
 
 void go(IExecutor &executor, FiberRoutine &&routine)
 {
-	UTILS_ASSERT(bool(routine), "empty routine for fiber");
+	UTILS_ASSERT(routine, "empty routine for fiber");
 
-	auto *fiber = createFiber(::std::move(routine), &executor);
+	auto fiber = createFiber(::std::move(routine), &executor);
 
 	fiber->schedule();
 }

@@ -37,8 +37,8 @@ public:
 	MPMCUnboundedBlockingQueue() = default;
 
 	template <typename ...Args>
-	requires ::std::constructible_from<T, Args...>
 	bool put(Args &&...args)
+		requires (::std::constructible_from<T, Args...>)
 	{
 		::std::lock_guard lock{m_};
 

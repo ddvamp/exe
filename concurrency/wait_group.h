@@ -70,7 +70,7 @@ public:
 		);
 
 		if (count == delta) {
-			if (auto lock = ::std::lock_guard{m_}; there_are_waiters_) {
+			if (::std::lock_guard lock{m_}; there_are_waiters_) {
 				there_are_waiters_ = false;
 			} else {
 				return;

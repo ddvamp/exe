@@ -11,12 +11,12 @@ using executors::IExecutor;
 
 // Start fiber on where
 //
-// Precondition: bool(routine) == true
+// Precondition: routine == true
 void go(IExecutor &where, FiberRoutine &&routine);
 
 // Start fiber on executor of current fiber
 //
-// Precondition: fiber context && bool(routine) == true
+// Precondition: fiber context && routine == true
 void go(FiberRoutine &&routine);
 
 // precondition: fiber context

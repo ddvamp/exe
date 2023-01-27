@@ -15,13 +15,13 @@ namespace utils {
 
 /* static */ ::std::size_t page_allocation::page_size() noexcept
 {
-	static ::std::size_t const kPageSize = get_page_size();
+	static auto const kPageSize = get_page_size();
 	return kPageSize;
 }
 
 /* static */ ::std::size_t page_allocation::max_pages() noexcept
 {
-	static ::std::size_t const kMaxPages =
+	static auto const kMaxPages =
 		(::std::numeric_limits<::std::size_t>::max)() /
 		page_allocation::page_size();
 	return kMaxPages;

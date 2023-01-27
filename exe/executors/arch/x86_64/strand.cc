@@ -8,11 +8,11 @@ namespace exe::executors {
 
 /* virtual */ void Strand::execute(TaskBase *task) noexcept
 {
-	UTILS_ASSERT(bool(task), "nullptr instead of a task");
+	UTILS_ASSERT(task, "nullptr instead of a task");
 	
 	task->next_.store(nullptr, ::std::memory_order_relaxed);
 
-	auto *prev = tail_.exchange(task);
+	auto prev = tail_.exchange(task);
 
 	auto idle = static_cast<bool>(prev->next_.exchange(task));
 	if (idle) {
@@ -34,8 +34,8 @@ namespace exe::executors {
 
 /* virtual */ void Strand::run() noexcept
 {
-	auto *curr = head_;
-	auto *next = curr->next_.load(::std::memory_order_relaxed);
+	auto curr = head_;
+	auto next = curr->next_.load(::std::memory_order_relaxed);
 
 	do {
 		// at this point curr is the only pointer to its object
@@ -43,7 +43,7 @@ namespace exe::executors {
 		curr->run();
 		curr = next;
 	} while (
-		// in case of a high load,
+		// be optimistic: in case of a high load,
 		// we will immediately get the following task
 		(next = curr->next_.load(::std::memory_order_acquire)) ||
 

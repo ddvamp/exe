@@ -14,7 +14,7 @@ thread_local Coroutine *current = nullptr;
 // debug checking of ctor precondition
 Routine &check(Routine &routine) noexcept
 {
-	UTILS_ASSERT(bool(routine), "empty routine on coroutine creation");
+	UTILS_ASSERT(routine, "empty routine on coroutine creation");
 
 	return routine;
 }

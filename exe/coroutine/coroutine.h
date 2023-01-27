@@ -18,7 +18,7 @@ private:
 	CoroutineImpl impl_;
 
 public:
-	// precondition: bool(routine) == true
+	// precondition: routine == true
 	explicit Coroutine(Routine &&routine);
 
 	[[nodiscard]] bool isActive() const noexcept

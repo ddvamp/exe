@@ -45,14 +45,14 @@ public:
 	void operator= (Strand &&) = delete;
 
 public:
-	explicit Strand(IExecutor &e) noexcept
-		: executor_(e)
+	explicit Strand(IExecutor &where) noexcept
+		: executor_(where)
 	{}
 
 	// Wait-free task submission
 	// (excluding the executor_.execute call)
 	// 
-	// Precondition: bool(task)
+	// Precondition: task != nullptr
 	void execute(TaskBase *task) noexcept override;
 
 private:

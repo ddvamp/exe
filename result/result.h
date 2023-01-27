@@ -800,7 +800,7 @@ private:
 			error_.~E();
 			::new (::std::addressof(value_)) T(::std::forward<Args>(args)...);
 		} else if constexpr (::std::is_nothrow_move_constructible_v<T>) {
-			auto tmp = T(::std::forward<Args>(args)...);
+			T tmp(::std::forward<Args>(args)...);
 			error_.~E();
 			::new (::std::addressof(value_)) T(::std::move(tmp));
 		} else {
@@ -820,7 +820,7 @@ private:
 	void reinit_swap(result &that)
 		noexcept (::std::is_nothrow_move_constructible_v<T>)
 	{
-		auto tmp = E(::std::move(error_));
+		E tmp(::std::move(error_));
 
 		if constexpr (::std::is_nothrow_move_constructible_v<T>) {
 			::new (::std::addressof(value_)) T(::std::move(that.value_));

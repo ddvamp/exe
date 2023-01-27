@@ -14,7 +14,7 @@ void ExceptionsContext::switchTo(ExceptionsContext &target) noexcept
 {
 	constexpr auto kStateSize = sizeof(exceptions_state_buf_);
 
-	auto *this_thread_exceptions = ::__cxxabiv1::__cxa_get_globals();
+	auto this_thread_exceptions = ::__cxxabiv1::__cxa_get_globals();
 
 	decltype(exceptions_state_buf_) tmp;
 

@@ -33,9 +33,9 @@ public:
 
 	static Stack allocateBytes(::std::size_t at_least)
 	{
-		::std::size_t const page_size = ::utils::page_allocation::page_size();
+		auto const page_size = ::utils::page_allocation::page_size();
 
-		::std::size_t pages = at_least / page_size;
+		auto pages = at_least / page_size;
 		if (at_least % page_size != 0) {
 			++pages;
 		}
