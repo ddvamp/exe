@@ -29,10 +29,10 @@
 - ***[executors](https://github.com/ddvamp/exe/tree/main/exe/executors)***
 	- inline (выполняет задачи на месте)
 	- blocking static threadpool
-	- **[X]** fast work-stealing threadpool
+	- [ ] fast work-stealing threadpool
 	- strand ([сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
 - ***[stackful coroutines](https://github.com/ddvamp/exe/tree/main/exe/coroutine)***
-- **[X]** ***stackless coroutines***
+- [ ] ***stackless coroutines***
 - ***[fibers](https://github.com/ddvamp/exe/tree/main/exe/fibers)***
     - API & implementation
 	- synchronization primitives
@@ -41,17 +41,17 @@
 		- condition variable
 		- wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
 		- wait point (обобщенная wait group)
-		- **[X]** channels
-			- **[X]** implementation
-			- **[X]** select
-	- **[X]** futures support
+		- [ ] channels
+			- [ ] implementation
+			- [ ] select
+	- [ ] futures support
 - ***[futures & promises](https://github.com/ddvamp/exe/tree/main/exe/futures/)***
 	- future (будущее значение)
 	- promise (обещание будущего значения)
-	- **[X]** combinators
-		- **[X]** all
-		- **[X]** first_of
-	- **[X]** await
+	- [ ] combinators
+		- [ ] all
+		- [ ] first_of
+	- [ ] await
 
 ## Requirements
 
