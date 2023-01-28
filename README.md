@@ -1,18 +1,39 @@
 # exe
 
-Учебный фреймворк для написания масштабируемых многопоточных concurrency приложений, созданный на основе выполнения заданий из курса "Теория и практика многопоточной синхронизации" за авторством Романа Липовского, MIPT
+## Contents
 
-Написан с использованием C++23
+- [Disclaimer](#disclaimer)
+- [About](#about)
+- [Structure](#structure)
+- [Requirements](#requirements)
+- [Configuration](#configuration)
+- [Third-party libraries](#third-party-libraries)
+- [Links](#links)
 
-## Content
-- [executors](https://github.com/ddvamp/exe/tree/main/exe/executors)
+## Disclaimer
+
+---
+
+Настоящий код **не тестировался и не предназначен для использования**, но служит всего лишь демонстрацией применения автором знания языка C++
+
+---
+
+## About
+
+Учебный фреймворк для написания многопоточных масштабируемых concurrency приложений, созданный на основе выполнения заданий из курса "Теория и практика многопоточной синхронизации" за авторством [Романа Липовского](https://gitlab.com/Lipovsky), MIPT
+
+**Написан с использованием C++23**
+
+## Structure
+
+- ***[executors](https://github.com/ddvamp/exe/tree/main/exe/executors)***
 	- inline (выполняет задачи на месте)
 	- blocking static threadpool
 	- **[X]** fast work-stealing threadpool
-	- strand ([сериализует задачи вместо потоков](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
-- [stackful coroutines](https://github.com/ddvamp/exe/tree/main/exe/coroutine)
-- **[X]** stackless coroutines
-- [fibers](https://github.com/ddvamp/exe/tree/main/exe/fibers)
+	- strand ([сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
+- ***[stackful coroutines](https://github.com/ddvamp/exe/tree/main/exe/coroutine)***
+- **[X]** ***stackless coroutines***
+- ***[fibers](https://github.com/ddvamp/exe/tree/main/exe/fibers)***
     - API & implementation
 	- synchronization primitives
 		- mutex
@@ -24,7 +45,7 @@
 			- **[X]** implementation
 			- **[X]** select
 	- **[X]** futures support
-- [futures & promises](https://github.com/ddvamp/exe/tree/main/exe/futures/)
+- ***[futures & promises](https://github.com/ddvamp/exe/tree/main/exe/futures/)***
 	- future (будущее значение)
 	- promise (обещание будущего значения)
 	- **[X]** combinators
@@ -33,19 +54,22 @@
 	- **[X]** await
 
 ## Requirements
+
 1. C++23
 2. gcc (trunk)
 3. x86-64/sysv/elf
 4. POSIX
 
 ## Configuration
-Для отключения отладочных проверок внутри фреймворка необходимо передать флаг -DUTILS_DISABLE_DEBUG
+
+Для отключения отладочных проверок внутри фреймворка необходимо передать флаг **-DUTILS_DISABLE_DEBUG**
 
 ## Third-party libraries
-- concurrency - библиотека средств синхронизации потоков
-- context - контекст исполнения для stackful корутин/файберов
-- result - упрощенная реализация C++23 std::expected для представления значения или пойманного исключения (value or std::exception_ptr)
-- utils - std-like библиотека общих утилит
+
+- ***[concurrency](https://github.com/ddvamp/exe/tree/main/concurrency)*** - библиотека средств синхронизации потоков
+- ***[context](https://github.com/ddvamp/exe/tree/main/context)*** - контекст исполнения для stackful корутин/файберов
+- ***[result](https://github.com/ddvamp/exe/tree/main/result)*** - упрощенная реализация C++23 std::expected для представления значения или пойманного исключения (value or std::exception_ptr)
+- ***[utils](https://github.com/ddvamp/exe/tree/main/utils)*** - std-like библиотека общих утилит
 
 ## Links
 
