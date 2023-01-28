@@ -37,7 +37,7 @@ public:
 		{
 			::std::lock_guard lock{m_};
 
-			UTILS_ASSERT(isWaitNeeded(), "One-time notification sent twice");
+			UTILS_ASSERT(isWaitNeeded(), "one-time notification sent twice");
 
 			setNotified();
 

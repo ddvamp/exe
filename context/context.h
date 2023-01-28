@@ -4,6 +4,7 @@
 #include "context/exceptions_context.h"
 #include "context/machine_context.h"
 
+#include "utils/debug.h"
 #include "utils/memory/view.h"
 
 namespace context {
@@ -48,7 +49,11 @@ public:
 	}
 
 	// last context switch
-	[[noreturn]] void exitTo(ExecutionContext &target) noexcept;
+	[[noreturn]] void exitTo(ExecutionContext &target) noexcept
+	{
+		switchTo(target);
+		UTILS_UNREACHABLE("resuming a completed ExecutionContext");
+	}
 
 	[[noreturn]] void exitToSaved() noexcept
 	{

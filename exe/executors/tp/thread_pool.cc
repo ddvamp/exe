@@ -34,7 +34,6 @@ void ThreadPool::workLoop()
 			auto task = *item;
 
 			task->run();
-
 			wp_.done();
 		}
 	} catch (...) {
@@ -44,11 +43,10 @@ void ThreadPool::workLoop()
 
 void ThreadPool::join()
 {
-#ifndef UTILS_DISABLE_DEBUG
-	UTILS_CHECK(!joined_, "thread pool already stopped");
-	
-	joined_ = true;
-#endif
+	UTILS_ASSERT(
+		!::std::exchange(joined_, true),
+		"thread pool already stopped"
+	);
 
 	for (auto &w : workers_) {
 		w.join();

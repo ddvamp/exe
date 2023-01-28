@@ -42,7 +42,7 @@ public:
 	[[nodiscard]] FiberHandle awaitSymmetricSuspend(FiberHandle &&from) override
 	{
 		// prevents race condition
-		auto clean_up = ::utils::defer{
+		auto cleanup = ::utils::defer{
 			[&from]() noexcept {
 				::std::move(from).schedule();
 			}
@@ -124,7 +124,7 @@ Fiber *Fiber::doRun() noexcept
 
 	auto awaiter = ::std::exchange(awaiter_, nullptr);
 
-	[[assume(awaiter)]];
+	UTILS_ASSUME(awaiter, "nullptr instead of awaiter");
 
 	auto next = awaiter->awaitSymmetricSuspend(FiberHandle{this});
 

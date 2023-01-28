@@ -42,7 +42,7 @@ public:
 
 	void resume()
 	{
-		auto clean_up = ::utils::rollback_exchange(is_active_, true);
+		auto cleanup = ::utils::rollback_exchange(is_active_, true);
 
 		context_.switchToSaved();
 

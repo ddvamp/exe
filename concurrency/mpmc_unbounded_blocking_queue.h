@@ -65,7 +65,7 @@ public:
 
 		while (true) {
 			if (!queue_.empty()) {
-				auto defer_pop = ::utils::defer{
+				auto cleanup = ::utils::defer{
 					[&q = queue_]() noexcept { q.pop_front(); }
 				};
 
@@ -85,9 +85,10 @@ public:
 		{
 			::std::lock_guard lock{m_};
 
-			UTILS_ASSERT(!is_closed_, "queue already closed");
-
-			is_closed_ = true;
+			UTILS_VERIFY(
+				!::std::exchange(is_closed_, true),
+				"queue already closed"
+			);
 		}
 
 		if (waiters_on_take_ > 0) {

@@ -35,7 +35,7 @@ void Coroutine::resume()
 	UTILS_ASSERT(!isCompleted(), "resuming a completed coroutine");
 	UTILS_ASSERT(!isActive(), "coroutine is already active");
 
-	auto clean_up = ::utils::rollback_exchange(current, this);
+	auto cleanup = ::utils::rollback_exchange(current, this);
 
 	impl_.resume();
 }
