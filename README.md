@@ -8,13 +8,14 @@
 - [Requirements](#requirements)
 - [Configuration](#configuration)
 - [Third-party libraries](#third-party-libraries)
+- [License](#license)
 - [Links](#links)
 
 ## Disclaimer
 
 ---
 
-Настоящий код **не тестировался и не предназначен для использования**, но служит всего лишь демонстрацией применения автором знания языка C++
+В настоящем репозитории код **не тестировался и не предназначен для использования**, но служит всего лишь демонстрацией применения автором знания языка C++
 
 ---
 
@@ -62,7 +63,11 @@
 
 ## Configuration
 
-Для отключения отладочных проверок внутри фреймворка необходимо передать флаг **-DUTILS_DISABLE_DEBUG**
+Для отключения отладочных проверок внутри фреймворка необходимо передать флаг
+
+<!-- -->
+
+**-DUTILS_DISABLE_DEBUG**
 
 ## Third-party libraries
 
@@ -70,6 +75,10 @@
 - ***[context](https://github.com/ddvamp/exe/tree/main/context)*** - контекст исполнения для stackful корутин/файберов
 - ***[result](https://github.com/ddvamp/exe/tree/main/result)*** - упрощенная реализация C++23 std::expected для представления значения или пойманного исключения (value or std::exception_ptr)
 - ***[utils](https://github.com/ddvamp/exe/tree/main/utils)*** - std-like библиотека общих утилит
+
+## License
+
+В настоящем репозитории код лицензирован под [GNU General Public License v3.0](https://github.com/ddvamp/exe/blob/main/LICENSE). Дополнительная информация доступна по адресу https://www.gnu.org/licenses/
 
 ## Links
 
