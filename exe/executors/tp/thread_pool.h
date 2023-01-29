@@ -38,8 +38,6 @@ public:
 public:
 	explicit ThreadPool(::std::size_t workers);
 
-	void execute(TaskBase *task) override;
-
 	void waitIdle();
 
 	// wait for all tasks to complete and join threads
@@ -48,6 +46,8 @@ public:
 	static ThreadPool *current() noexcept;
 
 private:
+	void doExecute(TaskBase *task) override;
+
 	void workLoop();
 
 	void join();

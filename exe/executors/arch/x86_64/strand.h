@@ -53,13 +53,11 @@ public:
 		: executor_(where)
 	{}
 
-	// Wait-free task submission
-	// (excluding the executor_.execute call)
-	// 
-	// Precondition: task != nullptr
-	void execute(TaskBase *task) noexcept override;
-
 private:
+	// wait-free task submission
+	// (excluding the executor_.execute call)
+	void doExecute(TaskBase *task) noexcept override;
+
 	// wait-free task processing cycle
 	void run() noexcept override;
 };

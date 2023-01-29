@@ -65,9 +65,8 @@ ThreadPool::ThreadPool(::std::size_t workers)
 	}
 }
 
-/* virtual */ void ThreadPool::execute(TaskBase *task)
+/* virtual */ void ThreadPool::doExecute(TaskBase *task)
 {
-	UTILS_ASSERT(task, "thread pool got nullptr instead of a task");
 	UTILS_VERIFY(
 		tasks_.put(::utils::builder{
 			[&w = wp_, task]() noexcept {

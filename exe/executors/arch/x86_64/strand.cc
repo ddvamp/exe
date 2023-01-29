@@ -5,15 +5,12 @@
 #include "exe/executors/arch/x86_64/strand.h"
 
 #include "utils/abort.h"
-#include "utils/debug.h"
 #include "utils/utility.h"
 
 namespace exe::executors {
 
-/* virtual */ void Strand::execute(TaskBase *task) noexcept
+/* virtual */ void Strand::doExecute(TaskBase *task) noexcept
 {
-	UTILS_ASSERT(task, "nullptr instead of a task");
-	
 	task->next_.store(nullptr, ::std::memory_order_relaxed);
 
 	auto prev = tail_.exchange(task);
