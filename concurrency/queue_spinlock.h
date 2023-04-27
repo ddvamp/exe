@@ -12,6 +12,25 @@
 
 namespace concurrency {
 
+namespace detail {
+
+inline void thread_relax() noexcept
+{
+#if (defined(__GNUC__) || defined(__GNUG__)) &&				\
+	!defined(__clang__) && !defined(__INTEL_COMPILER) &&	\
+	(defined(__x86_64__) || defined(__i386__))
+
+	__builtin_ia32_pause();
+
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+
+	_mm_pause();
+
+#endif
+}
+
+} // namespace detail
+
 class QueueSpinlock {
 private:
 	struct Node : ::utils::intrusive_concurrent_forward_list_node<Node> {
@@ -68,13 +87,17 @@ private:
 		auto prev = tail_.exchange(&node, ::std::memory_order_acq_rel);
 
 		if (prev == &dummy_) [[likely]] {
-			while (!dummy_.free_.load(::std::memory_order_acquire));
+			while (!dummy_.free_.load(::std::memory_order_acquire)) {
+				detail::thread_relax();
+			}
 
 			dummy_.free_.store(false, ::std::memory_order_relaxed);
 		} else {
 			prev->next_.store(&node, ::std::memory_order_release);
 
-			while (!node.free_.load(::std::memory_order_acquire));
+			while (!node.free_.load(::std::memory_order_acquire)) {
+				detail::thread_relax();
+			}
 		}
 	}
 
@@ -90,7 +113,9 @@ private:
 				::std::memory_order_relaxed
 			)
 		) [[unlikely]] {
-			while (!(head_ = node.next_.load(::std::memory_order_acquire)));
+			while (!(head_ = node.next_.load(::std::memory_order_acquire))) {
+				detail::thread_relax();
+			}
 		}
 	}
 
