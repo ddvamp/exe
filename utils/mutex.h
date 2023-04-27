@@ -94,9 +94,9 @@ template <BasicLockable Lock1, BasicLockable Lock2, BasicLockable ...LockN>
 void lock(Lock1 &lock1, Lock2 &lock2, LockN &...lockn)
 {
 	if constexpr (are_all_same_v<Lock1, Lock2, LockN...>) {
-		detail::lockSame(Lock1, Lock2, LockN...);
+		detail::lockSame(lock1, lock2, lockn...);
 	} else {
-		detail::lockAny(Lock1, Lock2, LockN...);
+		detail::lockAny(lock1, lock2, lockn...);
 	}
 }
 
