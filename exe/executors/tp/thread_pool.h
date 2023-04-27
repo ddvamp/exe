@@ -16,14 +16,27 @@
 
 namespace exe::executors::tp {
 
+struct defer_start_t {
+	explicit defer_start_t() = default;
+};
+
+inline constexpr defer_start_t defer_start{};
+
 class ThreadPool : public IExecutor {
 private:
 	::std::vector<::std::thread> workers_;
+	::std::size_t worker_count_;
 	::concurrency::MPMCUnboundedBlockingQueue<TaskBase *> tasks_;
-	::concurrency::WaitPoint wp_;
+	::concurrency::WaitPoint task_count_;
 
 #ifndef UTILS_DISABLE_DEBUG
-	bool joined_ = false;
+	enum class State {
+		CREATED,
+		STARTED,
+		STOPPED,
+	};
+
+	State state_ = State::CREATED;
 #endif
 
 public:
@@ -38,7 +51,14 @@ public:
 public:
 	explicit ThreadPool(::std::size_t workers);
 
+	// requires explicit start of threads
+	ThreadPool(::std::size_t workers, defer_start_t);
+
+	// wait until the number of tasks drops to zero
 	void waitIdle();
+
+	// initializes and starts worker threads
+	void start();
 
 	// wait for all tasks to complete and join threads
 	void stop();
@@ -50,7 +70,7 @@ private:
 
 	void workLoop();
 
-	void join();
+	void joinWorkerThreads();
 };
 
 } // namespace exe::executors::tp

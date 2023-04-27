@@ -25,7 +25,7 @@ thread_local ThreadPool *current_pool = nullptr;
 
 ThreadPool::~ThreadPool()
 {
-	UTILS_ASSERT(joined_, "thread pool was not stopped");
+	UTILS_ASSERT(state_ == State::STOPPED, "thread pool was not stopped");
 }
 
 void ThreadPool::workLoop()
@@ -38,55 +38,74 @@ void ThreadPool::workLoop()
 			auto task = *item;
 
 			task->run();
-			wp_.done();
+			task_count_.done();
 		}
 	} catch (...) {
 		UTILS_ABORT("exception inside thread pool");
 	}
 }
 
-void ThreadPool::join()
+void ThreadPool::start()
 {
 	UTILS_ASSERT(
-		!::std::exchange(joined_, true),
-		"thread pool already stopped"
+		::std::exchange(state_, State::STARTED) == State::CREATED,
+		"thread pool has already been started"
 	);
 
+	auto cnt = worker_count_;
+
+	workers_.reserve(cnt);
+	do {
+		workers_.emplace_back(&ThreadPool::workLoop, this);
+	} while (--cnt != 0);
+}
+
+void ThreadPool::joinWorkerThreads()
+{
 	for (auto &w : workers_) {
 		w.join();
 	}
 }
 
 ThreadPool::ThreadPool(::std::size_t workers)
+	: ThreadPool(workers, defer_start)
 {
-	workers_.reserve(workers);
-	while (workers-- != 0) {
-		workers_.emplace_back(&ThreadPool::workLoop, this);
-	}
+	start();
+}
+
+ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
+	: worker_count_(workers)
+{
+	UTILS_ASSERT(workers != 0, "zero-size thread pool was requested");
 }
 
 /* virtual */ void ThreadPool::doExecute(TaskBase *task)
 {
 	UTILS_VERIFY(
 		tasks_.put(::utils::builder{
-			[&w = wp_, task]() noexcept {
-				w.add();
+			[this, task]() noexcept {
+				task_count_.add();
 				return task;
 			}
 		}),
-		"using a thread pool after stop"
+		"using thread pool after stop"
 	);
 }
 
 void ThreadPool::waitIdle()
 {
-	wp_.wait();
+	task_count_.wait();
 }
 
 void ThreadPool::stop()
 {
+	UTILS_ASSERT(
+		::std::exchange(state_, State::STOPPED) == State::STARTED,
+		"attempt to stop non-working thread pool"
+	);
+
 	tasks_.close();
-	join();
+	joinWorkerThreads();
 }
 
 } // namespace exe::executors::tp
