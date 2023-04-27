@@ -33,6 +33,35 @@ struct is_any_of : ::std::bool_constant<is_any_of_v<T, Ts...>> {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace detail {
+
+template <typename ...>
+struct head_type_or_void {
+	using type = void;
+};
+
+template <typename Head, typename ...Tail>
+struct head_type_or_void<Head, Tail...> {
+	using type = Head;
+};
+
+template <typename ...Ts>
+using head_type_or_void_t = typename head_type_or_void<Ts...>::type;
+
+} // namespace detail
+
+template <typename ...Ts>
+inline constexpr bool are_all_same_v =
+	::std::is_same_v<
+		::std::common_type<detail::head_type_or_void<Ts...>, Ts...>,
+		::std::common_type<Ts..., detail::head_type_or_void<Ts...>>
+	>;
+
+template <typename ...Ts>
+struct are_all_same : ::std::bool_constant<are_all_same_v<Ts...>> {};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // determine whether T can be direct-initialized with
 // result of applying INVOKE operation to F and Args...
 template <typename T, typename Fn, typename ...Args>
