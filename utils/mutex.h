@@ -100,6 +100,17 @@ void lock(Lock1 &lock1, Lock2 &lock2, LockN &...lockn)
 	}
 }
 
+template <typename ...MutexTypes>
+::std::scoped_lock<MutexTypes...> make_scoped_lock(MutexTypes &...m)
+{
+	if constexpr (sizeof...(m) < 2) {
+		return ::std::scoped_lock(m...);
+	} else {
+		utils::lock(m...);
+		return {::std::adopt_lock, m...};
+	}
+}
+
 } // namespace utils
 
 #endif /* DDV_UTILS_MUTEX_H_ */
