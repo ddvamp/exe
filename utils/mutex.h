@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <ranges>
 #include <memory>
 #include <mutex>
 #include <tuple>
@@ -35,7 +34,13 @@ void lockAny(Locks &...locks)
 		}...
 	};
 
-	::std::ranges::sort(sorted_locks | ::std::views::elements<0>);
+	::std::ranges::sort(
+		sorted_locks,
+		{},
+		[](auto const &t) noexcept {
+			return ::std::get<0>(t);
+		}
+	);
 
 	::std::size_t next = 0;
 
