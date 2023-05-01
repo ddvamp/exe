@@ -126,8 +126,7 @@ public:
 	}
 
 public:
-	constexpr WaitingAtomic() noexcept = default;
-	~WaitingAtomic() noexcept = default;
+	~WaitingAtomic() = default;
 
 	WaitingAtomic(WaitingAtomic const &) = delete;
 	void operator= (WaitingAtomic const &) = delete;
@@ -136,6 +135,8 @@ public:
 	void operator= (WaitingAtomic &&) = delete;
 
 public:
+	constexpr WaitingAtomic() noexcept = default;
+
 	constexpr WaitingAtomic(value_type val) noexcept
 		: atomic_(val)
 	{}
