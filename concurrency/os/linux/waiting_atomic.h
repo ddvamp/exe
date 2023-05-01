@@ -22,9 +22,9 @@
 
 namespace concurrency {
 
-namespace detail {
-
 using wait_t = ::std::uint32_t;
+
+namespace detail {
 
 inline void futex_wait(wait_t const *uaddr, wait_t val,
 	::std::timespec const *timeout) noexcept
@@ -74,7 +74,7 @@ class NotifyToken {
 private:
 	friend class WaitingAtomic;
 
-	using value_type = detail::wait_t;
+	using value_type = wait_t;
 
 	value_type const *address;
 
@@ -112,7 +112,7 @@ class WaitingAtomic {
 private:
 	using clock_t = ::std::chrono::steady_clock;
 
-	using value_type = detail::wait_t;
+	using value_type = wait_t;
 
 	::std::atomic<value_type> atomic_ = 0;
 
