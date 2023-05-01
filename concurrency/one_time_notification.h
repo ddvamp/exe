@@ -5,7 +5,7 @@
 #ifndef DDV_CONCURRENCY_ONE_TIME_NOTIFICATION_H_
 #define DDV_CONCURRENCY_ONE_TIME_NOTIFICATION_H_ 1
 
-#if defined (__linux__)
+#if defined(__linux__)
 #	include "concurrency/os/linux/one_time_notification.h"
 #else
 #	include "concurrency/os/general/one_time_notification.h"
