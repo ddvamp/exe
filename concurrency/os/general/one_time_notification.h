@@ -18,14 +18,7 @@ namespace concurrency {
 // and sharing data with it
 class OneTimeNotification {
 private:
-	using state_t = ::std::uint64_t;
-
-	enum State : state_t {
-		initial,
-		notified,
-	};
-
-	state_t state_ = State::initial;
+	bool notified_ = false;
 	::std::mutex m_; // protects the condvar
 	::std::condition_variable its_time_;
 
@@ -34,12 +27,9 @@ public:
 	{
 		auto lock = ::std::unique_lock(m_);
 
-		its_time_.wait(
-			lock,
-			[this]() noexcept {
-				return state_ == State::notified;
-			}
-		);
+		while (!notified_) {
+			its_time_.wait(lock);
+		}
 	}
 
 	void notify()
@@ -48,7 +38,7 @@ public:
 			auto lock = ::std::lock_guard(m_);
 
 			UTILS_ASSERT(
-				::std::exchange(state_, State::notified) == State::initial,
+				!::std::exchange(notified_, true),
 				"one-time notification sent twice"
 			);
 		}
@@ -59,7 +49,7 @@ public:
 	// in case of instance reuse
 	void clear() noexcept
 	{
-		state_ = State::initial;
+		notified_ = false;
 	}
 };
 
