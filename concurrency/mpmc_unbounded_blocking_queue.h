@@ -44,7 +44,7 @@ public:
 	bool put(Args &&...args)
 		requires (::std::constructible_from<T, Args...>)
 	{
-		::std::lock_guard lock{m_};
+		auto lock = ::std::lock_guard(m_);
 
 		if (is_closed_) {
 			return false;
@@ -61,17 +61,17 @@ public:
 
 	[[nodiscard]] ::std::optional<T> take()
 	{
-		::std::unique_lock lock{m_};
+		auto lock = ::std::unique_lock(m_);
 
-		auto stop_waiting = ::utils::defer{
+		auto stop_waiting = ::utils::defer(
 			[&w = ++waiters_on_take_]() noexcept { --w; }
-		};
+		);
 
 		while (true) {
 			if (!queue_.empty()) {
-				auto cleanup = ::utils::defer{
+				auto cleanup = ::utils::defer(
 					[&q = queue_]() noexcept { q.pop_front(); }
-				};
+				);
 
 				return ::std::move(queue_.front());
 			}
@@ -87,17 +87,19 @@ public:
 	void close()
 	{
 		{
-			::std::lock_guard lock{m_};
+			auto lock = ::std::lock_guard(m_);
 
 			UTILS_VERIFY(
 				!::std::exchange(is_closed_, true),
 				"queue already closed"
 			);
+
+			if (waiters_on_take_ == 0) {
+				return;
+			}
 		}
 
-		if (waiters_on_take_ > 0) {
-			has_elements_.notify_all();
-		}
+		has_elements_.notify_all();
 	}
 };
 
