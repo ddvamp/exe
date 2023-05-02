@@ -7,29 +7,11 @@
 
 #include <atomic>
 
+#include "utils/concurrency/relax.h"
 #include "utils/intrusive/forward_list.h"
-#include "utils/utility.h";
+#include "utils/utility.h"
 
 namespace concurrency {
-
-namespace detail {
-
-inline void thread_relax() noexcept
-{
-#if (defined(__GNUC__) || defined(__GNUG__)) &&				\
-	!defined(__clang__) && !defined(__INTEL_COMPILER) &&	\
-	(defined(__x86_64__) || defined(__i386__))
-
-	__builtin_ia32_pause();
-
-#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
-
-	_mm_pause();
-
-#endif
-}
-
-} // namespace detail
 
 class QueueSpinlock {
 private:
@@ -88,7 +70,7 @@ private:
 
 		if (prev == &dummy_) [[likely]] {
 			while (!dummy_.free_.load(::std::memory_order_acquire)) {
-				detail::thread_relax();
+				::utils::thread_relax();
 			}
 
 			dummy_.free_.store(false, ::std::memory_order_relaxed);
@@ -96,7 +78,7 @@ private:
 			prev->next_.store(&node, ::std::memory_order_release);
 
 			while (!node.free_.load(::std::memory_order_acquire)) {
-				detail::thread_relax();
+				::utils::thread_relax();
 			}
 		}
 	}
@@ -114,7 +96,7 @@ private:
 			)
 		) [[unlikely]] {
 			while (!(head_ = node.next_.load(::std::memory_order_acquire))) {
-				detail::thread_relax();
+				::utils::thread_relax();
 			}
 		}
 	}

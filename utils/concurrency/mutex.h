@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_MUTEX_H_
-#define DDV_UTILS_MUTEX_H_ 1
+#ifndef DDV_UTILS_CONCURRENCY_MUTEX_H_
+#define DDV_UTILS_CONCURRENCY_MUTEX_H_ 1
 
 #include <algorithm>
 #include <array>
@@ -118,4 +118,4 @@ template <typename ...MutexTypes>
 
 } // namespace utils
 
-#endif /* DDV_UTILS_MUTEX_H_ */
+#endif /* DDV_UTILS_CONCURRENCY_MUTEX_H_ */

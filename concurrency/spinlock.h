@@ -7,6 +7,8 @@
 
 #include <atomic>
 
+#include "utils/concurrency/relax.h"
+
 namespace concurrency {
 
 class Spinlock {
@@ -23,7 +25,7 @@ public:
 	{
 		while (locked_.test_and_set(::std::memory_order_acquire)) {
 			while (locked_.test(::std::memory_order_relaxed)) {
-				// backoff
+				::utils::thread_relax();
 			}
 		}
 	}
