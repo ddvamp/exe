@@ -28,7 +28,7 @@ private:
 public:
 	void wait() noexcept
 	{
-		state_.wait(State::initial);
+		state_.wait(State::initial, ::std::memory_order_acquire);
 	}
 
 	void notify() noexcept
@@ -40,7 +40,7 @@ public:
 
 		auto token = state_.get_notify_token();
 
-		state_.store(State::notified);
+		state_.store(State::notified, ::std::memory_order_release);
 
 		UTILS_IGNORE(token.notify_all());
 	}
