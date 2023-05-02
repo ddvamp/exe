@@ -38,7 +38,7 @@ void ThreadPool::workLoop()
 			auto task = *item;
 
 			task->run();
-			task_count_.done();
+			task_count_.done(1, ::std::memory_order_release);
 		}
 	} catch (...) {
 		UTILS_ABORT("exception inside thread pool");
@@ -94,7 +94,7 @@ ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 
 void ThreadPool::waitIdle()
 {
-	task_count_.wait();
+	task_count_.wait(::std::memory_order_acquire);
 }
 
 void ThreadPool::stop()
