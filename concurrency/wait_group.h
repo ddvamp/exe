@@ -6,10 +6,9 @@
 #define DDV_CONCURRENCY_WAIT_GROUP_H_ 1
 
 #include <atomic>
-#include <condition_variable>
 #include <cstdint>
-#include <mutex>
-#include <new>
+
+#include "concurrency/one_time_notification.h"
 
 #include "utils/debug.h"
 #include "utils/macro.h"
@@ -18,10 +17,10 @@ namespace concurrency {
 
 // Synchronization primitive for waiting for the completion of tasks,
 // which are expressed as a 64-bit counter
-// Formally, the wait ends when the counter reaches zero
+// Formally, the wait ends when the counter drops to zero
 // 
-// The add call should happens before the corresponding done call
-// (otherwise, we get a negative counter)
+// The add call should happens before the corresponding done call, otherwise
+// the behavior is undefined
 // 
 // The add calls should happens before the wait calls
 //
@@ -29,14 +28,10 @@ namespace concurrency {
 // end (happens) before subsequent add calls
 class WaitGroup {
 private:
-	alignas(::std::hardware_destructive_interference_size)
-		::std::atomic_uint64_t count_ = 0;
+	using counter_t = ::std::uint64_t;
 
-	alignas(::std::hardware_destructive_interference_size)
-		bool there_are_waiters_ = false;
-
-	::std::mutex m_; // protects the condvar
-	::std::condition_variable counter_is_zero_;
+	::std::atomic<counter_t> count_ = 0;
+	OneTimeNotification counter_is_zero_;
 
 public:
 	~WaitGroup() = default;
@@ -50,10 +45,10 @@ public:
 public:
 	WaitGroup() = default;
 
-	// increases the counter
-	void add(::std::uint64_t delta = 1) noexcept
+	// increases the counter by delta
+	void add(counter_t const delta = 1) noexcept
 	{
-		[[maybe_unused]] auto count
+		[[maybe_unused]] auto const count
 			= count_.fetch_add(delta, ::std::memory_order_relaxed);
 
 		UTILS_ASSERT(
@@ -62,11 +57,13 @@ public:
 		);
 	}
 
-	// reduces the counter, releases data,
-	// and if the counter has reached zero, notifies
-	void done(::std::uint64_t delta = 1)
+	// reduces the counter by delta, (if requested) performs synchronization,
+	// and if the counter drops to zero,
+	// unblocks all threads currently waiting for
+	void done(counter_t const delta = 1)
+		noexcept (noexcept(counter_is_zero_.notify()))
 	{
-		auto count = count_.fetch_sub(delta, ::std::memory_order_release);
+		auto const count = count_.fetch_sub(delta, ::std::memory_order_release);
 
 		UTILS_ASSERT(
 			count - delta < count,
@@ -74,25 +71,26 @@ public:
 		);
 
 		if (count == delta) {
-			if (::std::lock_guard lock{m_}; there_are_waiters_) {
-				there_are_waiters_ = false;
-			} else {
-				return;
-			}
-
-			counter_is_zero_.notify_all();
+			counter_is_zero_.notify();
 		}
 	}
 
-	// waits until the counter drops to zero and acquire data
+	// blocks the current thread until the counter drops to zero, and
+	// (if requested) synchronizes with threads that
+	// performed synchronization when calling done
 	void wait()
+		noexcept (noexcept(counter_is_zero_.wait()))
 	{
-		::std::unique_lock lock{m_};
+		counter_is_zero_.wait();
 
-		while (count_.load(::std::memory_order_acquire) != 0) {
-			there_are_waiters_ = true;
-			counter_is_zero_.wait(lock);
-		}
+		// synchronization
+		UTILS_IGNORE(count_.load(::std::memory_order_acquire));
+	}
+
+	// in case of instance reuse
+	void clear() noexcept
+	{
+		counter_is_zero_.clear();
 	}
 };
 
