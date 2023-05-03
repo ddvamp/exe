@@ -6,7 +6,6 @@
 #define DDV_CONCURRENCY_OS_GENERAL_ONE_TIME_NOTIFICATION_H_ 1
 
 #include <condition_variable>
-#include <cstdint>
 #include <mutex>
 #include <utility>
 
