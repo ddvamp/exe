@@ -91,15 +91,21 @@ public:
 
 		auto const state = prev_state + delta;
 
-		if (isNotifyNeeded(state)) {
+		if (!isNotifyNeeded(state)) {
+			return;
+		}
+
+		{
 			auto lock = ::std::lock_guard(m_);
 
-			if (there_are_waiters_) {
-				there_are_waiters_ = false;
-
-				counter_is_zero_.notify_all();
+			if (!there_are_waiters_) {
+				return;
 			}
+
+			there_are_waiters_ = false;
 		}
+
+		counter_is_zero_.notify_all();
 	}
 
 	// blocks the current thread until the counter drops to zero, and
