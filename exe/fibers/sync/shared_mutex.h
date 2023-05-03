@@ -80,7 +80,7 @@ public:
 			return;
 		}
 
-		LockAwaiter awaiter{this};
+		auto awaiter = LockAwaiter(this);
 		self::suspend(awaiter);
 
 		in_ = 0;
@@ -95,24 +95,26 @@ public:
 	[[nodiscard]] bool try_lock_shared() noexcept
 	{
 		if (!mutex_.try_lock()) {
-			return;
+			return false;
 		}
 
 		UTILS_IGNORE(in_ += 0b10);
 
 		mutex_.unlock();
+
+		return true;
 	}
 
 	void lock_shared() noexcept
 	{
-		::std::lock_guard lock{mutex_};
+		auto lock = ::std::lock_guard(mutex_);
 
 		UTILS_IGNORE(in_ += 0b10);
 	}
 
 	void unlock_shared() noexcept
 	{
-		auto state = out_.fetch_add(0b10, ::std::memory_order_relaxed);
+		auto const state = out_.fetch_add(0b10, ::std::memory_order_relaxed);
 
 		if (state == (0b01 - 0b10ull)) {
 			// synchronization of writer_
