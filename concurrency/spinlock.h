@@ -18,15 +18,14 @@ private:
 public:
 	[[nodiscard]] bool try_lock() noexcept
 	{
-		return !locked_.test_and_set(::std::memory_order_acquire);
+		return !locked_.test(::std::memory_order_relaxed) &&
+			!locked_.test_and_set(::std::memory_order_acquire);
 	}
 
 	void lock() noexcept
 	{
-		while (locked_.test_and_set(::std::memory_order_acquire)) {
-			while (locked_.test(::std::memory_order_relaxed)) {
-				::utils::thread_relax();
-			}
+		while (!try_lock()) {
+			::utils::thread_relax();
 		}
 	}
 
