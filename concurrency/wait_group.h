@@ -57,9 +57,8 @@ public:
 		);
 	}
 
-	// reduces the counter by delta, (if requested) performs synchronization,
-	// and if the counter drops to zero,
-	// unblocks all threads currently waiting for
+	// reduces the counter by delta, performs synchronization, and
+	// if the counter drops to zero, unblocks all threads currently waiting for
 	void done(counter_t const delta = 1)
 		noexcept (noexcept(counter_is_zero_.notify()))
 	{
@@ -76,8 +75,7 @@ public:
 	}
 
 	// blocks the current thread until the counter drops to zero, and
-	// (if requested) synchronizes with threads that
-	// performed synchronization when calling done
+	// synchronizes with threads that performed synchronization when calling done
 	void wait()
 		noexcept (noexcept(counter_is_zero_.wait()))
 	{
