@@ -72,7 +72,7 @@ public:
 	[[nodiscard]] bool try_lock() noexcept
 	{
 		return dummy_.next_.load(::std::memory_order_relaxed) == &dummy_ &&
-			dummy_.next_.compare_exchange_strong(
+			dummy_.next_.compare_exchange_weak(
 				::utils::temporary(&dummy_),
 				nullptr,
 				::std::memory_order_acquire,
