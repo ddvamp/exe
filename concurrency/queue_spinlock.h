@@ -20,7 +20,7 @@ private:
 	};
 
 	Node dummy_{nullptr, true};
-	Node *head_;
+	Node *head_ = &dummy_;
 	::std::atomic<Node *> tail_ = &dummy_;
 
 public:
@@ -29,17 +29,21 @@ public:
 	private:
 		QueueSpinlock &lock_;
 		Node node_;
+		bool fast_;
 
 	public:
 		explicit Guard(QueueSpinlock &lock) noexcept
 			: lock_(lock)
+			, fast_(lock.try_lock())
 		{
-			lock_.lockInit(node_);
+			if (!fast_) [[likely]] {
+				lock.lockInit(node_);
+			}
 		}
 
 		~Guard()
 		{
-			lock_.unlockFini(node_);
+			lock_.unlockFini(node_, fast_);
 		}
 
 		Guard(Guard const &) = delete;
@@ -50,12 +54,25 @@ public:
 	};
 
 public:
+	[[nodiscard]] bool try_lock() noexcept
+	{
+		return dummy_.free_.load(::std::memory_order_relaxed) &&
+			dummy_.free_.compare_exchange_weak(
+				::utils::temporary(true),
+				false,
+				::std::memory_order_acquire,
+				::std::memory_order_relaxed
+			);
+	}
+
 	void lock() noexcept
 	{
-		auto node = Node{};
+		if (!try_lock()) [[unlikely]] {
+			auto node = Node{};
 
-		lockInit(node);
-		lockFini(node);
+			lockInit(node);
+			lockFini(node);
+		}
 	}
 
 	void unlock() noexcept
@@ -66,14 +83,12 @@ public:
 private:
 	void lockInit(Node &node) noexcept
 	{
-		auto prev = tail_.exchange(&node, ::std::memory_order_acq_rel);
+		auto const prev = tail_.exchange(&node, ::std::memory_order_acq_rel);
 
-		if (prev == &dummy_) [[likely]] {
-			while (!dummy_.free_.load(::std::memory_order_acquire)) {
+		if (prev == &dummy_) [[unlikely]] {
+			while (!try_lock()) {
 				::utils::thread_relax();
 			}
-
-			dummy_.free_.store(false, ::std::memory_order_relaxed);
 		} else {
 			prev->next_.store(&node, ::std::memory_order_release);
 
@@ -85,25 +100,31 @@ private:
 
 	void lockFini(Node &node) noexcept
 	{
+		auto next = static_cast<Node *>(nullptr);
+
 		if (
-			!(head_ = node.next_.load(::std::memory_order_acquire)) &&
+			!(next = node.next_.load(::std::memory_order_acquire)) &&
 
 			!tail_.compare_exchange_strong(
 				::utils::temporary(&node),
-				head_ = &dummy_,
+				next = &dummy_,
 				::std::memory_order_release,
 				::std::memory_order_relaxed
 			)
 		) [[unlikely]] {
-			while (!(head_ = node.next_.load(::std::memory_order_acquire))) {
+			while (!(next = node.next_.load(::std::memory_order_acquire))) {
 				::utils::thread_relax();
 			}
 		}
+
+		head_ = next;
 	}
 
-	void unlockFini(Node &node) noexcept
+	void unlockFini(Node &node, bool fast) noexcept
 	{
-		lockFini(node);
+		if (!fast) [[likely]] {
+			lockFini(node);
+		}
 		unlock();
 	}
 };
