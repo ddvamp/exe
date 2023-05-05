@@ -44,8 +44,7 @@ private:
 	// [ version | helping | counter ]
 	// initially, helping bit is set
 	alignas(align) ::std::atomic<state_t> state_ = Mask::helping_bit;
-	alignas(align) bool there_are_waiters_ = false;
-	::std::mutex m_; // protects the condvar
+	alignas(align) ::std::mutex m_; // protects the condvar
 	::std::condition_variable counter_is_zero_;
 
 public:
@@ -91,21 +90,12 @@ public:
 
 		auto const state = prev_state + delta;
 
-		if (!isNotifyNeeded(state)) {
-			return;
+		if (isNotifyNeeded(state)) {
+			// intentionally
+			::std::lock_guard(m_);
+
+			counter_is_zero_.notify_all();
 		}
-
-		{
-			auto lock = ::std::lock_guard(m_);
-
-			if (!there_are_waiters_) {
-				return;
-			}
-
-			there_are_waiters_ = false;
-		}
-
-		counter_is_zero_.notify_all();
 	}
 
 	// blocks the current thread until the counter drops to zero, and
@@ -122,7 +112,6 @@ public:
 		auto lock = ::std::unique_lock(m_);
 
 		while (isWaitNeeded(state, order)) {
-			there_are_waiters_ = true;
 			counter_is_zero_.wait(lock);
 		}
 	}
