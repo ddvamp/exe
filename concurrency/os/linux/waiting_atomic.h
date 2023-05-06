@@ -87,7 +87,7 @@ public:
 	// up to INT_MAX waiters
 	::std::size_t notify_n(value_type count) const noexcept
 	{
-		return detail::futex_wake(address, normalize_count(count));
+		return detail::futex_wake(address, count);
 	}
 
 	::std::size_t notify_one() const noexcept
@@ -98,12 +98,6 @@ public:
 	::std::size_t notify_all() const noexcept
 	{
 		return notify_n(INT_MAX);
-	}
-
-private:
-	inline static value_type normalize_count(value_type count) noexcept
-	{
-		return count & 0x8000'0000u;
 	}
 };
 
