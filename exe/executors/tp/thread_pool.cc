@@ -16,6 +16,18 @@ namespace {
 
 thread_local ThreadPool *current_pool = nullptr;
 
+::std::size_t normalize_thread_count(::std::size_t requested) noexcept
+{
+	auto const available = ::std::thread::hardware_concurrency();
+
+	return
+		available == 0
+		? requested
+		: requested < available
+		? requested
+		: available;
+}
+
 } // namespace
 
 /* static */ ThreadPool *ThreadPool::current() noexcept
@@ -74,7 +86,7 @@ ThreadPool::ThreadPool(::std::size_t workers)
 }
 
 ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
-	: worker_count_(workers)
+	: worker_count_(normalize_thread_count(workers))
 {
 	UTILS_ASSERT(workers != 0, "zero-size thread pool was requested");
 }
