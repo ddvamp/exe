@@ -83,7 +83,7 @@ public:
 	void lock() noexcept
 	{
 		if (!try_lock()) [[unlikely]] {
-			LockAwaiter awaiter{this};
+			auto awaiter = LockAwaiter(this);
 			self::suspend(awaiter);
 		}
 	}
@@ -109,16 +109,17 @@ private:
 		return ::std::move(info->handle_);
 	}
 
-	// Puts fiber node in queue
-	// If lock has passed to current THREAD in the process, returns false
+	// puts fiber in the waiting queue (in any case) and returns true only if
+	// no ownership was obtained by the current THREAD at the same time
 	bool giveNodeOrGetControl(Node *node) noexcept
 	{
 		return !tail_.exchange(node, ::std::memory_order_acq_rel)
 			->	next_.exchange(node, ::std::memory_order_acq_rel);
 	}
 
-	// Gets fiber node from queue (following known next owner or dummy)
-	// Otherwise, if there isn't one yet, passes control and returns nullptr
+	// Takes fiber from the waiting queue (following known next owner or dummy)
+	// and return it
+	// Otherwise, if there isn't one yet, gives ownership and returns nullptr
 	Node *getNodeOrGiveControl() const noexcept
 	{
 		// be optimistic
@@ -160,6 +161,7 @@ private:
 	}
 
 	// sets known next owner instead of dummy and tries to get his FiberHandle
+	// (tries to exclusively take ownership of it)
 	FiberHandle getFiberFrom(Node *next) noexcept
 	{
 		// cleanup
@@ -170,6 +172,7 @@ private:
 		return getFiberFromKnownNextOwner();
 	}
 
+	// returns true if it is known which fiber is the next owner
 	bool isNextOwnerKnown() const noexcept
 	{
 		return head_ != &dummy_;
@@ -178,27 +181,42 @@ private:
 	FiberHandle lockImpl(FiberInfo *node) noexcept
 	{
 		if (giveNodeOrGetControl(node)) [[likely]] {
+			// successfully put the current fiber in the waiting queue
 			return FiberHandle::invalid();
 		}
+		// Getting control over the mutex state
+		// The current fiber has become shared (by waiting queue)
 
 		if (isNextOwnerKnown()) [[unlikely]] {
+			// There is another fiber in front of the current one
+			// The mutex exclusively owns it, so it can be scheduled
+			// The current fiber becomes the next one for scheduling (owner)
 			replaceKnownNextOwner(node).schedule();
-
 			return FiberHandle::invalid();
 		}
-
+		// The current fiber is next one for scheduling, but
+		// it still doesn't own the lock because it has just been shared
+		// It is necessary to prevent sharing
 		return getFiberFrom(node); // ~ getNodeOrGiveControl
 	}
 
 	FiberHandle unlockImpl() noexcept
 	{
 		if (isNextOwnerKnown()) [[unlikely]] {
+			// there is the fiber for scheduling, but it may be shared, so
+			// try to exclusively take ownership of it, and
+			// if successful, schedule it
 			return getFiberFromKnownNextOwner(); // ~ getNodeOrGiveControl
 		}
+		// the next fiber for scheduling is unknown, so
+		// try to get fiber from the waiting queue
 
 		if (auto node = getNodeOrGiveControl(); node) [[unlikely]] {
+			// if the next fiber for scheduling has been received, record it
+			// as the next owner and follow the steps above
 			return getFiberFrom(node); // ~ getNodeOrGiveControl
 		}
+		// the next fiber for scheduling was not received and control was given
 
 		return FiberHandle::invalid();
 	}
