@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <memory>
 #include <mutex>
-#include <tuple>
+#include <span>
 
 #include "utils/defer.h"
 #include "utils/type_traits.h"
@@ -19,75 +19,60 @@ namespace utils {
 
 namespace detail {
 
-template <typename ...Locks>
-void lockAny(Locks &...locks)
+struct any_lock_base {
+	void *lock_;
+	void(*fn_)(void *, bool);
+
+	void lock() const
+	{
+		fn_(lock_, true);
+	}
+
+	void unlock() const noexcept
+	{
+		fn_(lock_, false);
+	}
+};
+
+struct any_lock {
+	any_lock_base base_;
+
+	operator void const * () const noexcept
+	{
+		return base_.lock_;
+	}
+
+	any_lock_base const *operator-> () const noexcept
+	{
+		return &base_;
+	}
+};
+
+template <typename LockPtr>
+void lockImpl(::std::span<LockPtr> locks)
 {
-	auto sorted_locks = ::std::array{
-		::std::tuple{
-			static_cast<void *>(::std::addressof(locks)),
-			+[](void *lock) {
-				static_cast<Locks *>(lock)->lock();
-			},
-			+[](void *lock) noexcept {
-				static_cast<Locks *>(lock)->unlock();
-			},
-		}...
-	};
+	::std::ranges::sort(locks);
 
-	::std::ranges::sort(
-		sorted_locks,
-		{},
-		[](auto const &t) noexcept {
-			return ::std::get<0>(t);
-		}
-	);
-
-	::std::size_t next = 0;
+	auto next = ::std::size_t(0);
 
 	auto unlock_on_exception = defer(
-		[&] noexcept {
+		[&]() noexcept {
 			while (next-- != 0) {
-				auto [ptr, _, fn] = sorted_locks[next];
-				fn(ptr);
+				locks[next]->unlock();
 			}
 		}
 	);
 
 	do {
-		auto [ptr, fn, _] = sorted_locks[next];
-		fn(ptr);
-	} while (++next != size(sorted_locks));
-
-	next = 0;
-}
-
-template <typename ...Locks>
-void lockSame(Locks &...locks)
-{
-	auto sorted_locks = ::std::array{
-		::std::addressof(locks)...
-	};
-
-	::std::ranges::sort(sorted_locks);
-
-	::std::size_t next = 0;
-
-	auto unlock_on_exception = defer(
-		[&] noexcept {
-			while (next-- != 0) {
-				sorted_locks[next]->unlock();
-			}
-		}
-	);
-
-	do {
-		sorted_locks[next]->lock();
-	} while (++next != size(sorted_locks));
+		locks[next]->lock();
+	} while (++next != size(locks));
 
 	next = 0;
 }
 
 } // namespace detail
+
+////////////////////////////////////////////////////////////////////////////////
 
 template <typename Lock>
 concept BasicLockable = requires (Lock &lock) {
@@ -98,11 +83,27 @@ concept BasicLockable = requires (Lock &lock) {
 template <BasicLockable Lock1, BasicLockable Lock2, BasicLockable ...LockN>
 void lock(Lock1 &lock1, Lock2 &lock2, LockN &...lockn)
 {
-	if constexpr (are_all_same_v<Lock1, Lock2, LockN...>) {
-		detail::lockSame(lock1, lock2, lockn...);
-	} else {
-		detail::lockAny(lock1, lock2, lockn...);
-	}
+	auto list = []<typename ...Locks>(Locks &...locks) {
+		if constexpr (are_all_same_v<Locks...>) {
+			return ::std::array{::std::addressof(locks)...};
+		} else {
+			return ::std::array{
+				detail::any_lock{
+					.lock_ = ::std::addressof(locks),
+					.fn_ = [](void *obj, bool lock) {
+						auto m = static_cast<Locks *>(obj);
+						if (lock) {
+							m->lock();
+						} else {
+							m->unlock();
+						}
+					},
+				}...
+			};
+		}
+	} (lock1, lock2, lockn...);
+
+	detail::lockImpl(list);
 }
 
 template <typename ...MutexTypes>
