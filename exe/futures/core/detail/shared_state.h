@@ -122,8 +122,10 @@ protected:
 	HoldState(HoldState const &) = delete;
 	void operator= (HoldState const &) = delete;
 
-	HoldState(HoldState &&) = default;
-	HoldState &operator= (HoldState &&) = default;
+	HoldState(HoldState &&that) noexcept
+		: HoldState(that.release())
+	{}
+	void operator= (HoldState &&) = delete;
 
 protected:
 	explicit HoldState(State *state) noexcept
