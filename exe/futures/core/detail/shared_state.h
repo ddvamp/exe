@@ -5,12 +5,11 @@
 #ifndef DDV_EXE_FUTURES_CORE_DETAIL_SHARED_STATE_H_
 #define DDV_EXE_FUTURES_CORE_DETAIL_SHARED_STATE_H_ 1
 
-#include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
 
-#include "concurrency/rendezvous.h"
+#include "concurrency/meeting.h"
 
 #include "exe/executors/executor.h"
 #include "exe/executors/task.h"
@@ -29,25 +28,21 @@ namespace exe::futures::detail {
 // and callback in the opposite direction,
 // as well as to specify where callback will be called
 template <typename T>
-class SharedState
-	: public executors::TaskBase
-	, public ::std::enable_shared_from_this<SharedState> {
+class SharedState : public executors::TaskBase {
 public:
 	using Result = ::utils::result<T>;
 	using Callback = futures::Callback<T>;
 
 private:
-	::concurrency::Rendezvous rendezvous_;
 	::std::optional<Result> result_;
 	Callback callback_;
+	::concurrency::Meeting meeting_{2};
 	executors::IExecutor *executor_;
-	::std::shared_ptr<SharedState> self_;
 
 public:
-	[[nodiscard]] static ::std::shared_ptr<SharedState> create(
-		executors::IExecutor &where)
+	[[nodiscard]] static SharedState *create(executors::IExecutor &where)
 	{
-		return ::std::make_shared<SharedState>(&where);
+		return ::new SharedState(&where);
 	}
 
 	void setExecutor(executors::IExecutor &where) noexcept
@@ -60,44 +55,17 @@ public:
 		return *executor_;
 	}
 
-	// may be false negative
-	[[nodiscard]] bool hasResult() const noexcept
-	{
-		return rendezvous_.isLatecomer();
-	}
-
-	// returns true if execution of callback was scheduled
-	[[nodiscard]] bool setResult(Result const &result)
-		noexcept (::std::is_nothrow_copy_constructible_v<Result>)
-	{
-		result_.emplace(result);
-		return inform();
-	}
-
-	// returns true if execution of callback was scheduled
-	[[nodiscard]] bool setResult(Result &&result)
+	void setResult(Result &&result)
 		noexcept (::std::is_nothrow_move_constructible_v<Result>)
 	{
 		result_.emplace(::std::move(result));
-		return inform();
+		notify();
 	}
 
-	// returns true if execution of callback was scheduled
-	[[nodiscard]] bool setCallback(Callback &&callback) noexcept
+	void setCallback(Callback &&callback) noexcept
 	{
 		callback_ = ::std::move(callback);
-		return inform();
-	}
-
-	// Alternative to setCallback
-	//
-	// Precondition: hasResult() == true
-	Result getReadyResult()
-		noexcept (::std::is_nothrow_move_constructible_v<Result>)
-	{
-		UTILS_ASSERT(hasResult(), "shared state has no result");
-
-		return *::std::move(result_);
+		notify();
 	}
 
 private:
@@ -108,13 +76,11 @@ private:
 	void run() noexcept override
 	{
 		callback_(*::std::move(result_));
-		self_.reset();
+		destroySelf();
 	}
 
 	void scheduleCallback() noexcept
 	{
-		self_ = this->shared_from_this();
-
 		// TODO: exception handling
 		try {
 			executor_->execute(this);
@@ -123,32 +89,29 @@ private:
 		}
 	}
 
-	// if there is both result and callback,
-	// schedules execution of callback and returns true
-	bool inform() noexcept
+	void notify() noexcept
 	{
-		if (rendezvous_.arrive()) {
+		if (meeting_.takesPlace()) {
 			scheduleCallback();
-			return true;
 		}
+	}
 
-		return false;
+	void destroySelf() noexcept
+	{
+		delete this;
 	}
 };
 
 template <typename T>
-using StateRef = ::std::shared_ptr<SharedState<T>>;
-
-template <typename T>
 class HoldState {
-private:
+protected:
 	using State = SharedState<T>;
 
-protected:
 	using Result = State::Result;
 	using Callback = State::Callback;
 
-	StateRef<T> state_;
+private:
+	State *state_;
 
 protected:
 	~HoldState()
@@ -163,8 +126,8 @@ protected:
 	HoldState &operator= (HoldState &&) = default;
 
 protected:
-	explicit HoldState(StateRef<T> &&state) noexcept
-		: state_(::std::move(state))
+	explicit HoldState(State *state) noexcept
+		: state_(state)
 	{}
 
 	[[nodiscard]] bool hasState() const noexcept
@@ -172,31 +135,31 @@ protected:
 		return state_;
 	}
 
-	void reset() noexcept
-	{
-		state_.reset();
-	}
-
-	[[nodiscard]] StateRef<T> release() noexcept
-	{
-		UTILS_RUN(check);
-		return ::std::move(state_);
-	}
-
 	[[nodiscard]] State &getState() noexcept
 	{
-		UTILS_RUN(check);
+		UTILS_RUN(checkState);
 		return *state_;
 	}
 
 	[[nodiscard]] State const &getState() const noexcept
 	{
-		UTILS_RUN(check);
+		UTILS_RUN(checkState);
 		return *state_;
 	}
 
+	[[nodiscard]] State *release() noexcept
+	{
+		UTILS_RUN(checkState);
+		return ::std::exchange(state_, nullptr);
+	}
+
+	void reset() noexcept
+	{
+		state_ = nullptr;
+	}
+
 private:
-	[[maybe_unused]] void check() const noexcept
+	[[maybe_unused]] void checkState() const noexcept
 	{
 		UTILS_CHECK(hasState(), "HoldState does not hold shared state");
 	}
