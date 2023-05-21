@@ -45,14 +45,14 @@ public:
 		return ::new SharedState(&where);
 	}
 
-	void setExecutor(executors::IExecutor &where) noexcept
-	{
-		executor_ = &where;
-	}
-
 	[[nodiscard]] executors::IExecutor &getExecutor() const noexcept
 	{
 		return *executor_;
+	}
+
+	void setExecutor(executors::IExecutor &where) noexcept
+	{
+		executor_ = &where;
 	}
 
 	void setResult(Result &&result)
@@ -105,8 +105,9 @@ private:
 template <typename T>
 class HoldState {
 protected:
-	using State = SharedState<T>;
+	using value_type = T;
 
+	using State = SharedState<value_type>;
 	using Result = State::Result;
 	using Callback = State::Callback;
 
