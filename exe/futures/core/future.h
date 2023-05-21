@@ -79,36 +79,24 @@ struct [[nodiscard]] Contract {
 
 template <typename T>
 class [[nodiscard]] Future : protected detail::HoldState<T> {
-private:
 	template <::utils::suitable_for_result U>
 	friend Contract<U> makeContractVia(executors::IExecutor &);
 
+private:
 	using Base = detail::HoldState<T>;
+
+	using Base::Base;
 
 	using Base::hasState;
 	using Base::getState;
 	using Base::release;
 	using Base::reset;
 
-	using Result = Base::Result;
-	using Callback = Base::Callback;
+	using Base::Result;
+	using Base::Callback;
 
 public:
-	using value_type = T;
-
-	[[nodiscard]] bool isReady() const noexcept
-	{
-		return getState().hasResult();
-	}
-
-	// precondition: isReady() == true
-	Result getReadyResult() &&
-		noexcept (::std::is_nothrow_move_constructible_v<Result>)
-	{
-		auto retval = getState().getReadyResult();
-		reset();
-		return retval;
-	}
+	using Base::value_type;
 
 	[[nodiscard]] executors::IExecutor &getExecutor() const noexcept
 	{
@@ -121,14 +109,14 @@ public:
 		return Future(release());
 	}
 
-	bool subscribe(Callback &&callback) && noexcept
+	void subscribe(Callback &&callback) && noexcept
 	{
-		return release()->setCallback(::std::move(callback));
+		release()->setCallback(::std::move(callback));
 	}
 
 	void discard() && noexcept
 	{
-		reset();
+		release()->setCallback([](Result &&) noexcept {});
 	}
 
 	template <SyncContinuation<T> F>
@@ -225,19 +213,13 @@ public:
 
 		return future;
 	}
-
-private:
-	explicit Future(detail::StateRef<T> &&state) noexcept
-		: Base(::std::move(state))
-	{}
 };
 
 template <::utils::suitable_for_result T>
 Contract<T> makeContractVia(executors::IExecutor &where)
 {
-	auto fstate = detail::SharedState<T>::create(where);
-	auto pstate = fstate;
-	return {Future<T>(::std::move(fstate)), Promise<T>(::std::move(pstate))};
+	auto state = detail::SharedState<T>::create(where);
+	return {Future<T>(state), Promise<T>(state)};
 }
 
 template <typename T>
@@ -252,8 +234,9 @@ auto asyncVia(executors::IExecutor &where, F &&what)
 {
 	using T = ::utils::detail::result_<F &>;
 
-	auto [future, promise] = futures::makeContractVia<T>(where);
+	auto [future, promise] = futures::makeContract<T>();
 
+	// exception handling (return futures::failure(exception_ptr))
 	executors::execute(
 		where,
 		[f = ::std::forward<F>(what), p = ::std::move(promise)]

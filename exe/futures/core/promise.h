@@ -23,40 +23,30 @@ class Promise : protected detail::HoldState<T> {
 	template <::utils::suitable_for_result U>
 	friend Contract<U> makeContractVia(executors::IExecutor &);
 
+private:
 	using Base = detail::HoldState<T>;
+
+	using Base::Base;
 
 	using Base::getState;
 	using Base::release;
 	using Base::reset;
 
-	using Result = Base::Result;
+	using Base::Result;
 
 public:
-	bool setResult(Result const &result) &&
-		noexcept (::std::is_nothrow_copy_constructible_v<Result>)
-	{
-		auto retval = getState().setResult(result);
-		reset();
-		return retval;
-	}
-
-	bool setResult(Result &&result) &&
+	void setResult(Result result) &&
 		noexcept (::std::is_nothrow_move_constructible_v<Result>)
 	{
-		auto retval = getState().setResult(::std::move(result));
+		// strong exception safety
+		getState().setResult(::std::move(result));
 		reset();
-		return retval;
 	}
 
-	bool setError(::utils::error error) && noexcept
+	void setError(::utils::error error) && noexcept
 	{
-		return release()->setResult(::std::move(error));
+		release()->setResult(::std::move(error));
 	}
-
-private:
-	explicit Promise(detail::StateRef<T> &&state) noexcept
-		: Base(::std::move(state))
-	{}
 };
 
 } // namespace exe::futures
