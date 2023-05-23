@@ -45,6 +45,11 @@ public:
 		return ::new SharedState();
 	}
 
+	static void destroy(SharedState *state) noexcept
+	{
+		state->destroySelf();
+	}
+
 	[[nodiscard]] executors::IExecutor &getExecutor() const noexcept
 	{
 		return *executor_;

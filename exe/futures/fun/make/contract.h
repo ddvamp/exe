@@ -57,10 +57,17 @@ struct Contract {
 	};
 
 	template <::utils::suitable_for_result T>
-	static Content<T> make()
+	static Content<T> open()
 	{
 		auto state = detail::SharedState<T>::create();
 		return {SemiFuture<T>(state), Promise<T>(state)};
+	}
+
+	template <typename T>
+	static void close(Content<T> contract) noexcept
+	{
+		contract.future.reset();
+		detail::SharedState<T>::destroy(contract.promise.release());
 	}
 };
 
