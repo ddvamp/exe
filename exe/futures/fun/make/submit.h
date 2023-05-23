@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "exe/executors/execute.h"
+#include "exe/executors/executor.h"
 #include "exe/futures/fun/make/contract.h"
 #include "exe/futures/fun/combine/seq/via.h"
 
@@ -103,7 +103,7 @@ auto submit(executors::IExecutor &where, F fun)
 
 	task->submit(where);
 
-	return ::std::move(contract.future) | via(where);
+	return ::std::move(contract).future | via(where);
 }
 
 } // namespace exe::futures
