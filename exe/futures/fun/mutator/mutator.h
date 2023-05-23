@@ -29,8 +29,7 @@ protected:
 	}
 
 	template <typename T>
-	static void setCallback(Future<T> f,
-		typename Future<T>::Callback &&cb) noexcept
+	static void setCallback(Future<T> f, Future<T>::Callback &&cb) noexcept
 	{
 		f.release()->setCallback(::std::move(cb));
 	}
