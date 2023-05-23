@@ -5,7 +5,7 @@
 #ifndef DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_
 #define DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_ 1
 
-namespace exe::futures::detail {
+namespace exe::futures::pipe {
 
 struct Mutator;
 

@@ -13,7 +13,7 @@ namespace exe::futures {
 template <typename T>
 class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
 	friend class Contract;
-	friend detail::Mutator;
+	friend pipe::Mutator;
 
 protected:
 	using Base = detail::HoldState<T>;
@@ -28,7 +28,7 @@ public:
 // Future is moveable value type
 template <typename T>
 class [[nodiscard]] Future : public SemiFuture<T> {
-	friend detail::Mutator;
+	friend pipe::Mutator;
 
 protected:
 	using SemiFuture<T>::SemiFuture;
