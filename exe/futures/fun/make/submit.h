@@ -6,6 +6,7 @@
 #define DDV_EXE_FUTURES_FUN_MAKE_SUBMIT_H_ 1
 
 #include <exception>
+#include <functional>
 #include <type_traits>
 #include <utility>
 
