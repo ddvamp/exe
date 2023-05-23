@@ -2,16 +2,14 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_CORE_PROMISE_H_
-#define DDV_EXE_FUTURES_CORE_PROMISE_H_ 1
+#ifndef DDV_EXE_FUTURES_FUN_PROMISE_H_
+#define DDV_EXE_FUTURES_FUN_PROMISE_H_ 1
 
 #include <type_traits>
 
-#include "exe/futures/core/detail/shared_state.h"
+#include "exe/futures/fun/state/shared_state.h"
 
 #include "result/result.h"
-
-#include "utils/utility.h"
 
 namespace exe::futures {
 
@@ -47,4 +45,4 @@ public:
 
 } // namespace exe::futures
 
-#endif /* DDV_EXE_FUTURES_CORE_PROMISE_H_ */
+#endif /* DDV_EXE_FUTURES_FUN_PROMISE_H_ */

@@ -2,13 +2,12 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_CORE_FUTURE_H_
-#define DDV_EXE_FUTURES_CORE_FUTURE_H_ 1
+#ifndef DDV_EXE_FUTURES_FUN_FUTURE_H_
+#define DDV_EXE_FUTURES_FUN_FUTURE_H_ 1
 
 #include <utility>
 
-#include "exe/executors/inline.h"
-#include "exe/futures/core/detail/shared_state.h"
+#include "exe/futures/fun/state/shared_state.h"
 #include "exe/futures/fun/promise.h"
 
 #include "result/result.h"
@@ -33,7 +32,6 @@ public:
 // Future is moveable value type
 template <typename T>
 class [[nodiscard]] Future : public SemiFuture<T> {
-	friend Contract;
 	friend Mutator;
 
 protected:
@@ -45,34 +43,17 @@ protected:
 
 
 struct Contract {
-	template <::utils::suitable_for_result T>
-	static auto make()
-	{
-		using F = SemiFuture<T>;
-		using P = Promise<T>;
-
-		struct [[nodiscard]] Content {
-			F future;
-			P promise;
-		};
-
-		auto state = detail::SharedState<T>::create(nullptr);
-		return Content{F(state), P(state)};
-	}
+	template <typename T>
+	struct [[nodiscard]] Content {
+		SemiFuture<T> future;
+		Promise<T> promise;
+	};
 
 	template <::utils::suitable_for_result T>
-	static auto make(executors::IExecutor &where)
+	static Content<T> make()
 	{
-		using F = Future<T>;
-		using P = Promise<T>;
-
-		struct [[nodiscard]] Content {
-			F future;
-			P promise;
-		};
-
-		auto state = detail::SharedState<T>::create(&where);
-		return Content{F(state), P(state)};
+		auto state = detail::SharedState<T>::create();
+		return {SemiFuture<T>(state), Promise<T>(state)};
 	}
 };
 
@@ -102,4 +83,4 @@ protected:
 
 } // namespace exe::futures
 
-#endif /* DDV_EXE_FUTURES_CORE_FUTURE_H_ */
+#endif /* DDV_EXE_FUTURES_FUN_FUTURE_H_ */

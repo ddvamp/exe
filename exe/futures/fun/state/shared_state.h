@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_CORE_DETAIL_SHARED_STATE_H_
-#define DDV_EXE_FUTURES_CORE_DETAIL_SHARED_STATE_H_ 1
+#ifndef DDV_EXE_FUTURES_FUN_STATE_SHARED_STATE_H_
+#define DDV_EXE_FUTURES_FUN_STATE_SHARED_STATE_H_ 1
 
 #include <optional>
 #include <type_traits>
@@ -13,7 +13,7 @@
 
 #include "exe/executors/executor.h"
 #include "exe/executors/task.h"
-#include "exe/futures/core/callback.h"
+#include "exe/futures/fun/state/callback.h"
 
 #include "result/result.h"
 
@@ -40,9 +40,9 @@ private:
 	executors::IExecutor *executor_;
 
 public:
-	[[nodiscard]] static SharedState *create(executors::IExecutor *where)
+	[[nodiscard]] static SharedState *create()
 	{
-		return ::new SharedState(where);
+		return ::new SharedState();
 	}
 
 	[[nodiscard]] executors::IExecutor &getExecutor() const noexcept
@@ -69,9 +69,7 @@ public:
 	}
 
 private:
-	explicit SharedState(executors::IExecutor *where) noexcept
-		: executor_(where)
-	{}
+	SharedState() noexcept = default;
 
 	void run() noexcept override
 	{
@@ -170,4 +168,4 @@ private:
 
 } // namespace exe::futures::detail
 
-#endif /* DDV_EXE_FUTURES_CORE_DETAIL_SHARED_STATE_H_ */
+#endif /* DDV_EXE_FUTURES_FUN_STATE_SHARED_STATE_H_ */

@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_CORE_CALLBACK_H_
-#define DDV_EXE_FUTURES_CORE_CALLBACK_H_ 1
+#ifndef DDV_EXE_FUTURES_FUN_STATE_CALLBACK_H_
+#define DDV_EXE_FUTURES_FUN_STATE_CALLBACK_H_ 1
 
 #include <functional>
 
@@ -21,4 +21,4 @@ using Callback =
 
 } // namespace exe::futures
 
-#endif /* DDV_EXE_FUTURES_CORE_CALLBACK_H_ */
+#endif /* DDV_EXE_FUTURES_FUN_STATE_CALLBACK_H_ */
