@@ -22,7 +22,7 @@ namespace pipe {
 // TODO: harmful exceptions
 template <typename F>
 struct [[nodiscard]] OrElse : Mutator {
-	F fun;
+	[[no_unique_address]] F fun;
 
 	using map_result_t =
 		::std::remove_cvref_t<::std::invoke_result_t<F &, ::utils::error>>;

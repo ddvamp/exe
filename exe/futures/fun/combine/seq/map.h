@@ -22,7 +22,7 @@ namespace pipe {
 // TODO: harmful exceptions
 template <typename F>
 struct [[nodiscard]] Map : Mutator {
-	F fun;
+	[[no_unique_address]] F fun;
 
 	template <typename T>
 	auto mutate(Future<T> f)
