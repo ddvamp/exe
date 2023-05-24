@@ -12,6 +12,7 @@
 #include "exe/futures/fun/make/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
+#include "exe/futures/fun/traits/invoke.h"
 
 #include "result/result.h"
 
@@ -26,9 +27,9 @@ struct [[nodiscard]] Map : Mutator {
 
 	template <typename T>
 	auto mutate(Future<T> f)
-		requires (::std::is_invocable_v<F &, T>)
+		requires (traits::is_invocable_v<F &, T>)
 	{
-		using U = ::std::remove_cvref_t<::std::invoke_result_t<F &, T>>;
+		using U = ::std::remove_cvref_t<traits::invoke_result_t<F &, T>>;
 
 		// loss future at exception
 		auto [future, promise] = Contract::open<U>();
@@ -39,7 +40,7 @@ struct [[nodiscard]] Map : Mutator {
 			[fn = ::std::move(fun), p = ::std::move(promise)]
 			(::utils::result<T> &&res) mutable noexcept {
 				if constexpr (
-					::std::is_nothrow_invocable_v<F &, T> &&
+					traits::is_nothrow_invocable_v<F &, T> &&
 					::std::is_nothrow_move_constructible_v<U>
 				) {
 					::std::move(p).setResult(::std::move(res).transform(fn));

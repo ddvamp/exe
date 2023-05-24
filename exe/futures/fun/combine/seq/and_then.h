@@ -25,12 +25,12 @@ struct [[nodiscard]] AndThen : Mutator {
 	[[no_unique_address]] F fun;
 
 	template <typename T>
-	using map_result_t = ::std::remove_cvref_t<::std::invoke_result_t<F &, T>>;
+	using map_result_t = ::std::remove_cvref_t<traits::invoke_result_t<F &, T>>;
 
 	template <typename T>
 	auto mutate(Future<T> f)
 		requires (
-			::std::is_invocable_v<F &, T> &&
+			traits::is_invocable_v<F &, T> &&
 			::utils::is_result_v<map_result_t<T>>
 		)
 	{
@@ -45,7 +45,7 @@ struct [[nodiscard]] AndThen : Mutator {
 			[fn = ::std::move(fun), p = ::std::move(promise)]
 			(::utils::result<T> &&res) mutable noexcept {
 				if constexpr (
-					::std::is_nothrow_invocable_v<F &, T> &&
+					traits::is_nothrow_invocable_v<F &, T> &&
 					::std::is_nothrow_move_constructible_v<U>
 				) {
 					::std::move(p).setResult(::std::move(res).and_then(fn));
