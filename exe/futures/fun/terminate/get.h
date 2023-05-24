@@ -40,6 +40,7 @@ struct [[nodiscard]] Get : Mutator {
 		// loss future at exception
 		::concurrency::OneTimeNotification result_is_ready;
 
+		// loss future at exception
 		setCallback<T>(
 			::std::move(f),
 			[&](::utils::result<T> &&res) noexcept {
