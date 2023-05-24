@@ -34,7 +34,7 @@ struct [[nodiscard]] FlatMap : Mutator {
 template <typename F>
 auto flatMap(F fun) noexcept
 {
-	return pipe::FlatMap{::std::move(fun)};
+	return pipe::FlatMap{{}, ::std::move(fun)};
 }
 
 } // namespace exe::futures

@@ -65,7 +65,7 @@ auto orElse(F fun) noexcept
 		::std::is_invocable_v<F &, ::utils::error>
 	)
 {
-	return pipe::OrElse{::std::move(fun)};
+	return pipe::OrElse{{}, ::std::move(fun)};
 }
 
 } // namespace exe::futures

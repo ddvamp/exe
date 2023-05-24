@@ -61,7 +61,7 @@ template <typename F>
 auto map(F fun) noexcept
 	requires (::std::is_nothrow_destructible_v<F>)
 {
-	return pipe::Map{::std::move(fun)};
+	return pipe::Map{{}, ::std::move(fun)};
 }
 
 } // namespace exe::futures

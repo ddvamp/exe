@@ -67,7 +67,7 @@ template <typename F>
 auto andThen(F fun) noexcept
 	requires (::std::is_nothrow_destructible_v<F>)
 {
-	return pipe::AndThen{::std::move(fun)};
+	return pipe::AndThen{{}, ::std::move(fun)};
 }
 
 } // namespace exe::futures
