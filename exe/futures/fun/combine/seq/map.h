@@ -5,11 +5,16 @@
 #ifndef DDV_EXE_FUTURES_FUN_COMBINE_SEQ_MAP_H_
 #define DDV_EXE_FUTURES_FUN_COMBINE_SEQ_MAP_H_ 1
 
+#include <exception>
+#include <functional>
+#include <type_traits>
 #include <utility>
 
 #include "exe/futures/fun/make/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
+
+#include "result/result.h"
 
 namespace exe::futures {
 
