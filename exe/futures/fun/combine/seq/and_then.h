@@ -6,7 +6,6 @@
 #define DDV_EXE_FUTURES_FUN_COMBINE_SEQ_AND_THEN_H_ 1
 
 #include <exception>
-#include <functional>
 #include <type_traits>
 #include <utility>
 
