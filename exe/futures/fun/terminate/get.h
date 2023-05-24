@@ -27,7 +27,7 @@ struct [[nodiscard]] Get : Mutator {
 	template <typename T>
 	::utils::result<T> mutate(SemiFuture<T> f)
 	{
-		return mutate<T>(inLine().mutate<T>(::std::move(f)));
+		return mutate<T>(::std::move(f) | futures::inLine());
 	}
 
 	// TODO: my eyes hurt

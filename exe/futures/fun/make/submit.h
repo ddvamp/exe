@@ -104,7 +104,7 @@ auto submit(executors::IExecutor &where, F fun)
 
 	task->submit(where);
 
-	return ::std::move(contract).future | via(where);
+	return ::std::move(contract).future | futures::via(where);
 }
 
 } // namespace exe::futures

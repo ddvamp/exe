@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "exe/executors/inline.h"
+#include "exe/futures/fun/combine/seq/via.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
 
@@ -19,7 +20,7 @@ struct [[nodiscard]] InLine : Mutator {
 	template <typename T>
 	Future<T> mutate(SemiFuture<T> f) noexcept
 	{
-		return setExecutor<T>(::std::move(f), executors::getInlineExecutor());
+		return ::std::move(f) | futures::via(executors::getInlineExecutor());
 	}
 };
 
