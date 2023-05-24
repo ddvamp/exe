@@ -6,7 +6,6 @@
 #define DDV_EXE_FUTURES_FUN_COMBINE_SEQ_MAP_H_ 1
 
 #include <exception>
-#include <functional>
 #include <type_traits>
 #include <utility>
 
@@ -43,9 +42,9 @@ struct [[nodiscard]] Map : Mutator {
 					::std::is_nothrow_invocable_v<F &, T> &&
 					::std::is_nothrow_move_constructible_v<U>
 				) {
-					::std::move(p).setResult(::std::invoke(fn, std::move(res)));
+					::std::move(p).setResult(::std::move(res).transform(fn));
 				} else try {
-					::std::move(p).setResult(::std::invoke(fn, std::move(res)));
+					::std::move(p).setResult(::std::move(res).transform(fn));
 				} catch (...) {
 					::std::move(p).setError(::std::current_exception());
 				}
