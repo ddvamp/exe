@@ -60,6 +60,7 @@ struct [[nodiscard]] Map : Mutator {
 
 template <typename F>
 auto map(F fun) noexcept
+	requires (::std::is_nothrow_destructible_v<F>)
 {
 	return pipe::Map{::std::move(fun)};
 }
