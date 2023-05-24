@@ -13,13 +13,9 @@ namespace exe::executors {
 {
 	task->next_.store(nullptr, ::std::memory_order_relaxed);
 
-	auto prev = tail_.exchange(task);
-
-	auto idle = static_cast<bool>(prev->next_.exchange(task));
-	if (idle) {
+	if (tail_.exchange(task)->next_.exchange(task)) {
 		// start a new critical section
 		// (relying on correct synchronization by executor)
-		head_ = prev;
 
 		// TODO: exception handling
 		try {
@@ -62,7 +58,7 @@ namespace exe::executors {
 
 			// if the task has not been linked yet, we give control
 			(next = curr->next_.load(::std::memory_order_acquire)) ||
-			(next = curr->next_.exchange(curr))
+			(next = curr->next_.exchange(head_ = curr))
 		)
 	);
 }
