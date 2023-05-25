@@ -11,6 +11,28 @@
 
 namespace utils {
 
+template <::std::size_t I, typename Head, typename ...Tail>
+struct pack_element_impl : pack_element_impl<I - 1, Tail...> {};
+
+template <typename Head, typename ...Tail>
+struct pack_element_impl<0, Head, Tail...> {
+	using type = Head;
+};
+
+template <::std::size_t, typename ...>
+struct pack_element {};
+
+template <::std::size_t I, typename ...Ts>
+	requires (I < sizeof...(Ts))
+struct pack_element<I, Ts...> : pack_element_impl<I, Ts...> {};
+
+template <::std::size_t I, typename ...Ts>
+using pack_element_t = pack_element<I, Ts...>::type;
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 // true if and only if T is a specialization of Template
 template <typename T, template <typename ...> typename Template>
 inline constexpr bool is_specialization_v = false;
@@ -23,7 +45,9 @@ struct is_specialization
 	: ::std::bool_constant<is_specialization_v<T, Template>>
 {};
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
 
 template <typename T, typename ...Ts>
 inline constexpr bool is_any_of_v = (::std::is_same_v<T, Ts> || ...);
@@ -31,7 +55,9 @@ inline constexpr bool is_any_of_v = (::std::is_same_v<T, Ts> || ...);
 template <typename T, typename ...Ts>
 struct is_any_of : ::std::bool_constant<is_any_of_v<T, Ts...>> {};
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
 
 namespace detail {
 
@@ -60,7 +86,9 @@ inline constexpr bool are_all_same_v =
 template <typename ...Ts>
 struct are_all_same : ::std::bool_constant<are_all_same_v<Ts...>> {};
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
 
 // determine whether T can be direct-initialized with
 // result of applying INVOKE operation to F and Args...
@@ -74,7 +102,9 @@ struct is_constructible_with
 	: ::std::bool_constant<is_constructible_with_v<T, Fn, Args...>>
 {};
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
 
 // determine whether direct-initialization of T from
 // result of applying INVOKE operation to F and Args...
