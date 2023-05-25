@@ -5,10 +5,10 @@
 #ifndef DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_
 #define DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_ 1
 
-namespace exe::futures::pipe {
+namespace exe::futures::detail {
 
 class Mutator;
 
-} // namespace exe::futures::pipe
+} // namespace exe::futures::detail
 
 #endif /* DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_ */

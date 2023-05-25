@@ -24,7 +24,7 @@ namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] Get : Mutator {
+struct [[nodiscard]] Get : detail::Mutator {
 	template <typename T>
 	auto mutate(SemiFuture<T> f)
 	{

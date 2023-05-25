@@ -16,7 +16,7 @@ namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] InLine : Mutator {
+struct [[nodiscard]] InLine : detail::Mutator {
 	template <typename T>
 	auto mutate(SemiFuture<T> f) noexcept
 	{

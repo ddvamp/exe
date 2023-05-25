@@ -22,7 +22,7 @@ namespace exe::futures {
 namespace pipe {
 
 // TODO: harmful exceptions
-struct [[nodiscard]] Flatten : Mutator {
+struct [[nodiscard]] Flatten : detail::Mutator {
 	template <typename T>
 	auto mutate(Future<Future<T>> f)
 	{

@@ -23,7 +23,7 @@ namespace pipe {
 
 // TODO: harmful exceptions
 template <typename F>
-struct [[nodiscard]] OrElse : Mutator {
+struct [[nodiscard]] OrElse : detail::Mutator {
 	[[no_unique_address]] F fun;
 
 	template <typename T>

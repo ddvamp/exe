@@ -16,7 +16,7 @@ namespace exe::futures {
 namespace pipe {
 
 template <typename F>
-struct [[nodiscard]] FlatMap : Mutator {
+struct [[nodiscard]] FlatMap : detail::Mutator {
 	[[no_unique_address]] F fun;
 
 	template <typename T>

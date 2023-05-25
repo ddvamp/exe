@@ -17,7 +17,7 @@ namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] Detach : Mutator {
+struct [[nodiscard]] Detach : detail::Mutator {
 	template <typename T>
 	void mutate(SemiFuture<T> f) noexcept
 	{

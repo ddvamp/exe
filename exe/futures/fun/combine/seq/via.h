@@ -15,7 +15,7 @@ namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] Via : Mutator {
+struct [[nodiscard]] Via : detail::Mutator {
 	executors::IExecutor &executor;
 
 	template <typename T>
