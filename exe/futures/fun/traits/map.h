@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_FUN_TRAITS_INVOKE_H_
-#define DDV_EXE_FUTURES_FUN_TRAITS_INVOKE_H_ 1
+#ifndef DDV_EXE_FUTURES_FUN_TRAITS_MAP_H_
+#define DDV_EXE_FUTURES_FUN_TRAITS_MAP_H_ 1
 
 #include <type_traits>
 
@@ -35,6 +35,24 @@ inline constexpr bool is_nothrow_invocable_v =
 template <typename Fn, typename ...Args>
 using invoke_result_t = InvokeTraits<Fn, Args...>::invoke_result::type;
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+template <typename T>
+inline constexpr bool is_nothrow_move_constructible_v =
+	::std::is_nothrow_move_constructible_v<T>;
+
+template <>
+inline constexpr bool is_nothrow_move_constructible_v<void> = true;
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+template <typename Fn, typename ...Args>
+using map_result_t = ::std::remove_cvref_t<invoke_result_t<Fn, Args...>>;
+
 } // namespace exe::futures::traits
 
-#endif /* DDV_EXE_FUTURES_FUN_TRAITS_INVOKE_H_ */
+#endif /* DDV_EXE_FUTURES_FUN_TRAITS_MAP_H_ */
