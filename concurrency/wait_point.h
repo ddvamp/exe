@@ -92,7 +92,9 @@ public:
 
 		if (isNotifyNeeded(state)) {
 			// intentionally
-			::std::lock_guard(m_);
+			{
+				auto lock = ::std::lock_guard(m_);
+			}
 
 			counter_is_zero_.notify_all();
 		}

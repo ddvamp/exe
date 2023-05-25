@@ -33,7 +33,7 @@ namespace self {
 void suspend(IAwaiter &) noexcept;
 
 // reschedule current fiber
-void yield();
+void yield() noexcept;
 
 // reschedule current fiber and activate next one if it is valid
 // otherwise, the call is equivalent to yield

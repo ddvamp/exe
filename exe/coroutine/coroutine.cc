@@ -29,7 +29,7 @@ Routine &check(Routine &routine) noexcept
 ////////////////////////////////////////////////////////////////////////////////
 
 
-explicit Coroutine::Coroutine(Routine &&routine)
+Coroutine::Coroutine(Routine &&routine)
 	: stack_(allocateStack())
 	, impl_(::std::move(check(routine)), stack_.view())
 {}

@@ -66,7 +66,7 @@ struct are_all_same : ::std::bool_constant<are_all_same_v<Ts...>> {};
 // result of applying INVOKE operation to F and Args...
 template <typename T, typename Fn, typename ...Args>
 inline constexpr bool is_constructible_with_v = requires {
-	T(::std::invoke(::std::declval<F>(), ::std::declval<Args>()...));
+	T(::std::invoke(::std::declval<Fn>(), ::std::declval<Args>()...));
 };
 
 template <typename T, typename Fn, typename ...Args>
@@ -81,7 +81,7 @@ struct is_constructible_with
 // is both valid and not potentially-throwing
 template <typename T, typename Fn, typename ...Args>
 inline constexpr bool is_nothrow_constructible_with_v = requires {
-	{T(::std::invoke(::std::declval<F>(), ::std::declval<Args>()...))} noexcept;
+	{T(::std::invoke(::std::declval<Fn>(), ::std::declval<Args>()...))} noexcept;
 };
 
 template <typename T, typename Fn, typename ...Args>
