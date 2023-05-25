@@ -49,7 +49,8 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 
-struct Contract {
+class Contract {
+public:
 	template <typename T>
 	struct [[nodiscard]] Content {
 		SemiFuture<T> future;
