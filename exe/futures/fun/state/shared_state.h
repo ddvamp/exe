@@ -37,7 +37,7 @@ private:
 	::std::optional<Result> result_;
 	Callback callback_;
 	::concurrency::Meeting meeting_{2};
-	executors::IExecutor *executor_;
+	executors::IExecutor *executor_ = nullptr;
 
 public:
 	[[nodiscard]] static SharedState *create()
