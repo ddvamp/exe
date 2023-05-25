@@ -9,25 +9,31 @@
 
 namespace exe::futures::traits {
 
-template <typename F, typename T>
+template <typename ...Ts>
+struct InvokeTraitsImpl {
+	using is_invocable			= ::std::is_invocable<Ts...>;
+	using is_nothrow_invocable	= ::std::is_nothrow_invocable<Ts...>;
+	using invoke_result			= ::std::invoke_result<Ts...>;
+};
+
+template <typename ...Ts>
+struct InvokeTraits : InvokeTraitsImpl<Ts...> {};
+
+template <typename T>
+struct InvokeTraits<T, void> : InvokeTraitsImpl<T> {};
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Fn, typename ...Args>
 inline constexpr bool is_invocable_v =
-	::std::is_void_v<T> ?
-	::std::is_invocable_v<F> :
-	::std::is_invocable_v<F, T>;
+	InvokeTraits<Fn, Args...>::is_invocable::value;
 
-template <typename F, typename T>
+template <typename Fn, typename ...Args>
 inline constexpr bool is_nothrow_invocable_v =
-	::std::is_void_v<T> ?
-	::std::is_nothrow_invocable_v<F> :
-	::std::is_nothrow_invocable_v<F, T>;
+	InvokeTraits<Fn, Args...>::is_nothrow_invocable::value;
 
-template <typename F, typename T>
-using invoke_result_t =
-	::std::conditional_t<
-		::std::is_void_v<T>,
-		::std::invoke_result_t<F>,
-		::std::invoke_result_t<F, T>
-	>;
+template <typename Fn, typename ...Args>
+using invoke_result_t = InvokeTraits<Fn, Args...>::invoke_result::type;
 
 } // namespace exe::futures::traits
 
