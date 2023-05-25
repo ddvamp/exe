@@ -9,9 +9,11 @@
 #include <type_traits>
 #include <utility>
 
+#include "exe/futures/fun/combine/seq/via.h"
 #include "exe/futures/fun/make/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
+#include "exe/futures/fun/traits/map.h"
 
 #include "result/result.h"
 
@@ -25,28 +27,27 @@ struct [[nodiscard]] AndThen : Mutator {
 	[[no_unique_address]] F fun;
 
 	template <typename T>
-	using map_result_t = ::std::remove_cvref_t<traits::invoke_result_t<F &, T>>;
-
-	template <typename T>
 	auto mutate(Future<T> f)
 		requires (
 			traits::is_invocable_v<F &, T> &&
-			::utils::is_result_v<map_result_t<T>>
+			::utils::is_result_v<traits::map_result_t<F &, T>>
 		)
 	{
-		using U = map_result_t<T>::value_type;
+		using U = traits::map_result_t<F &, T>::value_type;
 
 		// loss future at exception
 		auto [future, promise] = Contract::open<U>();
 
+		auto &where = getExecutor(f);
+
 		// loss future at exception
-		setCallback<T>(
+		setCallback(
 			::std::move(f),
 			[fn = ::std::move(fun), p = ::std::move(promise)]
 			(::utils::result<T> &&res) mutable noexcept {
 				if constexpr (
 					traits::is_nothrow_invocable_v<F &, T> &&
-					::std::is_nothrow_move_constructible_v<U>
+					traits::is_nothrow_move_constructible_v<U>
 				) {
 					::std::move(p).setResult(::std::move(res).and_then(fn));
 				} else try {
@@ -57,7 +58,7 @@ struct [[nodiscard]] AndThen : Mutator {
 			}
 		);
 
-		return future;
+		return ::std::move(future) | futures::via(where);
 	}
 };
 

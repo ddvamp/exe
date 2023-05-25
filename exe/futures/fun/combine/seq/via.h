@@ -19,9 +19,9 @@ struct [[nodiscard]] Via : Mutator {
 	executors::IExecutor &executor;
 
 	template <typename T>
-	Future<T> mutate(SemiFuture<T> f) noexcept
+	auto mutate(SemiFuture<T> f) noexcept
 	{
-		return setExecutor<T>(::std::move(f), executor);
+		return setExecutor(::std::move(f), executor);
 	}
 };
 

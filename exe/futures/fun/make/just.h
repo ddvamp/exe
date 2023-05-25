@@ -17,7 +17,7 @@ inline auto just()
 
 	::std::move(promise).setResult({});
 
-	return future;
+	return ::std::move(future);
 }
 
 } // namespace exe::futures

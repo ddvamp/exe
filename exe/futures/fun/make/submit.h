@@ -13,6 +13,7 @@
 #include "exe/executors/executor.h"
 #include "exe/futures/fun/make/contract.h"
 #include "exe/futures/fun/combine/seq/via.h"
+#include "exe/futures/fun/traits/map.h"
 
 #include "result/result.h"
 
@@ -20,18 +21,11 @@
 
 namespace exe::futures {
 
-namespace traits {
-
-template <typename F>
-using submit_result_t = ::std::remove_cvref_t<::std::invoke_result_t<F>>;
-
-} // namespace traits
-
 namespace detail {
 
 template <typename F>
 struct Task : executors::TaskBase {
-	using T = traits::submit_result_t<F &>::value_type;
+	using T = traits::map_result_t<F &>::value_type;
 
 	[[no_unique_address]] F fn;
 	Promise<T> p;
@@ -49,7 +43,7 @@ struct Task : executors::TaskBase {
 	{
 		if constexpr (
 			::std::is_nothrow_invocable_v<F &> &&
-			::std::is_nothrow_move_constructible_v<T>
+			traits::is_nothrow_move_constructible_v<T>
 		) {
 			invoke();
 		} else try {
@@ -65,7 +59,7 @@ struct Task : executors::TaskBase {
 		destroySelf();
 	}
 
-	void fail(::utils::error error) noexcept
+	void fail() noexcept
 	{
 		::std::move(p).setError(::std::current_exception());
 		destroySelf();
@@ -84,10 +78,10 @@ auto submit(executors::IExecutor &where, F fun)
 	requires (
 		::std::is_nothrow_destructible_v<F> &&
 		::std::is_invocable_v<F &> &&
-		::utils::is_result_v<traits::submit_result_t<F &>>
+		::utils::is_result_v<traits::map_result_t<F &>>
 	)
 {
-	using T = traits::submit_result_t<F &>::value_type;
+	using T = traits::map_result_t<F &>::value_type;
 
 	auto contract = Contract::open<T>();
 
@@ -98,7 +92,7 @@ auto submit(executors::IExecutor &where, F fun)
 	);
 
 	auto task =
-		::new detail::Task{::std::move(fun), ::std::move(contract.promise)};
+		::new detail::Task{::std::move(fun), ::std::move(contract).promise};
 
 	rollback.disable();
 

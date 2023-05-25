@@ -9,9 +9,11 @@
 #include <type_traits>
 #include <utility>
 
+#include "exe/futures/fun/combine/seq/via.h"
 #include "exe/futures/fun/make/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
+#include "exe/futures/fun/traits/map.h"
 
 #include "result/result.h"
 
@@ -24,24 +26,28 @@ template <typename F>
 struct [[nodiscard]] OrElse : Mutator {
 	[[no_unique_address]] F fun;
 
-	using map_result_t =
-		::std::remove_cvref_t<::std::invoke_result_t<F &, ::utils::error>>;
-
 	template <typename T>
-	Future<T> mutate(Future<T> f)
-		requires (::std::is_same_v<map_result_t, ::utils::result<T>>)
+	auto mutate(Future<T> f)
+		requires (
+			::std::is_same_v<
+				traits::map_result_t<F &, ::utils::error>,
+				::utils::result<T>
+			>
+		)
 	{
 		// loss future at exception
 		auto [future, promise] = Contract::open<T>();
 
+		auto &where = getExecutor(f);
+
 		// loss future at exception
-		setCallback<T>(
+		setCallback(
 			::std::move(f),
 			[fn = ::std::move(fun), p = ::std::move(promise)]
 			(::utils::result<T> &&res) mutable noexcept {
 				if constexpr (
 					::std::is_nothrow_invocable_v<F &, ::utils::error> &&
-					::std::is_nothrow_move_constructible_v<T>
+					traits::is_nothrow_move_constructible_v<T>
 				) {
 					::std::move(p).setResult(::std::move(res).or_else(fn));
 				} else try {
@@ -52,7 +58,7 @@ struct [[nodiscard]] OrElse : Mutator {
 			}
 		);
 
-		return future;
+		return ::std::move(future) | futures::via(where);
 	}
 };
 

@@ -14,6 +14,7 @@
 #include "exe/futures/fun/combine/seq/inline.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
+#include "exe/futures/fun/traits/map.h"
 
 #include "result/result.h"
 
@@ -25,15 +26,15 @@ namespace pipe {
 
 struct [[nodiscard]] Get : Mutator {
 	template <typename T>
-	::utils::result<T> mutate(SemiFuture<T> f)
+	auto mutate(SemiFuture<T> f)
 	{
-		return mutate<T>(::std::move(f) | futures::inLine());
+		return mutate(::std::move(f) | futures::inLine());
 	}
 
 	// TODO: my eyes hurt
 	// how to think about exceptions, please tell me
 	template <typename T>
-	::utils::result<T> mutate(Future<T> f)
+	auto mutate(Future<T> f)
 	{
 		::utils::result<T> result;
 
@@ -41,10 +42,10 @@ struct [[nodiscard]] Get : Mutator {
 		::concurrency::OneTimeNotification result_is_ready;
 
 		// loss future at exception
-		setCallback<T>(
+		setCallback(
 			::std::move(f),
 			[&](::utils::result<T> &&res) noexcept {
-				if constexpr (::std::is_nothrow_move_constructible_v<T>) {
+				if constexpr (traits::is_nothrow_move_constructible_v<T>) {
 					result = ::std::move(res);
 				} else try {
 					result = ::std::move(res);
@@ -66,7 +67,7 @@ struct [[nodiscard]] Get : Mutator {
 			UTILS_ABORT("exception while sync wait of future");
 		}
 
-		if constexpr (::std::is_nothrow_move_constructible_v<T>) {
+		if constexpr (traits::is_nothrow_move_constructible_v<T>) {
 			return result;
 		} else try {
 			return result;

@@ -21,13 +21,13 @@ struct [[nodiscard]] Detach : Mutator {
 	template <typename T>
 	void mutate(SemiFuture<T> f) noexcept
 	{
-		mutate<T>(::std::move(f) | futures::inLine());
+		mutate(::std::move(f) | futures::inLine());
 	}
 
 	template <typename T>
 	void mutate(Future<T> f) noexcept
 	{
-		setCallback<T>(::std::move(f), [](::utils::result<T> &&) noexcept {});
+		setCallback(::std::move(f), [](::utils::result<T> &&) noexcept {});
 	}
 };
 

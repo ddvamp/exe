@@ -9,9 +9,11 @@
 #include <type_traits>
 #include <utility>
 
+#include "exe/futures/fun/combine/seq/via.h"
 #include "exe/futures/fun/make/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
+#include "exe/futures/fun/traits/map.h"
 
 #include "result/result.h"
 
@@ -22,13 +24,15 @@ namespace pipe {
 // TODO: harmful exceptions
 struct [[nodiscard]] Flatten : Mutator {
 	template <typename T>
-	Future<T> mutate(Future<Future<T>> f)
+	auto mutate(Future<Future<T>> f)
 	{
 		// loss future at exception
 		auto [future, promise] = Contract::open<T>();
 
+		auto &where = getExecutor(f);
+
 		// loss future at exception
-		setCallback<Future<T>>(
+		setCallback(
 			::std::move(f),
 			[p = ::std::move(promise)]
 			(::utils::result<Future<T>> &&res) mutable noexcept {
@@ -37,12 +41,12 @@ struct [[nodiscard]] Flatten : Mutator {
 					return;
 				}
 
-				setCallback<T>(
+				setCallback(
 					*::std::move(res),
 					[p = ::std::move(p)]
 					(::utils::result<T> &&res) mutable noexcept {
 						if constexpr (
-							::std::is_nothrow_move_constructible_v<T>
+							traits::is_nothrow_move_constructible_v<T>
 						) {
 							::std::move(p).setResult(::std::move(res));
 						} else try {
@@ -55,7 +59,7 @@ struct [[nodiscard]] Flatten : Mutator {
 			}
 		);
 
-		return future;
+		return ::std::move(future) | futures::via(where);
 	}
 };
 

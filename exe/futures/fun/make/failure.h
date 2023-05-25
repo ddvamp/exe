@@ -20,7 +20,7 @@ auto failure(::utils::error error)
 
 	::std::move(promise).setError(::std::move(error));
 
-	return future;
+	return ::std::move(future);
 }
 
 } // namespace exe::futures

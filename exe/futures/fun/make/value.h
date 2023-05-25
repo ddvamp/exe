@@ -10,24 +10,24 @@
 
 #include "exe/futures/fun/make/contract.h"
 
+#include "utils/defer.h"
+
 namespace exe::futures {
 
-template <typename V>
-auto value(V &&v)
+template <typename T>
+auto value(T v)
 {
-	using T = ::std::remove_cvref_t<V>;
-
 	auto contract = Contract::open<T>();
 
-	if constexpr (::std::is_nothrow_constructible_v<T, V>) {
-		::std::move(contract).promise.setResult(::std::forward<V>(v));
+	if constexpr (::std::is_nothrow_move_constructible_v<T>) {
+		::std::move(contract).promise.setResult(::std::move(v));
 	} else {
 		auto rollback = ::utils::scope_guard(
 			[&contract]() noexcept {
 				Contract::close(::std::move(contract));
 			}
 		);
-		::std::move(contract).promise.setResult(::std::forward<V>(v));
+		::std::move(contract).promise.setResult(::std::move(v));
 		rollback.disable();
 	}
 
