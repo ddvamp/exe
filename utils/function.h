@@ -160,7 +160,7 @@ struct get_function_impl<R(Args...) noexcept> {
 	using type = FunctionImpl<R, true, Args...>;
 };
 
-} // namespace utils::detail
+} // namespace detail
 
 // wrapper for functors whose operator() is of type FuncType
 template <typename FuncType>

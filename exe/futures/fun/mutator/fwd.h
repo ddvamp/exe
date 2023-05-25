@@ -9,6 +9,6 @@ namespace exe::futures::pipe {
 
 class Mutator;
 
-} // namespace exe::futures::detail
+} // namespace exe::futures::pipe
 
 #endif /* DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_ */
