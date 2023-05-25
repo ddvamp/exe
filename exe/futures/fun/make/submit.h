@@ -24,11 +24,18 @@ namespace exe::futures {
 namespace detail {
 
 template <typename F>
-struct Task : executors::TaskBase {
+class Task : executors::TaskBase {
+private:
 	using T = traits::map_result_t<F &>::value_type;
 
-	[[no_unique_address]] F fn;
-	Promise<T> p;
+	[[no_unique_address]] F fn_;
+	Promise<T> p_;
+
+public:
+	Task(F fun, Promise<T> p) noexcept
+		: fn_(::std::move(fun))
+		, p_(::std::move(p))
+	{}
 
 	void submit(executors::IExecutor &where) noexcept
 	{
@@ -53,15 +60,16 @@ struct Task : executors::TaskBase {
 		}
 	}
 
+private:
 	void invoke()
 	{
-		::std::move(p).setResult(::std::invoke(fn));
+		::std::move(p_).setResult(::std::invoke(fn_));
 		destroySelf();
 	}
 
 	void fail() noexcept
 	{
-		::std::move(p).setError(::std::current_exception());
+		::std::move(p_).setError(::std::current_exception());
 		destroySelf();
 	}
 
@@ -92,7 +100,7 @@ auto submit(executors::IExecutor &where, F fun)
 	);
 
 	auto task =
-		::new detail::Task{::std::move(fun), ::std::move(contract).promise};
+		::new detail::Task(::std::move(fun), ::std::move(contract).promise);
 
 	rollback.disable();
 
