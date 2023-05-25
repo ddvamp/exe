@@ -11,7 +11,7 @@
 #include "exe/futures/fun/mutator/fwd.h"
 #include "exe/futures/fun/types/future.h"
 
-struct exe::futures::pipe::Mutator {
+class exe::futures::pipe::Mutator {
 protected:
 	template <typename T>
 	[[nodiscard]] static executors::IExecutor &getExecutor(

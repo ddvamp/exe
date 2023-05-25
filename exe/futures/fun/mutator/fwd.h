@@ -7,7 +7,7 @@
 
 namespace exe::futures::pipe {
 
-struct Mutator;
+class Mutator;
 
 } // namespace exe::futures::detail
 
