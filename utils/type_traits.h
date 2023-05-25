@@ -59,29 +59,18 @@ struct is_any_of : ::std::bool_constant<is_any_of_v<T, Ts...>> {};
 ////////////////////////////////////////////////////////////////////////////////
 
 
-namespace detail {
-
 template <typename ...>
-struct head_type_or_void {
-	using type = void;
-};
-
-template <typename Head, typename ...Tail>
-struct head_type_or_void<Head, Tail...> {
-	using type = Head;
-};
-
-template <typename ...Ts>
-using head_type_or_void_t = typename head_type_or_void<Ts...>::type;
-
-} // namespace detail
+struct are_all_same_helper;
 
 template <typename ...Ts>
 inline constexpr bool are_all_same_v =
 	::std::is_same_v<
-		::std::common_type<detail::head_type_or_void<Ts...>, Ts...>,
-		::std::common_type<Ts..., detail::head_type_or_void<Ts...>>
+		are_all_same_helper<pack_element_t<0, Ts...>, Ts...>,
+		are_all_same_helper<Ts..., pack_element_t<0, Ts...>>
 	>;
+
+template <>
+inline constexpr bool are_all_same_v<> = true;
 
 template <typename ...Ts>
 struct are_all_same : ::std::bool_constant<are_all_same_v<Ts...>> {};
