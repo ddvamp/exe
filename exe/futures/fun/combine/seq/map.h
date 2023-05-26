@@ -42,10 +42,7 @@ struct [[nodiscard]] Map : detail::Mutator {
 			::std::move(f),
 			[fn = ::std::move(fun), p = ::std::move(promise)]
 			(::utils::result<T> &&res) mutable noexcept {
-				if constexpr (
-					traits::is_nothrow_invocable_v<F &, T> &&
-					traits::is_nothrow_move_constructible_v<U>
-				) {
+				if constexpr (traits::is_nothrow_invocable_v<F &, T>) {
 					::std::move(p).setResult(::std::move(res).transform(fn));
 				} else try {
 					::std::move(p).setResult(::std::move(res).transform(fn));

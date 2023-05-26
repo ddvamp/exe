@@ -14,6 +14,7 @@
 #include "exe/executors/executor.h"
 #include "exe/executors/task.h"
 #include "exe/futures/fun/state/callback.h"
+#include "exe/futures/fun/traits/map.h"
 
 #include "result/result.h"
 
@@ -27,7 +28,8 @@ namespace exe::futures::detail {
 // Allows you to pass result from Promise to Future
 // and callback in the opposite direction,
 // as well as to specify where callback will be called
-template <typename T>
+template <::utils::suitable_for_result T>
+	requires (traits::is_nothrow_move_constructible_v<T>)
 class SharedState : public executors::TaskBase {
 public:
 	using Result = ::utils::result<T>;
@@ -60,8 +62,7 @@ public:
 		executor_ = &where;
 	}
 
-	void setResult(Result &&result)
-		noexcept (::std::is_nothrow_move_constructible_v<Result>)
+	void setResult(Result &&result) noexcept
 	{
 		result_.emplace(::std::move(result));
 		notify();

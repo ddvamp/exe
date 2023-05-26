@@ -48,10 +48,7 @@ public:
 
 	void run() noexcept override
 	{
-		if constexpr (
-			::std::is_nothrow_invocable_v<F &> &&
-			traits::is_nothrow_move_constructible_v<T>
-		) {
+		if constexpr (::std::is_nothrow_invocable_v<F &>) {
 			invoke();
 		} else try {
 			invoke();

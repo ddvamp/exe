@@ -46,8 +46,7 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 			[fn = ::std::move(fun), p = ::std::move(promise)]
 			(::utils::result<T> &&res) mutable noexcept {
 				if constexpr (
-					::std::is_nothrow_invocable_v<F &, ::utils::error> &&
-					traits::is_nothrow_move_constructible_v<T>
+					::std::is_nothrow_invocable_v<F &, ::utils::error>
 				) {
 					::std::move(p).setResult(::std::move(res).or_else(fn));
 				} else try {

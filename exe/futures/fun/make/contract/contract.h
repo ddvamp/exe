@@ -5,7 +5,6 @@
 #ifndef DDV_EXE_FUTURES_FUN_MAKE_CONTRACT_CONTRACT_H_
 #define DDV_EXE_FUTURES_FUN_MAKE_CONTRACT_CONTRACT_H_ 1
 
-#include <type_traits>
 #include <utility>
 
 #include "exe/futures/fun/make/contract/fwd.h"
@@ -27,19 +26,14 @@ private:
 
 	using Base::Base;
 
-	using Base::getState;
 	using Base::release;
-	using Base::reset;
 
 	using Base::Result;
 
 public:
-	void setResult(Result result) &&
-		noexcept (::std::is_nothrow_move_constructible_v<Result>)
+	void setResult(Result result) && noexcept
 	{
-		// strong exception safety
-		getState().setResult(::std::move(result));
-		reset();
+		release()->setResult(::std::move(result));
 	}
 
 	void setError(::utils::error error) && noexcept

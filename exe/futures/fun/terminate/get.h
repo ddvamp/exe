@@ -6,7 +6,7 @@
 #define DDV_EXE_FUTURES_FUN_TERMINATE_GET_H_ 1
 
 #include <exception>
-#include <type_traits>
+#include <optional>
 #include <utility>
 
 #include "concurrency/one_time_notification.h"
@@ -14,7 +14,6 @@
 #include "exe/futures/fun/combine/seq/inline.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
-#include "exe/futures/fun/traits/map.h"
 
 #include "result/result.h"
 
@@ -36,7 +35,7 @@ struct [[nodiscard]] Get : detail::Mutator {
 	template <typename T>
 	auto mutate(Future<T> f)
 	{
-		::utils::result<T> result;
+		::std::optional<::utils::result<T>> result;
 
 		// loss future at exception
 		::concurrency::OneTimeNotification result_is_ready;
@@ -45,13 +44,7 @@ struct [[nodiscard]] Get : detail::Mutator {
 		setCallback(
 			::std::move(f),
 			[&](::utils::result<T> &&res) noexcept {
-				if constexpr (traits::is_nothrow_move_constructible_v<T>) {
-					result = ::std::move(res);
-				} else try {
-					result = ::std::move(res);
-				} catch (...) {
-					result = ::std::current_exception();
-				}
+				result.emplace(::std::move(res));
 
 				try {
 					result_is_ready.notify();
@@ -67,13 +60,7 @@ struct [[nodiscard]] Get : detail::Mutator {
 			UTILS_ABORT("exception while sync wait of future");
 		}
 
-		if constexpr (traits::is_nothrow_move_constructible_v<T>) {
-			return result;
-		} else try {
-			return result;
-		} catch (...) {
-			return ::std::current_exception();
-		}
+		return *::std::move(result);
 	}
 };
 
