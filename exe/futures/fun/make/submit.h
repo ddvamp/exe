@@ -23,7 +23,7 @@ namespace exe::futures {
 namespace detail {
 
 template <typename F>
-class Task : executors::TaskBase {
+class Task : public executors::TaskBase {
 private:
 	using T = traits::map_result_t<F &>::value_type;
 
