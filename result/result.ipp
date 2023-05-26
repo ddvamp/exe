@@ -101,4 +101,29 @@ invoke_result_t<F, Args...> invoke(F &&f, Args &&...args) noexcept
 	}
 }
 
+template <typename F, typename ...Args>
+auto map_safely(F &&f, Args &&...args) noexcept
+	requires (
+		::std::is_invocable_v<F, Args...> &&
+		is_constructible_with_v<detail::result_<F, Args...>, F, Args...> &&
+		is_result_v<detail::result_<F, Args...>>
+	)
+{
+	using R = detail::result_<F, Args...>;
+
+	if constexpr (is_nothrow_constructible_with_v<R, F, Args...>) {
+		return R(::std::invoke(
+			::std::forward<F>(f),
+			::std::forward<Args>(args)...
+		));
+	} else try {
+		return R(::std::invoke(
+			::std::forward<F>(f),
+			::std::forward<Args>(args)...
+		));
+	} catch (...) {
+		return R(::std::current_exception());
+	}
+}
+
 } // namespace utils
