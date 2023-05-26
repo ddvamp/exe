@@ -17,21 +17,21 @@ namespace exe::futures {
 template <typename T>
 auto value(T v)
 {
-	auto contract = Contract::open<T>();
+	auto contract = Contract<T>();
 
 	if constexpr (::std::is_nothrow_move_constructible_v<T>) {
-		::std::move(contract).promise.setResult(::std::move(v));
+		::std::move(contract).p.setResult(::std::move(v));
 	} else {
 		auto rollback = ::utils::scope_guard(
-			[&contract]() noexcept {
-				Contract::close(::std::move(contract));
+			[&]() noexcept {
+				::std::move(contract).cancel();
 			}
 		);
-		::std::move(contract).promise.setResult(::std::move(v));
+		::std::move(contract).p.setResult(::std::move(v));
 		rollback.disable();
 	}
 
-	return ::std::move(contract).future;
+	return ::std::move(contract).f;
 }
 
 } // namespace exe::futures

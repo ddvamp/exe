@@ -12,7 +12,9 @@ namespace exe::futures {
 
 template <typename T>
 class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
-	friend class Contract;
+	template <typename>
+	friend struct Contract;
+
 	friend detail::Mutator;
 
 protected:

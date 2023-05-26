@@ -91,22 +91,22 @@ auto submit(executors::IExecutor &where, F fun)
 {
 	using T = traits::map_result_t<F &>::value_type;
 
-	auto contract = Contract::open<T>();
+	auto contract = Contract<T>();
 
 	auto rollback = ::utils::scope_guard(
-		[&contract]() noexcept {
-			Contract::close(::std::move(contract));
+		[&]() noexcept {
+			::std::move(contract).cancel();
 		}
 	);
 
 	auto task =
-		::new detail::Task(::std::move(fun), ::std::move(contract).promise);
+		::new detail::Task(::std::move(fun), ::std::move(contract).p);
 
 	rollback.disable();
 
 	task->submit(where);
 
-	return ::std::move(contract).future | futures::via(where);
+	return ::std::move(contract).f | futures::via(where);
 }
 
 } // namespace exe::futures

@@ -16,7 +16,7 @@ namespace exe::futures {
 template <typename T>
 auto failure(::utils::error error)
 {
-	auto [future, promise] = Contract::open<T>();
+	auto [future, promise] = Contract<T>();
 
 	::std::move(promise).setError(::std::move(error));
 

@@ -13,11 +13,14 @@
 
 #include "result/result.h"
 
+#include "utils/macro.h"
+
 namespace exe::futures {
 
 template <typename T>
 class Promise : protected detail::HoldState<T> {
-	friend Contract;
+	template <typename>
+	friend struct Contract;
 
 private:
 	using Base = detail::HoldState<T>;
@@ -45,31 +48,30 @@ public:
 	}
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
+template <typename T>
+struct [[nodiscard]] Contract {
+	using State = detail::SharedState<T>;
 
-class Contract {
-public:
-	template <typename T>
-	struct [[nodiscard]] Content {
-		SemiFuture<T> future;
-		Promise<T> promise;
-	};
+	SemiFuture<T> f;
+	Promise<T> p;
 
-	template <::utils::suitable_for_result T>
-	static Content<T> open()
+	Contract()
+		: Contract(State::create())
+	{}
+
+	void cancel() && noexcept
 	{
-		auto state = detail::SharedState<T>::create();
-		return {SemiFuture<T>(state), Promise<T>(state)};
+		UTILS_IGNORE(f.release());
+		State::destroy(p.release());
 	}
 
-	template <typename T>
-	static void close(Content<T> contract) noexcept
-	{
-		contract.future.reset();
-		detail::SharedState<T>::destroy(contract.promise.release());
-	}
+private:
+	Contract(State *state) noexcept
+		: f(state)
+		, p(state)
+	{}
 };
 
 } // namespace exe::futures

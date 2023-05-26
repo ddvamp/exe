@@ -36,7 +36,7 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 		using U = traits::map_result_t<F &, T>::value_type;
 
 		// loss future at exception
-		auto [future, promise] = Contract::open<U>();
+		auto [future, promise] = Contract<U>();
 
 		auto &where = getExecutor(f);
 

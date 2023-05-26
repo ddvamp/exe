@@ -13,7 +13,7 @@ namespace exe::futures {
 
 inline auto just()
 {
-	auto [future, promise] = Contract::open<void>();
+	auto [future, promise] = Contract<void>();
 
 	::std::move(promise).setResult({});
 

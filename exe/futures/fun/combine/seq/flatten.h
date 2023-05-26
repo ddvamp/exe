@@ -27,7 +27,7 @@ struct [[nodiscard]] Flatten : detail::Mutator {
 	auto mutate(Future<Future<T>> f)
 	{
 		// loss future at exception
-		auto [future, promise] = Contract::open<T>();
+		auto [future, promise] = Contract<T>();
 
 		auto &where = getExecutor(f);
 
