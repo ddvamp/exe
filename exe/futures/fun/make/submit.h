@@ -16,6 +16,7 @@
 
 #include "result/result.h"
 
+#include "utils/abort.h"
 #include "utils/defer.h"
 
 namespace exe::futures {
