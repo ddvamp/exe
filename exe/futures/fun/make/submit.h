@@ -6,7 +6,6 @@
 #define DDV_EXE_FUTURES_FUN_MAKE_SUBMIT_H_ 1
 
 #include <exception>
-#include <functional>
 #include <type_traits>
 #include <utility>
 
@@ -37,41 +36,9 @@ public:
 		, p_(::std::move(p))
 	{}
 
-	void submit(executors::IExecutor &where) noexcept
-	{
-		try {
-			where.execute(this);
-		} catch (...) {
-			fail();
-		}
-	}
-
 	void run() noexcept override
 	{
-		if constexpr (::std::is_nothrow_invocable_v<F &>) {
-			invoke();
-		} else try {
-			invoke();
-		} catch (...) {
-			fail();
-		}
-	}
-
-private:
-	void invoke()
-	{
-		::std::move(p_).setResult(::std::invoke(fn_));
-		destroySelf();
-	}
-
-	void fail() noexcept
-	{
-		::std::move(p_).setError(::std::current_exception());
-		destroySelf();
-	}
-
-	void destroySelf() noexcept
-	{
+		::std::move(p_).setResult(::utils::map_safely(fn_));
 		delete this;
 	}
 };
@@ -101,7 +68,11 @@ auto submit(executors::IExecutor &where, F fun)
 
 	rollback.disable();
 
-	task->submit(where);
+	try {
+		where.execute(task);
+	} catch (...) {
+		UTILS_ABORT("exception while submitting a task in executor");
+	}
 
 	return ::std::move(contract).f | futures::via(where);
 }

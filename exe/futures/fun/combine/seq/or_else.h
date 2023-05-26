@@ -5,7 +5,6 @@
 #ifndef DDV_EXE_FUTURES_FUN_COMBINE_SEQ_OR_ELSE_H_
 #define DDV_EXE_FUTURES_FUN_COMBINE_SEQ_OR_ELSE_H_ 1
 
-#include <exception>
 #include <type_traits>
 #include <utility>
 
@@ -45,15 +44,13 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 			::std::move(f),
 			[fn = ::std::move(fun), p = ::std::move(promise)]
 			(::utils::result<T> &&res) mutable noexcept {
-				if constexpr (
-					::std::is_nothrow_invocable_v<F &, ::utils::error>
-				) {
-					::std::move(p).setResult(::std::move(res).or_else(fn));
-				} else try {
-					::std::move(p).setResult(::std::move(res).or_else(fn));
-				} catch (...) {
-					::std::move(p).setError(::std::current_exception());
-				}
+				::std::move(p).setResult(::utils::map_safely(
+					[&]() noexcept (
+						::std::is_nothrow_invocable_v<F &, ::utils::error>
+					) {
+						return ::std::move(res).or_else(fn);
+					}
+				));
 			}
 		);
 

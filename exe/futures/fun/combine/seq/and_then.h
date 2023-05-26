@@ -5,7 +5,6 @@
 #ifndef DDV_EXE_FUTURES_FUN_COMBINE_SEQ_AND_THEN_H_
 #define DDV_EXE_FUTURES_FUN_COMBINE_SEQ_AND_THEN_H_ 1
 
-#include <exception>
 #include <type_traits>
 #include <utility>
 
@@ -45,13 +44,11 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 			::std::move(f),
 			[fn = ::std::move(fun), p = ::std::move(promise)]
 			(::utils::result<T> &&res) mutable noexcept {
-				if constexpr (traits::is_nothrow_invocable_v<F &, T>) {
-					::std::move(p).setResult(::std::move(res).and_then(fn));
-				} else try {
-					::std::move(p).setResult(::std::move(res).and_then(fn));
-				} catch (...) {
-					::std::move(p).setError(::std::current_exception());
-				}
+				::std::move(p).setResult(::utils::map_safely(
+					[&]() noexcept (traits::is_nothrow_invocable_v<F &, T>) {
+						return ::std::move(res).and_then(fn);
+					}
+				));
 			}
 		);
 
