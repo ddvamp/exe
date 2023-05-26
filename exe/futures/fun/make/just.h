@@ -7,7 +7,7 @@
 
 #include <utility>
 
-#include "exe/futures/fun/make/contract.h"
+#include "exe/futures/fun/make/contract/contract.h"
 
 namespace exe::futures {
 

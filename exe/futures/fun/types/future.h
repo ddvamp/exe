@@ -5,6 +5,7 @@
 #ifndef DDV_EXE_FUTURES_FUN_TYPES_FUTURE_H_
 #define DDV_EXE_FUTURES_FUN_TYPES_FUTURE_H_ 1
 
+#include "exe/futures/fun/make/contract/fwd.h"
 #include "exe/futures/fun/mutator/fwd.h"
 #include "exe/futures/fun/state/shared_state.h"
 
@@ -12,9 +13,7 @@ namespace exe::futures {
 
 template <typename T>
 class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
-	template <typename>
-	friend struct Contract;
-
+	friend Contract<T>;
 	friend detail::Mutator;
 
 protected:

@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "exe/futures/fun/make/contract.h"
+#include "exe/futures/fun/make/contract/contract.h"
 
 #include "utils/defer.h"
 

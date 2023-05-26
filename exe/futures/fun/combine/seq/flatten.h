@@ -10,7 +10,7 @@
 #include <utility>
 
 #include "exe/futures/fun/combine/seq/via.h"
-#include "exe/futures/fun/make/contract.h"
+#include "exe/futures/fun/make/contract/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
 #include "exe/futures/fun/traits/map.h"

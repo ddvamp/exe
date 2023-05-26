@@ -11,7 +11,7 @@
 #include <utility>
 
 #include "exe/executors/executor.h"
-#include "exe/futures/fun/make/contract.h"
+#include "exe/futures/fun/make/contract/contract.h"
 #include "exe/futures/fun/combine/seq/via.h"
 #include "exe/futures/fun/traits/map.h"
 

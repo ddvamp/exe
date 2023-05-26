@@ -2,12 +2,13 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_FUN_MAKE_CONTRACT_H_
-#define DDV_EXE_FUTURES_FUN_MAKE_CONTRACT_H_ 1
+#ifndef DDV_EXE_FUTURES_FUN_MAKE_CONTRACT_CONTRACT_H_
+#define DDV_EXE_FUTURES_FUN_MAKE_CONTRACT_CONTRACT_H_ 1
 
 #include <type_traits>
 #include <utility>
 
+#include "exe/futures/fun/make/contract/fwd.h"
 #include "exe/futures/fun/state/shared_state.h"
 #include "exe/futures/fun/types/future.h"
 
@@ -19,8 +20,7 @@ namespace exe::futures {
 
 template <typename T>
 class Promise : protected detail::HoldState<T> {
-	template <typename>
-	friend struct Contract;
+	friend Contract<T>;
 
 private:
 	using Base = detail::HoldState<T>;
@@ -76,4 +76,4 @@ private:
 
 } // namespace exe::futures
 
-#endif /* DDV_EXE_FUTURES_FUN_MAKE_CONTRACT_H_ */
+#endif /* DDV_EXE_FUTURES_FUN_MAKE_CONTRACT_CONTRACT_H_ */
