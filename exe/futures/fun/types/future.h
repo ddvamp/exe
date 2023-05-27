@@ -9,6 +9,8 @@
 #include "exe/futures/fun/mutator/fwd.h"
 #include "exe/futures/fun/state/shared_state.h"
 
+#include "utils/type_traits.h"
+
 namespace exe::futures {
 
 template <typename T>
@@ -34,6 +36,19 @@ class [[nodiscard]] Future : public SemiFuture<T> {
 protected:
 	using SemiFuture<T>::SemiFuture;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+inline constexpr bool is_future_v =
+	::utils::is_specialization_any_of_v<
+		::std::remove_cv_t<T>,
+		SemiFuture,
+		Future
+	>;
+
+template <typename T>
+struct is_future : ::std::bool_constant<is_future_v<T>> {};
 
 } // namespace exe::futures
 
