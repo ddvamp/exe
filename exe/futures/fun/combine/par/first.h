@@ -37,9 +37,9 @@ struct [[nodiscard]] First : Mutator {
 
 		void send(::utils::result<T> &&res) noexcept
 		{
-			if (res) {
-				auto order = ::std::memory_order_acquire;
+			auto order = ::std::memory_order_acquire;
 
+			if (res) {
 				if (auto first = success()) {
 					order = ::std::memory_order_release;
 					set(res);
@@ -51,7 +51,7 @@ struct [[nodiscard]] First : Mutator {
 					destroySelf();
 				}
 			} else {
-				auto [failure, last] = done(::std::memory_order_acquire);
+				auto [failure, last] = done(order);
 
 				if (last) {
 					if (failure) {
