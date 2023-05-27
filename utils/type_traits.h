@@ -33,6 +33,20 @@ using pack_element_t = pack_element<I, Ts...>::type;
 ////////////////////////////////////////////////////////////////////////////////
 
 
+template <bool ...>
+struct all_helper;
+
+template <bool ...Vs>
+inline constexpr bool all_true_v =
+	::std::is_same_v<all_helper<true, Vs...>, all_helper<Vs..., true>>;
+
+template <bool ...Vs>
+struct all_true : ::std::bool_constant<all_true_v<Vs...>> {};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 // true if and only if T is a specialization of Template
 template <typename T, template <typename ...> typename Template>
 inline constexpr bool is_specialization_v = false;
@@ -45,12 +59,22 @@ struct is_specialization
 	: ::std::bool_constant<is_specialization_v<T, Template>>
 {};
 
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T, template <typename ...> typename ...Templates>
+inline constexpr bool is_specialization_any_of_v =
+	!all_true_v<!is_specialization_v<T, Templates>...>;
+
+template <typename T, template <typename ...> typename ...Templates>
+struct is_specialization_any_of
+	: ::std::bool_constant<is_specialization_any_of_v<T, Templates...>> {};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 template <typename T, typename ...Ts>
-inline constexpr bool is_any_of_v = (::std::is_same_v<T, Ts> || ...);
+inline constexpr bool is_any_of_v = !all_true_v<!::std::is_same_v<T, Ts>...>;
 
 template <typename T, typename ...Ts>
 struct is_any_of : ::std::bool_constant<is_any_of_v<T, Ts...>> {};
