@@ -36,7 +36,7 @@ private:
 private:
 	IExecutor &executor_;
 	DummyTask dummy_;
-	TaskBase *head_ = nullptr;
+	TaskBase *head_ = &dummy_;
 	::std::atomic<TaskBase *> tail_ = &dummy_;
 
 public:
