@@ -1,3 +1,6 @@
+#include "exe/futures/fun/combine/par/all.h"
+#include "exe/futures/fun/combine/par/first.h"
+
 #include "exe/futures/fun/combine/seq/and_then.h"
 #include "exe/futures/fun/combine/seq/flatten.h"
 #include "exe/futures/fun/combine/seq/flat_map.h"
