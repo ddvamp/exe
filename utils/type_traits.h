@@ -11,6 +11,26 @@
 
 namespace utils {
 
+// true if and only if T is a cv qualified
+template <typename>
+inline constexpr bool is_cv_v = false;
+
+template <typename T>
+inline constexpr bool is_cv_v<T const> = true;
+
+template <typename T>
+inline constexpr bool is_cv_v<T volatile> = true;
+
+template <typename T>
+inline constexpr bool is_cv_v<T const volatile> = true;
+
+template <typename T>
+struct is_cv : ::std::bool_constant<is_cv_v<T>> {};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 template <::std::size_t I, typename Head, typename ...Tail>
 struct pack_element_impl : pack_element_impl<I - 1, Tail...> {};
 
