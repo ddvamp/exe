@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "exe/futures/fun/combine/seq/inline.h"
 #include "exe/futures/fun/make/contract/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 
