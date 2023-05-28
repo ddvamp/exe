@@ -31,6 +31,31 @@ inline auto inLine() noexcept
 	return pipe::InLine{};
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+namespace pipe {
+
+struct [[nodiscard]] InLineIfNeeded : detail::Mutator {
+	template <typename T>
+	auto mutate(SemiFuture<T> f) noexcept
+	{
+		return ::std::move(f) | futures::inLine();
+	}
+
+	template <typename T>
+	auto mutate(Future<T> f) noexcept
+	{
+		return ::std::move(f);
+	}
+};
+
+} // namespace pipe
+
+inline auto inLineIfNeeded() noexcept
+{
+	return pipe::InLineIfNeeded{};
+}
+
 } // namespace exe::futures
 
 #endif /* DDV_EXE_FUTURES_FUN_COMBINE_SEQ_INLINE_H_ */

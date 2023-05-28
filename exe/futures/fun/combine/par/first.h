@@ -103,9 +103,9 @@ struct [[nodiscard]] First : Mutator {
 	};
 
 	template <typename ...Ts>
-	auto mutate(Future<Ts> &&...fs)
+	auto mutate(Ts &&...fs)
 	{
-		using T = ::utils::pack_element_t<0, Ts...>;
+		using T = ::utils::pack_element_t<0, Ts...>::value_type;
 
 		auto contract = Contract<T>();
 
@@ -120,7 +120,7 @@ struct [[nodiscard]] First : Mutator {
 		rollback.disable();
 
 		(setCallback(
-			::std::move(fs),
+			::std::move(fs) | futures::inLineIfNeeded(),
 			[state](::utils::result<T> &&res) noexcept {
 				state->send(::std::move(res));
 			}
@@ -133,10 +133,12 @@ struct [[nodiscard]] First : Mutator {
 } // namespace detail
 
 template <typename ...Ts>
-auto first(Future<Ts> &&...fs)
+auto first(Ts &&...fs)
 	requires (
 		sizeof...(Ts) > 1 &&
-		::utils::are_all_same_v<Ts...>
+		::utils::all_true_v<is_future_v<Ts>...> &&
+		::utils::all_true_v<!::utils::is_cv_v<Ts>...> &&
+		::utils::are_all_same_v<typename Ts::value_type...>
 	)
 {
 	return detail::First{}.mutate(::std::move(fs)...);
