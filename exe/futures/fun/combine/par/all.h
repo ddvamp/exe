@@ -115,10 +115,10 @@ struct [[nodiscard]] All : Mutator {
 		}
 	};
 
-	template <typename ...Ts>
-	auto mutate(Ts &&...fs)
+	template <typename ...Fs>
+	auto mutate(Fs &&...fs)
 	{
-		using T = ::std::tuple<typename Ts::value_type...>;
+		using T = ::std::tuple<typename Fs::value_type...>;
 
 		auto contract = Contract<T>();
 
@@ -128,7 +128,7 @@ struct [[nodiscard]] All : Mutator {
 			}
 		);
 
-		auto state = ::new State(sizeof...(Ts), ::std::move(contract).p);
+		auto state = ::new State(sizeof...(Fs), ::std::move(contract).p);
 
 		rollback.disable();
 
@@ -136,11 +136,11 @@ struct [[nodiscard]] All : Mutator {
 		{
 			(setCallback(
 				::std::move(fs) | futures::inLineIfNeeded(),
-				[state](::utils::result<Ts::value_type> &&res) noexcept {
+				[state](::utils::result<Fs::value_type> &&res) noexcept {
 					state->send<Is>(::std::move(res));
 				}
 			), ...);
-		}(::std::make_index_sequence<sizeof...(Ts)>{});
+		}(::std::make_index_sequence<sizeof...(Fs)>{});
 
 		return ::std::move(contract).f;
 	}
@@ -148,12 +148,9 @@ struct [[nodiscard]] All : Mutator {
 
 } // namespace detail
 
-template <typename ...Ts>
-auto all(Ts &&...fs)
-	requires (
-		sizeof...(Ts) > 1 &&
-		::utils::all_true_v<is_noncv_future_v<Ts>...>
-	)
+template <concepts::Future ...Fs>
+auto all(Fs &&...fs)
+	requires (sizeof...(Fs) > 1)
 {
 	return detail::All{}.mutate(::std::move(fs)...);
 }

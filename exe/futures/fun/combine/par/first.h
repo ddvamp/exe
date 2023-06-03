@@ -103,10 +103,10 @@ struct [[nodiscard]] First : Mutator {
 		}
 	};
 
-	template <typename ...Ts>
-	auto mutate(Ts &&...fs)
+	template <typename ...Fs>
+	auto mutate(Fs &&...fs)
 	{
-		using T = ::utils::pack_element_t<0, Ts...>::value_type;
+		using T = ::utils::pack_element_t<0, Fs...>::value_type;
 
 		auto contract = Contract<T>();
 
@@ -116,7 +116,7 @@ struct [[nodiscard]] First : Mutator {
 			}
 		);
 
-		auto state = ::new State(sizeof...(Ts), ::std::move(contract).p);
+		auto state = ::new State(sizeof...(Fs), ::std::move(contract).p);
 
 		rollback.disable();
 
@@ -133,12 +133,11 @@ struct [[nodiscard]] First : Mutator {
 
 } // namespace detail
 
-template <typename ...Ts>
-auto first(Ts &&...fs)
+template <concepts::Future ...Fs>
+auto first(Fs &&...fs)
 	requires (
-		sizeof...(Ts) > 1 &&
-		::utils::all_true_v<is_noncv_future_v<Ts>...> &&
-		::utils::are_all_same_v<typename Ts::value_type...>
+		sizeof...(Fs) > 1 &&
+		::utils::are_all_same_v<typename Fs::value_type...>
 	)
 {
 	return detail::First{}.mutate(::std::move(fs)...);

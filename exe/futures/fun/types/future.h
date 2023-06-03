@@ -39,7 +39,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename T>
+template <typename>
 inline constexpr bool is_noncv_future_v = false;
 
 template <typename T>
@@ -58,6 +58,21 @@ inline constexpr bool is_future_v = is_noncv_future_v<::std::remove_cv_t<T>>;
 
 template <typename T>
 struct is_future : ::std::bool_constant<is_future_v<T>> {};
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace concepts {
+
+template <typename F>
+concept Future = is_noncv_future_v<F>;
+
+template <typename F, typename T>
+concept FutureOf = Future<F> && ::std::is_same_v<typename F::value_type, T>;
+
+template <typename F>
+concept Event = FutureOf<F, void>;
+
+} // namespace concepts
 
 } // namespace exe::futures
 

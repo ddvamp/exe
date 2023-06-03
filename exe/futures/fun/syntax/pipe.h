@@ -12,18 +12,11 @@
 namespace exe::futures::pipe {
 
 // TODO:
-//		trait -> is_future,
 //		trait -> is_combinator,
 //		trait -> is_nothrow_combinator
 
-template <typename T, typename C>
-auto operator| (SemiFuture<T> f, C c)
-{
-	return c.mutate(::std::move(f));
-}
-
-template <typename T, typename C>
-auto operator| (Future<T> f, C c)
+template <concepts::Future F, typename C>
+auto operator| (F &&f, C c)
 {
 	return c.mutate(::std::move(f));
 }
