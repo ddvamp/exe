@@ -36,15 +36,17 @@ public:
 		, promise_(::std::move(p))
 	{}
 
-	template <::std::size_t I>
-	void send(
-		::utils::result<::utils::pack_element_t<I, Ts...>> &&res) noexcept
+	template <::std::size_t I, typename T>
+	void send(::utils::result<T> &&res) noexcept
 	{
 		auto order = ::std::memory_order_acq_rel;
 
 		if (res) {
-			// TODO: fix for void
-			::std::get<I>(results_).emplace(*::std::move(res));
+			if constexpr (::std::is_void_v<T>) {
+				::std::get<I>(results_).emplace();
+			} else {
+				::std::get<I>(results_).emplace(*::std::move(res));
+			}
 
 			auto [clean, done] = release(order);
 
@@ -87,12 +89,30 @@ private:
 	}
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 struct [[nodiscard]] All : Mutator {
+	template <typename T>
+	struct void_to_dummy {
+		using type = T;
+	};
+
+	template <>
+	struct void_to_dummy<void> {
+		struct dummy {};
+
+		using type = dummy;
+	};
+
+	template <typename T>
+	using void_to_dummy_t = void_to_dummy<T>::type;
+
+
+
 	template <typename ...Fs>
 	auto mutate(Fs &&...fs)
 	{
-		// TODO: fix for void
-		using T = ::std::tuple<typename Fs::value_type...>;
+		using T = ::std::tuple<void_to_dummy_t<typename Fs::value_type>...>;
 
 		auto contract = Contract<T>();
 
