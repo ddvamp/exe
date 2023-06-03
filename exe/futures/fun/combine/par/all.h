@@ -152,8 +152,7 @@ template <typename ...Ts>
 auto all(Ts &&...fs)
 	requires (
 		sizeof...(Ts) > 1 &&
-		::utils::all_true_v<is_future_v<Ts>...> &&
-		::utils::all_true_v<!::utils::is_cv_v<Ts>...>
+		::utils::all_true_v<is_noncv_future_v<Ts>...>
 	)
 {
 	return detail::All{}.mutate(::std::move(fs)...);

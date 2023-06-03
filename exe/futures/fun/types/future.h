@@ -40,12 +40,21 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline constexpr bool is_future_v =
-	::utils::is_specialization_any_of_v<
-		::std::remove_cv_t<T>,
-		SemiFuture,
-		Future
-	>;
+inline constexpr bool is_noncv_future_v = false;
+
+template <typename T>
+inline constexpr bool is_noncv_future_v<SemiFuture<T>> = true;
+
+template <typename T>
+inline constexpr bool is_noncv_future_v<Future<T>> = true;
+
+template <typename T>
+struct is_noncv_future : ::std::bool_constant<is_noncv_future_v<T>> {};
+
+
+
+template <typename T>
+inline constexpr bool is_future_v = is_noncv_future_v<::std::remove_cv_t<T>>;
 
 template <typename T>
 struct is_future : ::std::bool_constant<is_future_v<T>> {};

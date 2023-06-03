@@ -137,8 +137,7 @@ template <typename ...Ts>
 auto first(Ts &&...fs)
 	requires (
 		sizeof...(Ts) > 1 &&
-		::utils::all_true_v<is_future_v<Ts>...> &&
-		::utils::all_true_v<!::utils::is_cv_v<Ts>...> &&
+		::utils::all_true_v<is_noncv_future_v<Ts>...> &&
 		::utils::are_all_same_v<typename Ts::value_type...>
 	)
 {
