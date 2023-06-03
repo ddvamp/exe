@@ -5,12 +5,12 @@
 #ifndef DDV_EXE_FUTURES_FUN_COMBINE_PAR_ALL_H_
 #define DDV_EXE_FUTURES_FUN_COMBINE_PAR_ALL_H_ 1
 
-#include <atomic>
-#include <cstdint>
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
+#include "exe/futures/fun/combine/par/detail/use_count.h"
 #include "exe/futures/fun/combine/seq/inline.h"
 #include "exe/futures/fun/make/contract/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
@@ -22,102 +22,76 @@ namespace exe::futures {
 
 namespace detail {
 
-struct [[nodiscard]] All : Mutator {
-	template <typename ...Ts>
-	class State {
-	private:
-		using state_t = ::std::uint64_t;
-		using U = ::std::tuple<Ts...>;
+template <typename ...Ts>
+class AllState : private UseCount {
+private:
+	using U = ::std::tuple<Ts...>;
 
-		::std::atomic<state_t> state_;
-		Promise<U> promise_;
-		::std::tuple<::std::optional<Ts>...> results_;
+	Promise<U> promise_;
+	::std::tuple<::std::optional<Ts>...> results_;
 
-	public:
-		State(state_t count, Promise<U> p)
-			: state_(count)
-			, promise_(::std::move(p))
-		{}
+public:
+	AllState(count_t count, Promise<U> p)
+		: UseCount(count)
+		, promise_(::std::move(p))
+	{}
 
-		template <::std::size_t I>
-		void send(
-			::utils::result<::utils::pack_element_t<I, Ts...>> &&res) noexcept
-		{
-			if (res) {
-				::std::get<I>(results_).emplace(*::std::move(res));
+	template <::std::size_t I>
+	void send(
+		::utils::result<::utils::pack_element_t<I, Ts...>> &&res) noexcept
+	{
+		auto order = ::std::memory_order_acq_rel;
 
-				auto [success, last] = done(::std::memory_order_acq_rel);
+		if (res) {
+			// TODO: fix for void
+			::std::get<I>(results_).emplace(*::std::move(res));
 
-				if (last) {
-					if (success) {
-						set();
-					}
+			auto [clean, done] = release(order);
 
-					destroySelf();
+			if (done) {
+				if (clean) {
+					setResult();
 				}
+
+				destroySelf();
+			}
+		} else {
+			if (auto first = use()) {
+				::std::move(promise_).setError(::std::move(res).error());
 			} else {
-				auto order = ::std::memory_order_acquire;
+				order = ::std::memory_order_acquire;
+			}
 
-				if (auto first = failure()) {
-					order = ::std::memory_order_acq_rel;
-					::std::move(promise_).setError(::std::move(res).error());
-				}
+			auto [_, done] = release(order);
 
-				auto [_, last] = done(order);
-
-				if (last) {
-					destroySelf();
-				}
+			if (done) {
+				destroySelf();
 			}
 		}
+	}
 
-	private:
-		bool failure() noexcept
-		{
-			auto state = state_.fetch_add(
-				state_t(1) << 32,
-				::std::memory_order_relaxed
-			);
+private:
+	void setResult() noexcept
+	{
+		[this]<::std::size_t ...Is>
+		(::std::index_sequence<Is...>) noexcept {
+			::std::move(promise_).setResult(::std::forward_as_tuple(
+				*::std::get<Is>(::std::move(results_))...
+			));
+		}(::std::make_index_sequence<sizeof...(Ts)>{});
+	}
 
-			return first(state);
-		}
+	void destroySelf() noexcept
+	{
+		delete this;
+	}
+};
 
-		::std::pair<bool, bool> done(::std::memory_order order) noexcept
-		{
-			auto state = state_.fetch_sub(1, order);
-
-			return {first(state), last(state)};
-		}
-
-		void set() noexcept
-		{
-			[this]<::std::size_t ...Is>
-			(::std::index_sequence<Is...>) noexcept {
-				::std::move(promise_).setResult(::std::forward_as_tuple(
-					*::std::get<Is>(::std::move(results_))...
-				));
-			}(::std::make_index_sequence<sizeof...(Ts)>{});
-		}
-
-		void destroySelf() noexcept
-		{
-			delete this;
-		}
-
-		static bool first(state_t const state) noexcept
-		{
-			return static_cast<::std::uint32_t>(state >> 32) == 0;
-		}
-
-		static bool last(state_t const state) noexcept
-		{
-			return static_cast<::std::uint32_t>(state) == 1;
-		}
-	};
-
+struct [[nodiscard]] All : Mutator {
 	template <typename ...Fs>
 	auto mutate(Fs &&...fs)
 	{
+		// TODO: fix for void
 		using T = ::std::tuple<typename Fs::value_type...>;
 
 		auto contract = Contract<T>();
@@ -128,7 +102,7 @@ struct [[nodiscard]] All : Mutator {
 			}
 		);
 
-		auto state = ::new State(sizeof...(Fs), ::std::move(contract).p);
+		auto state = ::new AllState(sizeof...(Fs), ::std::move(contract).p);
 
 		rollback.disable();
 
