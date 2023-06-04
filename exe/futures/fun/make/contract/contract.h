@@ -13,8 +13,6 @@
 
 #include "result/result.h"
 
-#include "utils/macro.h"
-
 namespace exe::futures {
 
 template <typename T>
