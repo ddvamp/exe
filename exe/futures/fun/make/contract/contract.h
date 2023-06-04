@@ -51,21 +51,28 @@ struct [[nodiscard]] Contract {
 	SemiFuture<T> f;
 	Promise<T> p;
 
+	~Contract()
+	{
+		if (f.hasState()) [[unlikely]] {
+			cancel();
+		}
+	}
+
 	Contract()
 		: Contract(State::create())
 	{}
-
-	void cancel() && noexcept
-	{
-		UTILS_IGNORE(f.release());
-		State::destroy(p.release());
-	}
 
 private:
 	Contract(State *state) noexcept
 		: f(state)
 		, p(state)
 	{}
+
+	void cancel() noexcept
+	{
+		f.reset();
+		State::destroy(p.release());
+	}
 };
 
 } // namespace exe::futures

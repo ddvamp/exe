@@ -15,7 +15,6 @@
 #include "exe/futures/fun/make/contract/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 
-#include "utils/defer.h"
 #include "utils/type_traits.h"
 
 namespace exe::futures {
@@ -116,15 +115,7 @@ struct [[nodiscard]] All : Mutator {
 
 		auto contract = Contract<T>();
 
-		auto rollback = ::utils::scope_guard(
-			[&]() noexcept {
-				::std::move(contract).cancel();
-			}
-		);
-
 		auto state = ::new AllState(sizeof...(Fs), ::std::move(contract).p);
-
-		rollback.disable();
 
 		[&]<::std::size_t ...Is>(::std::index_sequence<Is...>)
 		{

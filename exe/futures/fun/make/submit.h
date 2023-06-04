@@ -17,7 +17,6 @@
 #include "result/result.h"
 
 #include "utils/abort.h"
-#include "utils/defer.h"
 
 namespace exe::futures {
 
@@ -58,16 +57,7 @@ auto submit(executors::IExecutor &where, F fun)
 
 	auto contract = Contract<T>();
 
-	auto rollback = ::utils::scope_guard(
-		[&]() noexcept {
-			::std::move(contract).cancel();
-		}
-	);
-
-	auto task =
-		::new detail::Task(::std::move(fun), ::std::move(contract).p);
-
-	rollback.disable();
+	auto task = ::new detail::Task(::std::move(fun), ::std::move(contract).p);
 
 	try {
 		where.execute(task);
