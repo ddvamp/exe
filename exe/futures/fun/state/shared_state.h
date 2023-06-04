@@ -37,7 +37,7 @@ public:
 
 private:
 	::std::optional<Result> result_;
-	Callback callback_;
+	::std::optional<Callback> callback_;
 	::concurrency::Meeting meeting_{2};
 	executors::IExecutor *executor_ = nullptr;
 
@@ -70,7 +70,7 @@ public:
 
 	void setCallback(Callback &&callback) noexcept
 	{
-		callback_ = ::std::move(callback);
+		callback_.emplace(::std::move(callback));
 		notify();
 	}
 
@@ -79,7 +79,7 @@ private:
 
 	void run() noexcept override
 	{
-		callback_(*::std::move(result_));
+		(*callback_)(*::std::move(result_));
 		destroySelf();
 	}
 
