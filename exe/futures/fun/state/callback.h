@@ -5,9 +5,13 @@
 #ifndef DDV_EXE_FUTURES_FUN_STATE_CALLBACK_H_
 #define DDV_EXE_FUTURES_FUN_STATE_CALLBACK_H_ 1
 
+#include <cstddef>
 #include <functional>
+#include <utility>
 
 #include "result/result.h"
+
+#include "utils/type_traits.h"
 
 namespace exe::futures {
 
