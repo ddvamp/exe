@@ -26,6 +26,7 @@ private:
 
 	using Base::release;
 
+public:
 	using Base::Result;
 
 public:

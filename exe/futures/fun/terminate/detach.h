@@ -19,15 +19,15 @@ namespace pipe {
 
 struct [[nodiscard]] Detach : detail::Mutator {
 	template <typename T>
-	void mutate(SemiFuture<T> f) noexcept
+	void mutate(SemiFuture<T> &&f) noexcept
 	{
 		mutate(::std::move(f) | futures::inLine());
 	}
 
 	template <typename T>
-	void mutate(Future<T> f) noexcept
+	void mutate(Future<T> &&f) noexcept
 	{
-		setCallback(::std::move(f), [](::utils::result<T> &&) noexcept {});
+		setCallback(::std::move(f), [](auto &&) noexcept {});
 	}
 };
 

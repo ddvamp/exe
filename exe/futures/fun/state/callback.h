@@ -74,6 +74,12 @@ private:
 public:
 	template <typename TFn, typename ...TArgs>
 	explicit Callback(TFn &&fn, TArgs &&...args)
+		requires (
+			::utils::all_true_v<
+				::std::is_constructible_v<Fn, TFn>,
+				::std::is_constructible_v<Args, TArgs>...
+			>
+		)
 		: fn_(::std::forward<TFn>(fn))
 		, args_{::std::forward<TArgs>(args)...}
 	{}
@@ -88,15 +94,48 @@ public:
 
 } // namespace detail
 
-
-
 template <typename T, typename ...Ts>
 [[nodiscard]] auto makeCallback(Ts &&...ts)
 {
 	return Callback<T>(
-		::std::in_place_type_t<
+		::std::in_place_type<
 			detail::Callback<T, ::std::remove_cvref_t<Ts>...>
-		>{},
+		>,
+		::std::forward<Ts>(ts)...
+	);
+}
+
+// TODO: move to utils
+template <typename ...>
+struct types_list_t {};
+
+template <typename ...Ts>
+inline constexpr types_list_t<Ts...> types_list{};
+
+struct deduce_type_t {};
+
+template <typename T, typename>
+struct deduce {
+	using type = T;
+};
+
+template <typename U>
+struct deduce<deduce_type_t, U> {
+	using type = U;
+};
+
+template <typename T, typename U>
+using deduce_t = deduce<T, U>::type;
+
+template <typename T, typename ...Args, typename ...Ts>
+[[nodiscard]] auto makeCallback(types_list_t<Args...>, Ts &&...ts)
+	requires (sizeof...(Args) == sizeof...(Ts))
+{
+	return Callback<T>(
+		::std::in_place_type<detail::Callback<
+			T,
+			deduce_t<Args, ::std::remove_cvref_t<Ts>>...
+		>>,
 		::std::forward<Ts>(ts)...
 	);
 }

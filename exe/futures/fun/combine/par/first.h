@@ -80,9 +80,10 @@ struct [[nodiscard]] First : Mutator {
 
 		auto state = ::new FirstState(sizeof...(Fs), ::std::move(contract).p);
 
+		// TODO: more exception safety
 		(setCallback(
 			::std::move(fs) | futures::inLineIfNeeded(),
-			[state](::utils::result<T> &&res) noexcept {
+			[state](auto &&res) noexcept {
 				state->send(::std::move(res));
 			}
 		), ...);

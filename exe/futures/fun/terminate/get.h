@@ -25,7 +25,7 @@ namespace pipe {
 
 struct [[nodiscard]] Get : detail::Mutator {
 	template <typename T>
-	auto mutate(SemiFuture<T> f)
+	auto mutate(SemiFuture<T> &&f)
 	{
 		return mutate(::std::move(f) | futures::inLine());
 	}
@@ -33,17 +33,15 @@ struct [[nodiscard]] Get : detail::Mutator {
 	// TODO: my eyes hurt
 	// how to think about exceptions, please tell me
 	template <typename T>
-	auto mutate(Future<T> f)
+	auto mutate(Future<T> &&f)
 	{
 		::std::optional<::utils::result<T>> result;
 
-		// loss future at exception
 		::concurrency::OneTimeNotification result_is_ready;
 
-		// loss future at exception
 		setCallback(
 			::std::move(f),
-			[&](::utils::result<T> &&res) noexcept {
+			[&](auto &&res) noexcept {
 				result.emplace(::std::move(res));
 
 				try {

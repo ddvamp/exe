@@ -25,6 +25,8 @@ protected:
 
 public:
 	using Base::value_type;
+
+	using Base::Callback;
 };
 
 // Class for representing future value

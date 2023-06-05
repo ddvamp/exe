@@ -26,30 +26,33 @@ struct [[nodiscard]] Map : detail::Mutator {
 	[[no_unique_address]] F fun;
 
 	template <typename T>
-	auto mutate(Future<T> f)
+	auto mutate(Future<T> &&f)
 		requires (traits::is_invocable_v<F &, T>)
 	{
 		using U = traits::map_result_t<F &, T>;
 
-		// loss future at exception
-		auto [future, promise] = Contract<U>();
+		auto contract = Contract<U>();
 
 		auto &where = getExecutor(f);
 
-		// loss future at exception
 		setCallback(
 			::std::move(f),
-			[fn = ::std::move(fun), p = ::std::move(promise)]
-			(::utils::result<T> &&res) mutable noexcept {
-				::std::move(p).setResult(::utils::map_safely(
-					[&]() noexcept (traits::is_nothrow_invocable_v<F &, T>) {
-						return ::std::move(res).transform(fn);
-					}
-				));
-			}
+			futures::makeCallback<T>(
+				[](auto &res, auto &fn, auto &p) noexcept {
+					::std::move(p).setResult(::utils::map_safely(
+						[&]() noexcept (
+							traits::is_nothrow_invocable_v<F &, T>
+						) {
+							return ::std::move(res).transform(fn);
+						}
+					));
+				},
+				::std::move(fun),
+				::std::move(contract).p
+			)
 		);
 
-		return ::std::move(future) | futures::via(where);
+		return ::std::move(contract).f | futures::via(where);
 	}
 };
 

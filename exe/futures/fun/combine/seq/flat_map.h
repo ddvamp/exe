@@ -20,7 +20,7 @@ struct [[nodiscard]] FlatMap : detail::Mutator {
 	[[no_unique_address]] F fun;
 
 	template <typename T>
-	auto mutate(Future<T> f)
+	auto mutate(Future<T> &&f)
 	{
 		return
 			::std::move(f) |

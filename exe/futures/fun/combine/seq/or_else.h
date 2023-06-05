@@ -26,7 +26,7 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 	[[no_unique_address]] F fun;
 
 	template <typename T>
-	auto mutate(Future<T> f)
+	auto mutate(Future<T> &&f)
 		requires (
 			::std::is_same_v<
 				traits::map_result_t<F &, ::utils::error>,
@@ -34,27 +34,28 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 			>
 		)
 	{
-		// loss future at exception
-		auto [future, promise] = Contract<T>();
+		auto contract = Contract<T>();
 
 		auto &where = getExecutor(f);
 
-		// loss future at exception
 		setCallback(
 			::std::move(f),
-			[fn = ::std::move(fun), p = ::std::move(promise)]
-			(::utils::result<T> &&res) mutable noexcept {
-				::std::move(p).setResult(::utils::map_safely(
-					[&]() noexcept (
-						::std::is_nothrow_invocable_v<F &, ::utils::error>
-					) {
-						return ::std::move(res).or_else(fn);
-					}
-				));
-			}
+			futures::makeCallback<T>(
+				[](auto &res, auto &fn, auto &p) noexcept {
+					::std::move(p).setResult(::utils::map_safely(
+						[&]() noexcept (
+							::std::is_nothrow_invocable_v<F &, ::utils::error>
+						) {
+							return ::std::move(res).or_else(fn);
+						}
+					));
+				},
+				::std::move(fun),
+				::std::move(contract).p
+			)
 		);
 
-		return ::std::move(future) | futures::via(where);
+		return ::std::move(contract).f | futures::via(where);
 	}
 };
 

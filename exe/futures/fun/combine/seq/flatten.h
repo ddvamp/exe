@@ -6,7 +6,6 @@
 #define DDV_EXE_FUTURES_FUN_COMBINE_SEQ_FLATTEN_H_ 1
 
 #include <exception>
-#include <utility>
 
 #include "exe/futures/fun/combine/seq/via.h"
 #include "exe/futures/fun/make/contract/contract.h"
@@ -15,41 +14,46 @@
 
 #include "result/result.h"
 
+#include "utils/utility.h"
+
 namespace exe::futures {
 
 namespace pipe {
 
-// TODO: harmful exceptions
 struct [[nodiscard]] Flatten : detail::Mutator {
 	template <typename T>
-	auto mutate(Future<Future<T>> f)
+	auto mutate(Future<Future<T>> &&f)
 	{
-		// loss future at exception
-		auto [future, promise] = Contract<T>();
+		auto contract = Contract<T>();
 
+		// TODO: Future<SemiFuture<T>>
 		auto &where = getExecutor(f);
 
-		// loss future at exception
 		setCallback(
 			::std::move(f),
-			[p = ::std::move(promise)]
-			(::utils::result<Future<T>> &&res) mutable noexcept {
-				if (res.has_error()) {
-					::std::move(p).setError(::std::move(res).error());
-					return;
-				}
+			futures::makeCallback<Future<T>>(
+				types_list<deduce_type_t, Callback<T>>,
 
-				setCallback(
-					*::std::move(res),
-					[p = ::std::move(p)]
-					(::utils::result<T> &&res) mutable noexcept {
-						::std::move(p).setResult(::std::move(res));
+				[](auto &res, auto &cb) noexcept {
+					if (res.has_error()) {
+						cb(::std::move(res).error());
+					} else {
+						setCallback(*::std::move(res), ::std::move(cb));
 					}
-				);
-			}
+				},
+
+				::utils::builder([&]() { 
+					return futures::makeCallback<T>(
+						[] (auto &res, auto &p) noexcept {
+							::std::move(p).setResult(::std::move(res));
+						},
+						::std::move(contract).p
+					);
+				})
+			)
 		);
 
-		return ::std::move(future) | futures::via(where);
+		return ::std::move(contract).f | futures::via(where);
 	}
 };
 

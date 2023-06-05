@@ -18,7 +18,7 @@ namespace pipe {
 
 struct [[nodiscard]] InLine : detail::Mutator {
 	template <typename T>
-	auto mutate(SemiFuture<T> f) noexcept
+	auto mutate(SemiFuture<T> &&f) noexcept
 	{
 		return ::std::move(f) | futures::via(executors::getInlineExecutor());
 	}
