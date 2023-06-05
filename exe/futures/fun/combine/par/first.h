@@ -36,7 +36,7 @@ public:
 		promise_.emplace(::std::move(p));
 	}
 
-	void send(::utils::result<T> &&res) noexcept
+	void setResult(::utils::result<T> &&res) noexcept
 	{
 		auto order = ::std::memory_order_acquire;
 
@@ -76,6 +76,8 @@ private:
 	}
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 struct [[nodiscard]] First : Mutator {
 	template <typename ...Fs>
 	auto mutate(Fs &&...fs)
@@ -86,10 +88,11 @@ struct [[nodiscard]] First : Mutator {
 
 		auto state = ::std::make_unique<FirstState<T>>(sizeof...(Fs));
 
+		// strong exception guarantee
 		auto callback_list = ::std::array{
 			Fs::Callback(
 				[state = state.get()](auto &&res) noexcept {
-					state->send(::std::move(res));
+					state->setResult(::std::move(res));
 				}
 			)...
 		};
