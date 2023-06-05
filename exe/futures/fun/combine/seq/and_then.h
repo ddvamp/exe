@@ -20,7 +20,6 @@ namespace exe::futures {
 
 namespace pipe {
 
-// TODO: harmful exceptions
 template <typename F>
 struct [[nodiscard]] AndThen : detail::Mutator {
 	[[no_unique_address]] F fun;
@@ -42,13 +41,15 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 			::std::move(f),
 			futures::makeCallback<T>(
 				[](auto &res, auto &fn, auto &p) noexcept {
-					::std::move(p).setResult(::utils::map_safely(
-						[&]() noexcept (
-							traits::is_nothrow_invocable_v<F &, T>
-						) {
-							return ::std::move(res).and_then(fn);
-						}
-					));
+					::std::move(p).setResult(
+						::utils::map_safely(
+							[&]() noexcept (
+								traits::is_nothrow_invocable_v<F &, T>
+							) {
+								return ::std::move(res).and_then(fn);
+							}
+						)
+					);
 				},
 				::std::move(fun),
 				::std::move(contract).p
