@@ -86,18 +86,25 @@ inline constexpr bool is_nothrow_invocable_v =
 
 
 template <typename F, typename ...Args>
-invoke_result_t<F, Args...> invoke(F &&f, Args &&...args) noexcept
+auto invoke(F &&f, Args &&...args) noexcept
 	requires (is_invocable_v<F, Args...>)
 {
+	using R = invoke_result_t<F, Args...>;
+
 	if constexpr (is_nothrow_invocable_v<F, Args...>) {
-		return
-			{invoke_place, ::std::forward<F>(f), ::std::forward<Args>(args)...};
+		return R(
+			invoke_place,
+			::std::forward<F>(f),
+			::std::forward<Args>(args)...
+		);
 	} else try {
-		return
-			{invoke_place, ::std::forward<F>(f), ::std::forward<Args>(args)...};
+		return R(
+			invoke_place,
+			::std::forward<F>(f),
+			::std::forward<Args>(args)...
+		);
 	} catch (...) {
-		return
-			::std::current_exception();
+		return R(::std::current_exception());
 	}
 }
 
