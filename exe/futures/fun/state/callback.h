@@ -44,7 +44,7 @@ struct TupleImpl<::std::index_sequence<Is...>, Ts...> : TupleVal<Is, Ts>... {};
 
 // for a guaranteed order of construction of elements
 template <typename ...Ts>
-struct Tuple : TupleImpl<::std::make_index_sequence<sizeof...(Ts)>, Ts...> {};
+struct Tuple : TupleImpl<::std::index_sequence_for<Ts...>, Ts...> {};
 
 
 
@@ -82,7 +82,7 @@ public:
 	{
 		[&, this]<::std::size_t ...I>(::std::index_sequence<I...>) noexcept {
 			::std::invoke(fn_, res, detail::get<I>(args_)...);
-		}(::std::make_index_sequence<sizeof...(Args)>{});
+		}(::std::index_sequence_for<Args...>{});
 	}
 };
 

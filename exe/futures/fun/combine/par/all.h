@@ -79,7 +79,7 @@ private:
 			::std::move(promise_).setResult(::std::forward_as_tuple(
 				*::std::get<Is>(::std::move(results_))...
 			));
-		}(::std::make_index_sequence<sizeof...(Ts)>{});
+		}(::std::index_sequence_for<Ts...>{});
 	}
 
 	void destroySelf() noexcept
@@ -125,7 +125,7 @@ struct [[nodiscard]] All : Mutator {
 					state->send<Is>(::std::move(res));
 				}
 			), ...);
-		}(::std::make_index_sequence<sizeof...(Fs)>{});
+		}(::std::index_sequence_for<Fs...>{});
 
 		return ::std::move(contract).f;
 	}
