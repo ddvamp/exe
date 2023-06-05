@@ -20,18 +20,22 @@ namespace exe::futures {
 
 namespace pipe {
 
-template <typename F>
+template <typename Fn>
 struct [[nodiscard]] AndThen : detail::Mutator {
-	[[no_unique_address]] F fun;
+	[[no_unique_address]] Fn fn;
 
-	template <typename T>
-	auto mutate(Future<T> &&f)
+	template <concepts::Future F>
+	auto mutate(F &&f)
 		requires (
-			traits::is_invocable_v<F &, T> &&
-			::utils::is_result_v<traits::map_result_t<F &, T>>
+			hasExecutor<F> &&
+			traits::is_invocable_v<Fn &, typename F::value_type> &&
+			::utils::is_result_v<
+				traits::map_result_t<Fn &, typename F::value_type>
+			>
 		)
 	{
-		using U = traits::map_result_t<F &, T>::value_type;
+		using T = F::value_type;
+		using U = traits::map_result_t<Fn &, T>::value_type;
 
 		auto contract = Contract<U>();
 
@@ -44,14 +48,14 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 					::std::move(p).setResult(
 						::utils::map_safely(
 							[&]() noexcept (
-								traits::is_nothrow_invocable_v<F &, T>
+								traits::is_nothrow_invocable_v<Fn &, T>
 							) {
 								return ::std::move(res).and_then(fn);
 							}
 						)
 					);
 				},
-				::std::move(fun),
+				::std::move(fn),
 				::std::move(contract).p
 			)
 		);
@@ -62,11 +66,11 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 
 } // namespace pipe
 
-template <typename F>
-auto andThen(F fun) noexcept
-	requires (::std::is_nothrow_destructible_v<F>)
+template <typename Fn>
+auto andThen(Fn fn) noexcept
+	requires (::std::is_nothrow_destructible_v<Fn>)
 {
-	return pipe::AndThen{{}, ::std::move(fun)};
+	return pipe::AndThen{{}, ::std::move(fn)};
 }
 
 } // namespace exe::futures

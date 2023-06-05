@@ -20,20 +20,22 @@ namespace exe::futures {
 
 namespace pipe {
 
-// TODO: harmful exceptions
-template <typename F>
+template <typename Fn>
 struct [[nodiscard]] OrElse : detail::Mutator {
-	[[no_unique_address]] F fun;
+	[[no_unique_address]] Fn fn;
 
-	template <typename T>
-	auto mutate(Future<T> &&f)
+	template <concepts::Future F>
+	auto mutate(F &&f)
 		requires (
+			hasExecutor<F> &&
 			::std::is_same_v<
-				traits::map_result_t<F &, ::utils::error>,
-				::utils::result<T>
+				traits::map_result_t<Fn &, ::utils::error>,
+				::utils::result<typename F::value_type>
 			>
 		)
 	{
+		using T = F::value_type;
+
 		auto contract = Contract<T>();
 
 		auto &where = getExecutor(f);
@@ -42,15 +44,20 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 			::std::move(f),
 			futures::makeCallback<T>(
 				[](auto &res, auto &fn, auto &p) noexcept {
-					::std::move(p).setResult(::utils::map_safely(
-						[&]() noexcept (
-							::std::is_nothrow_invocable_v<F &, ::utils::error>
-						) {
-							return ::std::move(res).or_else(fn);
-						}
-					));
+					::std::move(p).setResult(
+						::utils::map_safely(
+							[&]() noexcept (
+								::std::is_nothrow_invocable_v<
+									Fn &,
+									::utils::error
+								>
+							) {
+								return ::std::move(res).or_else(fn);
+							}
+						)
+					);
 				},
-				::std::move(fun),
+				::std::move(fn),
 				::std::move(contract).p
 			)
 		);
@@ -61,14 +68,14 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 
 } // namespace pipe
 
-template <typename F>
-auto orElse(F fun) noexcept
+template <typename Fn>
+auto orElse(Fn fn) noexcept
 	requires (
-		::std::is_nothrow_destructible_v<F> &&
-		::std::is_invocable_v<F &, ::utils::error>
+		::std::is_nothrow_destructible_v<Fn> &&
+		::std::is_invocable_v<Fn &, ::utils::error>
 	)
 {
-	return pipe::OrElse{{}, ::std::move(fun)};
+	return pipe::OrElse{{}, ::std::move(fn)};
 }
 
 } // namespace exe::futures

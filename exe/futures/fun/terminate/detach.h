@@ -18,16 +18,13 @@ namespace exe::futures {
 namespace pipe {
 
 struct [[nodiscard]] Detach : detail::Mutator {
-	template <typename T>
-	void mutate(SemiFuture<T> &&f) noexcept
+	template <concepts::Future F>
+	void mutate(F &&f) noexcept
 	{
-		mutate(::std::move(f) | futures::inLine());
-	}
-
-	template <typename T>
-	void mutate(Future<T> &&f) noexcept
-	{
-		setCallback(::std::move(f), [](auto &&) noexcept {});
+		setCallback(
+			::std::move(f) | futures::inLineIfNeeded(),
+			[](auto &&) noexcept {}
+		);
 	}
 };
 

@@ -37,13 +37,13 @@ namespace pipe {
 
 struct [[nodiscard]] InLineIfNeeded : detail::Mutator {
 	template <typename T>
-	auto mutate(SemiFuture<T> f) noexcept
+	auto mutate(SemiFuture<T> &&f) noexcept
 	{
 		return ::std::move(f) | futures::inLine();
 	}
 
-	template <typename T>
-	auto mutate(Future<T> f) noexcept
+	template <concepts::Future F>
+	auto mutate(F &&f) noexcept
 	{
 		return ::std::move(f);
 	}

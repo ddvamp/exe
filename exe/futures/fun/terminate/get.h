@@ -24,23 +24,17 @@ namespace exe::futures {
 namespace pipe {
 
 struct [[nodiscard]] Get : detail::Mutator {
-	template <typename T>
-	auto mutate(SemiFuture<T> &&f)
+	template <concepts::Future F>
+	auto mutate(F &&f)
 	{
-		return mutate(::std::move(f) | futures::inLine());
-	}
+		using T = F::value_type;
 
-	// TODO: my eyes hurt
-	// how to think about exceptions, please tell me
-	template <typename T>
-	auto mutate(Future<T> &&f)
-	{
 		::std::optional<::utils::result<T>> result;
 
 		::concurrency::OneTimeNotification result_is_ready;
 
 		setCallback(
-			::std::move(f),
+			::std::move(f) | futures::inLineIfNeeded(),
 			[&](auto &&res) noexcept {
 				result.emplace(::std::move(res));
 

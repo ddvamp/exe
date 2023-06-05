@@ -45,19 +45,19 @@ public:
 
 } // namespace detail
 
-template <typename F>
-auto submit(executors::IExecutor &where, F fun)
+template <typename Fn>
+auto submit(executors::IExecutor &where, Fn fn)
 	requires (
-		::std::is_nothrow_destructible_v<F> &&
-		::std::is_invocable_v<F &> &&
-		::utils::is_result_v<traits::map_result_t<F &>>
+		::std::is_nothrow_destructible_v<Fn> &&
+		::std::is_invocable_v<Fn &> &&
+		::utils::is_result_v<traits::map_result_t<Fn &>>
 	)
 {
-	using T = traits::map_result_t<F &>::value_type;
+	using T = traits::map_result_t<Fn &>::value_type;
 
 	auto contract = Contract<T>();
 
-	auto task = ::new detail::Task(::std::move(fun), ::std::move(contract).p);
+	auto task = ::new detail::Task(::std::move(fn), ::std::move(contract).p);
 
 	try {
 		where.execute(task);

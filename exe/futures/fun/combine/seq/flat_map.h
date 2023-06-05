@@ -15,26 +15,27 @@ namespace exe::futures {
 
 namespace pipe {
 
-template <typename F>
+template <typename Fn>
 struct [[nodiscard]] FlatMap : detail::Mutator {
-	[[no_unique_address]] F fun;
+	[[no_unique_address]] Fn fn;
 
-	template <typename T>
-	auto mutate(Future<T> &&f)
+	template <concepts::Future F>
+	auto mutate(F &&f)
+		requires (hasExecutor<F>)
 	{
 		return
 			::std::move(f) |
-			futures::map(::std::move(fun)) |
+			futures::map(::std::move(fn)) |
 			futures::flatten();
 	}
 };
 
 } // namespace pipe
 
-template <typename F>
-auto flatMap(F fun) noexcept
+template <typename Fn>
+auto flatMap(Fn fn) noexcept
 {
-	return pipe::FlatMap{{}, ::std::move(fun)};
+	return pipe::FlatMap{{}, ::std::move(fn)};
 }
 
 } // namespace exe::futures
