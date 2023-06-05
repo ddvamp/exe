@@ -5,13 +5,48 @@
 #ifndef DDV_UTILS_UTILITY_H_
 #define DDV_UTILS_UTILITY_H_ 1
 
-#include <concepts>
-#include <memory>
-#include <tuple>
-#include <type_traits>
+#include <cstddef>
 #include <utility>
 
+#include "type_traits.h"
+
 namespace utils {
+
+// Type placeholder
+struct unit_t {};
+
+inline constexpr unit_t unit{};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+template <typename ...>
+struct types_list_t {};
+
+template <typename ...Ts>
+inline constexpr types_list_t<Ts...> types_list{};
+
+struct deduce_type_t {};
+
+inline constexpr deduce_type_t deduce_type{};
+
+template <typename T, typename>
+struct deduce {
+	using type = T;
+};
+
+template <typename U>
+struct deduce<deduce_type_t, U> {
+	using type = U;
+};
+
+template <typename T, typename U>
+using deduce_t = deduce<T, U>::type;
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 /**
  *	@brief		Convert a rvalue to an lvalue.
@@ -88,6 +123,36 @@ public:
 		return fn_();
 	}
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+template <::std::size_t I, typename T>
+struct TupleVal {
+	[[no_unique_address]] T val_;
+};
+
+template <typename, typename ...Ts>
+struct TupleImpl;
+
+template <::std::size_t ...Is, typename ...Ts>
+struct TupleImpl<::std::index_sequence<Is...>, Ts...> : TupleVal<Is, Ts>... {};
+
+// for a guaranteed order of construction of elements
+// TODO: add structured bindings support
+template <typename ...Ts>
+struct Tuple : TupleImpl<::std::index_sequence_for<Ts...>, Ts...> {};
+
+
+
+template <::std::size_t I, typename ...Ts>
+[[nodiscard]] auto &get(Tuple<Ts...> &t) noexcept
+	requires (I < sizeof...(Ts))
+{
+	using Ttype = TupleVal<I, pack_element_t<I, Ts...>>;
+	return static_cast<Ttype &>(t).val_;
+}
 
 } // namespace utils
 

@@ -152,6 +152,39 @@ struct is_nothrow_constructible_with
 	: ::std::bool_constant<is_nothrow_constructible_with_v<T, Fn, Args...>>
 {};
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+template <typename Expected, typename Checked, typename Alternative>
+struct change_if_same {
+	using type = Checked;
+};
+
+template <typename Checked, typename Alternative>
+struct change_if_same<Checked, Checked, Alternative> {
+	using type = Alternative;
+};
+
+template <typename Expected, typename Checked, typename Alternative>
+using change_if_same_t = change_if_same<Expected, Checked, Alternative>::type;
+
+
+
+template <typename Expected, typename Checked, typename Alternative>
+struct change_if_not_same {
+	using type = Alternative;
+};
+
+template <typename Checked, typename Alternative>
+struct change_if_not_same<Checked, Checked, Alternative> {
+	using type = Checked;
+};
+
+template <typename Expected, typename Checked, typename Alternative>
+using change_if_not_same_t =
+	change_if_not_same<Expected, Checked, Alternative>::type;
+
 } // namespace utils
 
 #endif /* DDV_UTILS_TYPE_TRAITS_H_ */

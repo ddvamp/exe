@@ -32,7 +32,7 @@ struct [[nodiscard]] Flatten : detail::Mutator {
 		setCallback(
 			::std::move(f),
 			futures::makeCallback<Future<T>>(
-				types_list<deduce_type_t, Callback<T>>,
+				::utils::types_list<::utils::deduce_type_t, Callback<T>>,
 
 				[](auto &res, auto &cb) noexcept {
 					if (res.has_error()) {

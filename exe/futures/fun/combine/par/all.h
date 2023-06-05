@@ -8,8 +8,6 @@
 #include <cstddef>
 #include <optional>
 #include <tuple>
-#include <type_traits>
-#include <utility>
 
 #include "exe/futures/fun/combine/par/detail/use_count.h"
 #include "exe/futures/fun/combine/seq/inline.h"
@@ -17,6 +15,7 @@
 #include "exe/futures/fun/mutator/mutator.h"
 
 #include "utils/type_traits.h"
+#include "utils/utility.h"
 
 namespace exe::futures {
 
@@ -110,10 +109,6 @@ private:
 
 	State *state_;
 
-	explicit AllStateHolder(State *state) noexcept
-		: state_(state)
-	{}
-
 public:
 	~AllStateHolder()
 	{
@@ -124,40 +119,38 @@ public:
 
 	void setPromise(Promise<typename State::U> p) && noexcept
 	{
-		::std::exchange(state_, nullptr)->
-			promise_.emplace(::std::move(p));
+		release()->promise_.emplace(::std::move(p));
 	}
 
 	[[nodiscard]] State *getState() const noexcept
 	{
 		return state_;
 	}
+
+private:
+	explicit AllStateHolder(State *state) noexcept
+		: state_(state)
+	{}
+
+	State *release() noexcept
+	{
+		return ::std::exchange(state_, nullptr);
+	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 struct [[nodiscard]] All : Mutator {
-	template <typename T>
-	struct void_to_dummy {
-		using type = T;
-	};
-
-	template <>
-	struct void_to_dummy<void> {
-		struct dummy {};
-
-		using type = dummy;
-	};
-
-	template <typename T>
-	using void_to_dummy_t = void_to_dummy<T>::type;
-
-
-
 	template <typename ...Fs>
 	auto mutate(Fs &&...fs)
 	{
-		using T = ::std::tuple<void_to_dummy_t<typename Fs::value_type>...>;
+		using T = ::std::tuple<
+			::utils::change_if_same_t<
+				void,
+				typename Fs::value_type,
+				::utils::unit_t
+			>...
+		>;
 
 		auto contract = Contract<T>();
 
