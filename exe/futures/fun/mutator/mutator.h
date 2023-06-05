@@ -13,6 +13,12 @@
 
 class exe::futures::detail::Mutator {
 protected:
+	template <concepts::Future>
+	inline static constexpr bool hasExecutor = false;
+
+	template <typename T>
+	inline static constexpr bool hasExecutor<Future<T>> = true;
+
 	template <typename T>
 	[[nodiscard]] static executors::IExecutor &getExecutor(
 		Future<T> const &f) noexcept
