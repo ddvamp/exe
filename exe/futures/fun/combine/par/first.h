@@ -5,7 +5,9 @@
 #ifndef DDV_EXE_FUTURES_FUN_COMBINE_PAR_FIRST_H_
 #define DDV_EXE_FUTURES_FUN_COMBINE_PAR_FIRST_H_ 1
 
-#include <type_traits>
+#include <array>
+#include <memory>
+#include <optional>
 #include <utility>
 
 #include "exe/futures/fun/combine/par/detail/use_count.h"
@@ -22,13 +24,17 @@ namespace detail {
 template <typename T>
 class FirstState : private UseCount {
 private:
-	Promise<T> promise_;
+	::std::optional<Promise<T>> promise_;
 
 public:
-	FirstState(count_t count, Promise<T> p)
+	explicit FirstState(count_t count) noexcept
 		: UseCount(count)
-		, promise_(::std::move(p))
 	{}
+
+	void setPromise(Promise<T> p) noexcept
+	{
+		promise_.emplace(::std::move(p));
+	}
 
 	void send(::utils::result<T> &&res) noexcept
 	{
@@ -61,7 +67,7 @@ public:
 private:
 	void setResult(::utils::result<T> &res) noexcept
 	{
-		::std::move(promise_).setResult(::std::move(res));
+		::std::move(*promise_).setResult(::std::move(res));
 	}
 
 	void destroySelf() noexcept
@@ -78,14 +84,21 @@ struct [[nodiscard]] First : Mutator {
 
 		auto contract = Contract<T>();
 
-		auto state = ::new FirstState(sizeof...(Fs), ::std::move(contract).p);
+		auto state = ::std::make_unique<FirstState<T>>(sizeof...(Fs));
 
-		// TODO: more exception safety
+		auto callback_list = ::std::array{
+			Fs::Callback(
+				[state = state.get()](auto &&res) noexcept {
+					state->send(::std::move(res));
+				}
+			)...
+		};
+
+		state.release()->setPromise(::std::move(contract).p);
+
 		(setCallback(
 			::std::move(fs) | futures::inLineIfNeeded(),
-			[state](auto &&res) noexcept {
-				state->send(::std::move(res));
-			}
+			::std::move(callback_list)
 		), ...);
 
 		return ::std::move(contract).f;
