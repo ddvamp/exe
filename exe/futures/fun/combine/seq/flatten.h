@@ -25,7 +25,7 @@ struct [[nodiscard]] Flatten : detail::Mutator {
 			return ::std::move(f) | futures::flatMap(mapper);
 		} else {
 			return unsetExecutor(
-				::std::move(f) | futures::inLine() | futures::flatMap(mapper)
+				makeHolder(f) | futures::inLine() | futures::flatMap(mapper)
 			);
 		}
 	}

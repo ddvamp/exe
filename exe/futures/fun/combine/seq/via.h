@@ -18,8 +18,8 @@ namespace pipe {
 struct [[nodiscard]] Via : detail::Mutator {
 	executors::IExecutor &executor;
 
-	template <typename T>
-	auto mutate(SemiFuture<T> &&f) noexcept
+	template <concepts::Future F>
+	auto mutate(F f) noexcept
 	{
 		return setExecutor(::std::move(f), executor);
 	}

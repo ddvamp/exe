@@ -19,7 +19,7 @@ namespace pipe {
 
 struct [[nodiscard]] Detach : detail::Mutator {
 	template <concepts::Future F>
-	void mutate(F &&f) noexcept
+	void mutate(F f) noexcept
 	{
 		setCallback(
 			::std::move(f) | futures::inLineIfNeeded(),

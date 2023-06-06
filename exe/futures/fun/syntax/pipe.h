@@ -16,7 +16,7 @@ namespace exe::futures::pipe {
 //		trait -> is_nothrow_combinator
 
 template <concepts::Future F, typename C>
-auto operator| (F &&f, C c)
+auto operator| (F &&f, C c) noexcept (noexcept(c.mutate(::std::move(f))))
 {
 	return c.mutate(::std::move(f));
 }

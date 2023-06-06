@@ -17,8 +17,8 @@ namespace exe::futures {
 namespace pipe {
 
 struct [[nodiscard]] InLine : detail::Mutator {
-	template <typename T>
-	auto mutate(SemiFuture<T> &&f) noexcept
+	template <concepts::Future F>
+	auto mutate(F f) noexcept
 	{
 		return ::std::move(f) | futures::via(executors::getInlineExecutor());
 	}
@@ -36,16 +36,14 @@ inline auto inLine() noexcept
 namespace pipe {
 
 struct [[nodiscard]] InLineIfNeeded : detail::Mutator {
-	template <typename T>
-	auto mutate(SemiFuture<T> &&f) noexcept
-	{
-		return ::std::move(f) | futures::inLine();
-	}
-
 	template <concepts::Future F>
-	auto mutate(F &&f) noexcept
+	auto mutate(F f) noexcept
 	{
-		return ::std::move(f);
+		if constexpr (has_executor_v<F>) {
+			return ::std::move(f);
+		} else {
+			return ::std::move(f) | futures::inLine();
+		}
 	}
 };
 

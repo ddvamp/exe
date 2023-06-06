@@ -7,37 +7,84 @@
 
 #include <utility>
 
-#include "exe/executors/executor.h"
 #include "exe/futures/fun/mutator/fwd.h"
 #include "exe/futures/fun/types/future.h"
 
 class exe::futures::detail::Mutator {
 protected:
-	template <concepts::Future>
-	inline static constexpr bool hasExecutor = false;
+	template <concepts::Future F>
+	static auto makeHolder(F &f) noexcept
+	{
+		if constexpr (has_executor_v<F>) {
+			return FutureHolder(f);
+		} else {
+			return SemiFutureHolder(f);
+		}
+	}
 
-	template <typename T>
-	inline static constexpr bool hasExecutor<Future<T>> = true;
+	template <typename F>
+	static void makeHolder(SemiFutureHolder<F> &) noexcept = delete;
 
-	template <typename T>
-	[[nodiscard]] static executors::IExecutor &getExecutor(
-		Future<T> const &f) noexcept
+
+
+	template <concepts::Future F>
+	[[nodiscard]] static executors::IExecutor &getExecutor(F const &f) noexcept
+		requires (has_executor_v<F>)
 	{
 		return f.getState().getExecutor();
 	}
 
-	template <typename T>
-	static Future<T> setExecutor(SemiFuture<T> f,
-		executors::IExecutor &where) noexcept
+	template <typename F>
+	[[nodiscard]] static executors::IExecutor &getExecutor(
+		FutureHolder<F> const &f) noexcept
 	{
-		f.getState().setExecutor(where);
-		return Future<T>(f.release());
+		return f.raw.getState().getExecutor();
 	}
 
-	template <typename T>
-	static void setCallback(Future<T> f, Future<T>::Callback &&cb) noexcept
+
+
+	template <concepts::Future F>
+	static auto setExecutor(F f, executors::IExecutor &where) noexcept
+	{
+		f.getState().setExecutor(where);
+		return F::with_executor(f.release());
+	}
+
+	template <typename F>
+	static auto setExecutor(SemiFutureHolder<F> f,
+		executors::IExecutor &where) noexcept
+	{
+		f.raw.getState().setExecutor(where);
+		return FutureHolder<F>(f.raw);
+	}
+
+
+
+	template <concepts::Future F>
+	static auto unsetExecutor(F f) noexcept
+	{
+		return F::without_executor(::std::move(f));
+	}
+
+	template <typename F>
+	static auto unsetExecutor(SemiFutureHolder<F> f) noexcept
+	{
+		return ::std::move(f);
+	}
+
+
+
+	template <concepts::Future F>
+	static void setCallback(F f, F::Callback &&cb) noexcept
+		requires (has_executor_v<F>)
 	{
 		f.release()->setCallback(::std::move(cb));
+	}
+
+	template <typename F>
+	static void setCallback(FutureHolder<F> f, F::Callback &&cb) noexcept
+	{
+		f.raw.release()->setCallback(::std::move(cb));
 	}
 };
 

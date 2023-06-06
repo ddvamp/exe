@@ -27,7 +27,7 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 	template <concepts::Future F>
 	auto mutate(F &&f)
 		requires (
-			hasExecutor<F> &&
+			has_executor_v<F> &&
 			traits::is_invocable_v<Fn &, typename F::value_type> &&
 			::utils::is_result_v<
 				traits::map_result_t<Fn &, typename F::value_type>
@@ -46,13 +46,11 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 			futures::makeCallback<T>(
 				[](auto &res, auto &fn, auto &p) noexcept {
 					::std::move(p).setResult(
-						::utils::map_safely(
-							[&]() noexcept (
-								traits::is_nothrow_invocable_v<Fn &, T>
-							) {
-								return ::std::move(res).and_then(fn);
-							}
-						)
+						::utils::map_safely([&]() noexcept (
+							traits::is_nothrow_invocable_v<Fn &, T>
+						) {
+							return ::std::move(res).and_then(fn);
+						})
 					);
 				},
 				::std::move(fn),
@@ -67,7 +65,7 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 } // namespace pipe
 
 template <typename Fn>
-auto andThen(Fn fn) noexcept
+auto andThen(Fn fn)
 	requires (::std::is_nothrow_destructible_v<Fn>)
 {
 	return pipe::AndThen{{}, ::std::move(fn)};

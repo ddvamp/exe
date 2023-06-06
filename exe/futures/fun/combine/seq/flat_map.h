@@ -28,7 +28,7 @@ struct [[nodiscard]] FlatMap : detail::Mutator {
 	template <concepts::Future F>
 	auto mutate(F &&f)
 		requires (
-			hasExecutor<F> &&
+			has_executor_v<F> &&
 			traits::is_invocable_v<Fn &, typename F::value_type> &&
 			concepts::Future<
 				traits::invoke_result_t<Fn &, typename F::value_type>

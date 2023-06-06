@@ -119,10 +119,18 @@ private:
 	State *state_;
 
 protected:
+#ifdef UTILS_DISABLE_DEBUG
+
+	~HoldState() = default;
+
+#else
+
 	~HoldState()
 	{
-		UTILS_ASSERT(!hasState(), "destruction of unused HoldState");
+		UTILS_CHECK(!hasState(), "destruction of unused HoldState");
 	}
+
+#endif
 
 	HoldState(HoldState const &) = delete;
 	void operator= (HoldState const &) = delete;

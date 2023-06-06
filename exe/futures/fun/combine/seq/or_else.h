@@ -27,7 +27,7 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 	template <concepts::Future F>
 	auto mutate(F &&f)
 		requires (
-			hasExecutor<F> &&
+			has_executor_v<F> &&
 			::std::is_same_v<
 				traits::map_result_t<Fn &, ::utils::error>,
 				::utils::result<typename F::value_type>
@@ -45,16 +45,11 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 			futures::makeCallback<T>(
 				[](auto &res, auto &fn, auto &p) noexcept {
 					::std::move(p).setResult(
-						::utils::map_safely(
-							[&]() noexcept (
-								::std::is_nothrow_invocable_v<
-									Fn &,
-									::utils::error
-								>
-							) {
-								return ::std::move(res).or_else(fn);
-							}
-						)
+						::utils::map_safely([&]() noexcept (
+							::std::is_nothrow_invocable_v<Fn &, ::utils::error>
+						) {
+							return ::std::move(res).or_else(fn);
+						})
 					);
 				},
 				::std::move(fn),
@@ -69,7 +64,7 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 } // namespace pipe
 
 template <typename Fn>
-auto orElse(Fn fn) noexcept
+auto orElse(Fn fn)
 	requires (
 		::std::is_nothrow_destructible_v<Fn> &&
 		::std::is_invocable_v<Fn &, ::utils::error>

@@ -5,7 +5,6 @@
 #ifndef DDV_EXE_FUTURES_FUN_TERMINATE_GET_H_
 #define DDV_EXE_FUTURES_FUN_TERMINATE_GET_H_ 1
 
-#include <exception>
 #include <optional>
 #include <utility>
 
