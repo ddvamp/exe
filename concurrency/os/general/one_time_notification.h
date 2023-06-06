@@ -36,7 +36,7 @@ public:
 		{
 			auto lock = ::std::lock_guard(m_);
 
-			UTILS_ASSERT(
+			UTILS_VERIFY(
 				!::std::exchange(notified_, true),
 				"one-time notification sent twice"
 			);
