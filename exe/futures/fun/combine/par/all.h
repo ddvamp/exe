@@ -128,10 +128,10 @@ struct [[nodiscard]] All : Mutator {
 
 			state.release()->setPromise(::std::move(contract).p);
 
-			(setCallback(
+			(..., setCallback(
 				::std::move(fs) | futures::inLineIfNeeded(),
 				::std::get<Is>(::std::move(callback_list))
-			), ...);
+			));
 		}(::std::index_sequence_for<Fs...>{});
 
 		return ::std::move(contract).f;
