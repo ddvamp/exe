@@ -14,5 +14,6 @@
 #include "exe/futures/fun/make/submit.h"
 #include "exe/futures/fun/make/value.h"
 
+#include "exe/futures/fun/terminate/apply.h"
 #include "exe/futures/fun/terminate/detach.h"
 #include "exe/futures/fun/terminate/get.h"
