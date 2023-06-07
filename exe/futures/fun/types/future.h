@@ -114,6 +114,10 @@ class [[nodiscard]] SemiFutureHolder {
 protected:
 	F &raw;
 
+	explicit SemiFutureHolder(F &f) noexcept
+		: raw(f)
+	{}
+
 	using without_executor = SemiFutureHolder;
 	using with_executor = FutureHolder<F>;
 
@@ -131,6 +135,9 @@ inline constexpr bool is_noncv_future_v<SemiFutureHolder<T>> = true;
 template <concepts::Future F>
 class [[nodiscard]] FutureHolder : public SemiFutureHolder<F> {
 	friend detail::Mutator;
+
+protected:
+	using SemiFutureHolder<F>::SemiFutureHolder;
 };
 
 template <typename T>
