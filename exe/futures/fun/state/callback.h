@@ -38,7 +38,7 @@ requires (
 class Callback {
 private:
 	[[no_unique_address]] Fn fn_;
-	[[no_unique_address]] ::utils::Tuple<Args...> args_;
+	[[no_unique_address]] ::utils::tuple<Args...> args_;
 
 public:
 	template <typename TFn, typename ...TArgs>

@@ -129,28 +129,29 @@ public:
 
 
 template <::std::size_t I, typename T>
-struct TupleVal {
+struct tuple_val {
 	[[no_unique_address]] T val_;
 };
 
 template <typename, typename ...Ts>
-struct TupleImpl;
+struct tuple_impl;
 
 template <::std::size_t ...Is, typename ...Ts>
-struct TupleImpl<::std::index_sequence<Is...>, Ts...> : TupleVal<Is, Ts>... {};
+struct tuple_impl<::std::index_sequence<Is...>, Ts...>
+	: tuple_val<Is, Ts>... {};
 
 // for a guaranteed order of construction of elements
 // TODO: add structured bindings support
 template <typename ...Ts>
-struct Tuple : TupleImpl<::std::index_sequence_for<Ts...>, Ts...> {};
+struct tuple : tuple_impl<::std::index_sequence_for<Ts...>, Ts...> {};
 
 
 
 template <::std::size_t I, typename ...Ts>
-[[nodiscard]] auto &get(Tuple<Ts...> &t) noexcept
+[[nodiscard]] auto &get(tuple<Ts...> &t) noexcept
 	requires (I < sizeof...(Ts))
 {
-	using Ttype = TupleVal<I, pack_element_t<I, Ts...>>;
+	using Ttype = tuple_val<I, pack_element_t<I, Ts...>>;
 	return static_cast<Ttype &>(t).val_;
 }
 
