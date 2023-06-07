@@ -46,13 +46,29 @@
 			- [ ] implementation
 			- [ ] select
 	- [ ] futures support
-- ***[futures & promises](https://github.com/ddvamp/exe/tree/main/exe/futures/)***
-	- future (будущее значение)
-	- promise (обещание будущего значения)
-	- [ ] combinators
-		- [ ] all
-		- [ ] first_of
-	- [ ] await
+- ***[(functional) futures](https://github.com/ddvamp/exe/tree/main/exe/futures/fun)*** (фьючи в функциональном стиле)
+	- constructors (пораждают фьючи)
+		- contract (канал future-promise)
+		- value (создать готовое значение)
+		- just (создать готовое событие)
+		- failure (создать готовую ошибку)
+		- submit (отправить вычисление в executor и получить его будущий результат)
+	- combinators (преобразуют одни фьючи в другие)
+		- seq
+			- via (установить, где будет значение будет потреблено)
+			- inLine (использовать значение на месте)
+			- map (преобразовать будущее значение)
+			- flatten (получить фьючу, которая сама представлена будущим значением)
+			- flatMap (map + flatten)
+			- andThen (асинхронный try)
+			- orElse (асинхронный catch)
+		- par
+			- first (получить первое значение или последнюю ошибку)
+			- all (получить все значения или первую ошибку)
+	- terminators (поглощают фьючи)
+		- apply (установить способ использования будущего значения)
+		- get (синхронно дождаться будущего значения)
+		- detach (сбросить будущее значение)
 
 ## Requirements
 
@@ -83,6 +99,11 @@
 ## Links
 
 - [Репозиторий курса](https://gitlab.com/Lipovsky/concurrency-course)
+
+<!-- -->
+
+- [Плейлист с лекциями(2023)](https://www.youtube.com/playlist?list=PL4_hYwCyhAvZw9PmwtHjw6nnmgZJmAXNV)
+- [Плейлист с семинарами(2023)](https://www.youtube.com/playlist?list=PL4_hYwCyhAvZ-LgrsobwRBki8FV8JIFg_)
 
 <!-- -->
 
