@@ -33,7 +33,7 @@ struct [[nodiscard]] Get : detail::Mutator {
 		::concurrency::OneTimeNotification result_is_ready;
 
 		setCallback(
-			::std::move(f) | futures::inLineIfNeeded(),
+			makeHolder(f) | futures::inLineIfNeeded(),
 			[&](auto &&res) noexcept {
 				result.emplace(::std::move(res));
 

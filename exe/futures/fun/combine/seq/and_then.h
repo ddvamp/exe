@@ -66,6 +66,7 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 
 template <typename Fn>
 auto andThen(Fn fn)
+	noexcept (::std::is_nothrow_move_constructible_v<Fn>)
 	requires (::std::is_nothrow_destructible_v<Fn>)
 {
 	return pipe::AndThen{{}, ::std::move(fn)};

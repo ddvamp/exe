@@ -22,7 +22,7 @@ struct [[nodiscard]] Detach : detail::Mutator {
 	void mutate(F f) noexcept
 	{
 		setCallback(
-			::std::move(f) | futures::inLineIfNeeded(),
+			makeHolder(f) | futures::inLineIfNeeded(),
 			[](auto &&) noexcept {}
 		);
 	}

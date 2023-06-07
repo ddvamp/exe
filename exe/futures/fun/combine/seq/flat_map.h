@@ -82,6 +82,7 @@ struct [[nodiscard]] FlatMap : detail::Mutator {
 
 template <typename Fn>
 auto flatMap(Fn fn)
+	noexcept (::std::is_nothrow_move_constructible_v<Fn>)
 	requires (::std::is_nothrow_destructible_v<Fn>)
 {
 	return pipe::FlatMap{{}, ::std::move(fn)};

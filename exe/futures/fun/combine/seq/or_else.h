@@ -65,6 +65,7 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 
 template <typename Fn>
 auto orElse(Fn fn)
+	noexcept (::std::is_nothrow_move_constructible_v<Fn>)
 	requires (
 		::std::is_nothrow_destructible_v<Fn> &&
 		::std::is_invocable_v<Fn &, ::utils::error>

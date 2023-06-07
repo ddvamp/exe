@@ -63,6 +63,7 @@ struct [[nodiscard]] Map : detail::Mutator {
 
 template <typename Fn>
 auto map(Fn fn)
+	noexcept (::std::is_nothrow_move_constructible_v<Fn>)
 	requires (::std::is_nothrow_destructible_v<Fn>)
 {
 	return pipe::Map{{}, ::std::move(fn)};
