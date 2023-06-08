@@ -78,7 +78,10 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct [[nodiscard]] First : Mutator {
+class [[nodiscard]] First : public Mutator {
+public:
+	First() = default;
+
 	template <typename ...Fs>
 	auto mutate(Fs &&...fs)
 	{
@@ -119,7 +122,7 @@ auto first(Fs &&...fs)
 		::utils::are_all_same_v<typename Fs::value_type...>
 	)
 {
-	return detail::First{}.mutate(::std::move(fs)...);
+	return detail::First().mutate(::std::move(fs)...);
 }
 
 } // namespace exe::futures

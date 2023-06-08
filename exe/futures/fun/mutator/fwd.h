@@ -5,10 +5,25 @@
 #ifndef DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_
 #define DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_ 1
 
-namespace exe::futures::detail {
+#include <concepts>
+
+namespace exe::futures {
+	
+namespace detail {
 
 class Mutator;
 
-} // namespace exe::futures::detail
+} // namespace detail
+
+namespace concepts {
+
+template <typename M>
+concept Mutator =
+	::std::destructible<M> &&
+	::std::derived_from<M, detail::Mutator>;
+
+} // namespace concepts
+
+} // namespace exe::futures
 
 #endif /* DDV_EXE_FUTURES_FUN_MUTATOR_FWD_H_ */

@@ -21,9 +21,22 @@ namespace exe::futures {
 namespace pipe {
 
 template <typename Fn>
-struct [[nodiscard]] OrElse : detail::Mutator {
-	[[no_unique_address]] Fn fn;
+class [[nodiscard]] OrElse : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
 
+private:
+	Fn &&fn_;
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = false;
+
+	explicit OrElse(Fn &&fn) noexcept
+		: fn_(::std::forward<Fn>(fn))
+	{}
+
+private:
 	template <concepts::Future F>
 	auto mutate(F &&f)
 		requires (
@@ -52,7 +65,7 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 						})
 					);
 				},
-				::std::move(fn),
+				::std::forward<Fn>(fn_),
 				::std::move(contract).p
 			)
 		);
@@ -64,14 +77,13 @@ struct [[nodiscard]] OrElse : detail::Mutator {
 } // namespace pipe
 
 template <typename Fn>
-auto orElse(Fn fn)
-	noexcept (::std::is_nothrow_move_constructible_v<Fn>)
+auto orElse(Fn &&fn) noexcept
 	requires (
-		::std::is_nothrow_destructible_v<Fn> &&
+		::std::is_nothrow_destructible_v<::std::remove_cvref_t<Fn>> &&
 		::std::is_invocable_v<Fn &, ::utils::error>
 	)
 {
-	return pipe::OrElse{{}, ::std::move(fn)};
+	return pipe::OrElse<Fn>(::std::forward<Fn>(fn));
 }
 
 } // namespace exe::futures

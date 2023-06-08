@@ -100,7 +100,10 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct [[nodiscard]] All : Mutator {
+class [[nodiscard]] All : public Mutator {
+public:
+	All() = default;
+
 	template <typename ...Fs>
 	auto mutate(Fs &&...fs)
 	{
@@ -144,7 +147,7 @@ template <concepts::Future ...Fs>
 auto all(Fs &&...fs)
 	requires (sizeof...(Fs) > 1)
 {
-	return detail::All{}.mutate(::std::move(fs)...);
+	return detail::All().mutate(::std::move(fs)...);
 }
 
 } // namespace exe::futures

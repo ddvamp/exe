@@ -16,7 +16,17 @@ namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] InLine : detail::Mutator {
+class [[nodiscard]] InLine : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = true;
+
+	InLine() = default;
+
+private:
 	template <concepts::Future F>
 	auto mutate(F f) noexcept
 	{
@@ -28,14 +38,24 @@ struct [[nodiscard]] InLine : detail::Mutator {
 
 inline auto inLine() noexcept
 {
-	return pipe::InLine{};
+	return pipe::InLine();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace pipe {
 
-struct [[nodiscard]] InLineIfNeeded : detail::Mutator {
+class [[nodiscard]] InLineIfNeeded : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = true;
+
+	InLineIfNeeded() = default;
+
+private:
 	template <concepts::Future F>
 	auto mutate(F f) noexcept
 	{
@@ -51,7 +71,7 @@ struct [[nodiscard]] InLineIfNeeded : detail::Mutator {
 
 inline auto inLineIfNeeded() noexcept
 {
-	return pipe::InLineIfNeeded{};
+	return pipe::InLineIfNeeded();
 }
 
 } // namespace exe::futures

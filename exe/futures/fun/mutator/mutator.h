@@ -10,7 +10,19 @@
 #include "exe/futures/fun/mutator/fwd.h"
 #include "exe/futures/fun/types/future.h"
 
-class exe::futures::detail::Mutator {
+namespace exe::futures::detail {
+
+class Mutator {
+protected:
+	Mutator() = default;
+	~Mutator() = default;
+
+	Mutator(Mutator const &) = delete;
+	void operator= (Mutator const &) = delete;
+
+	Mutator(Mutator &&) = delete;
+	void operator= (Mutator &&) = delete;
+
 protected:
 	template <concepts::Future F>
 	static auto makeHolder(F &f) noexcept
@@ -87,5 +99,7 @@ protected:
 		f.raw.release()->setCallback(::std::move(cb));
 	}
 };
+
+} // namespace exe::futures::detail
 
 #endif /* DDV_EXE_FUTURES_FUN_MUTATOR_MUTATOR_H_ */

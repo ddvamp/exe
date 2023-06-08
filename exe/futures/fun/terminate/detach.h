@@ -17,7 +17,17 @@ namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] Detach : detail::Mutator {
+class [[nodiscard]] Detach : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = true;
+
+	Detach() = default;
+
+private:
 	template <concepts::Future F>
 	void mutate(F f) noexcept
 	{
@@ -32,7 +42,7 @@ struct [[nodiscard]] Detach : detail::Mutator {
 
 inline auto detach() noexcept
 {
-	return pipe::Detach{};
+	return pipe::Detach();
 }
 
 } // namespace exe::futures

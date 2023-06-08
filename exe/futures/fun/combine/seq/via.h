@@ -7,7 +7,6 @@
 
 #include <utility>
 
-#include "exe/executors/executor.h"
 #include "exe/futures/fun/mutator/mutator.h"
 #include "exe/futures/fun/syntax/pipe.h"
 
@@ -15,13 +14,26 @@ namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] Via : detail::Mutator {
-	executors::IExecutor &executor;
+class [[nodiscard]] Via : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
 
+private:
+	executors::IExecutor &where_;
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = true;
+
+	explicit Via(executors::IExecutor &where) noexcept
+		: where_(where)
+	{}
+
+private:
 	template <concepts::Future F>
 	auto mutate(F f) noexcept
 	{
-		return setExecutor(::std::move(f), executor);
+		return setExecutor(::std::move(f), where_);
 	}
 };
 
@@ -29,7 +41,7 @@ struct [[nodiscard]] Via : detail::Mutator {
 
 inline auto via(executors::IExecutor &where) noexcept
 {
-	return pipe::Via{{}, where};
+	return pipe::Via(where);
 }
 
 } // namespace exe::futures

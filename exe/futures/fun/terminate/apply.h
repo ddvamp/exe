@@ -17,9 +17,22 @@ namespace exe::futures {
 namespace pipe {
 
 template <typename Fn>
-struct [[nodiscard]] Apply : detail::Mutator {
-	[[no_unique_address]] Fn fn;
+class [[nodiscard]] Apply : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
 
+private:
+	Fn &&fn_;
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = false;
+
+	explicit Apply(Fn &&fn) noexcept
+		: fn_(::std::forward<Fn>(fn))
+	{}
+
+private:
 	template <concepts::Future F>
 	auto mutate(F &&f)
 		noexcept (::std::is_nothrow_constructible_v<typename F::Callback, Fn>)
@@ -28,17 +41,17 @@ struct [[nodiscard]] Apply : detail::Mutator {
 			::std::is_constructible_v<typename F::Callback, Fn>
 		)
 	{
-		setCallback(::std::move(f), ::std::move(fn));
+		setCallback(::std::move(f), ::std::forward<Fn>(fn_));
 	}
 };
 
 } // namespace pipe
 
 template <typename Fn>
-auto apply(Fn fn)
-	requires (::std::is_nothrow_destructible_v<Fn>)
+auto apply(Fn &&fn) noexcept
+	requires (::std::is_nothrow_destructible_v<::std::remove_cvref_t<Fn>>)
 {
-	return pipe::Apply{{}, ::std::move(fn)};
+	return pipe::Apply<Fn>(::std::forward<Fn>(fn));
 }
 
 } // namespace exe::futures

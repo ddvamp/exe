@@ -22,7 +22,17 @@ namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] Get : detail::Mutator {
+class [[nodiscard]] Get : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = false;
+
+	Get() = default;
+
+private:
 	template <concepts::Future F>
 	auto mutate(F &&f)
 	{
@@ -59,7 +69,7 @@ struct [[nodiscard]] Get : detail::Mutator {
 
 inline auto get() noexcept
 {
-	return pipe::Get{};
+	return pipe::Get();
 }
 
 } // namespace exe::futures

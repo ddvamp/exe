@@ -21,9 +21,22 @@ namespace exe::futures {
 namespace pipe {
 
 template <typename Fn>
-struct [[nodiscard]] AndThen : detail::Mutator {
-	[[no_unique_address]] Fn fn;
+class [[nodiscard]] AndThen : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
 
+private:
+	Fn &&fn_;
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = false;
+
+	explicit AndThen(Fn &&fn) noexcept
+		: fn_(::std::forward<Fn>(fn))
+	{}
+
+private:
 	template <concepts::Future F>
 	auto mutate(F &&f)
 		requires (
@@ -53,7 +66,7 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 						})
 					);
 				},
-				::std::move(fn),
+				::std::forward<Fn>(fn_),
 				::std::move(contract).p
 			)
 		);
@@ -65,11 +78,10 @@ struct [[nodiscard]] AndThen : detail::Mutator {
 } // namespace pipe
 
 template <typename Fn>
-auto andThen(Fn fn)
-	noexcept (::std::is_nothrow_move_constructible_v<Fn>)
-	requires (::std::is_nothrow_destructible_v<Fn>)
+auto andThen(Fn fn) noexcept
+	requires (::std::is_nothrow_destructible_v<::std::remove_cvref_t<Fn>>)
 {
-	return pipe::AndThen{{}, ::std::move(fn)};
+	return pipe::AndThen<Fn>(::std::forward<Fn>(fn));
 }
 
 } // namespace exe::futures

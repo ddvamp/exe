@@ -7,20 +7,17 @@
 
 #include <utility>
 
+#include "exe/futures/fun/mutator/fwd.h"
 #include "exe/futures/fun/types/future.h"
 
 namespace exe::futures::pipe {
 
-// TODO:
-//		trait -> is_combinator,
-//		trait -> is_nothrow_combinator
-
-template <concepts::Future F, typename C>
-auto operator| (F &&f, C c) noexcept (noexcept(c.mutate(::std::move(f))))
+template <concepts::Future F, concepts::Mutator M>
+auto operator| (F &&f, M m) noexcept (M::template mutates_nothrow<F>)
 {
-	return c.mutate(::std::move(f));
+	return m.mutate(::std::move(f));
 }
 
-} // namespace exe::futures
+} // namespace exe::futures::pipe
 
 #endif /* DDV_EXE_FUTURES_FUN_SYNTAX_PIPE_H_ */

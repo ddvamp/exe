@@ -10,12 +10,23 @@
 #include "exe/futures/fun/combine/seq/flat_map.h"
 #include "exe/futures/fun/combine/seq/inline.h"
 #include "exe/futures/fun/mutator/mutator.h"
+#include "exe/futures/fun/syntax/pipe.h"
 
 namespace exe::futures {
 
 namespace pipe {
 
-struct [[nodiscard]] Flatten : detail::Mutator {
+class [[nodiscard]] Flatten : public detail::Mutator {
+	template <concepts::Future F, concepts::Mutator M>
+	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
+
+public:
+	template <typename>
+	inline static constexpr bool mutates_nothrow = false;
+
+	Flatten() = default;
+
+private:
 	template <concepts::Future F>
 	auto mutate(F &&f)
 	{
@@ -35,7 +46,7 @@ struct [[nodiscard]] Flatten : detail::Mutator {
 
 inline auto flatten() noexcept
 {
-	return pipe::Flatten{};
+	return pipe::Flatten();
 }
 
 } // namespace exe::futures
