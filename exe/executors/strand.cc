@@ -35,14 +35,14 @@ public:
 		: where_(where)
 	{}
 
+	void execute(TaskBase *task) noexcept;
+
 	void release() noexcept
 	{
 		if (owners_.fetch_sub(1, ::std::memory_order_acq_rel) == 1) {
 			destroySelf();
 		}
 	}
-
-	void execute(TaskBase *task) noexcept;
 
 private:
 	void run() noexcept override;
@@ -59,9 +59,9 @@ private:
 
 	void afterAcquire(TaskBase *task) noexcept;
 
-	void share() noexcept
+	void addRef() noexcept
 	{
-		owners_.store(2, ::std::memory_order_relaxed);
+		owners_.fetch_add(1, ::std::memory_order_relaxed);
 	}
 
 	void destroySelf() noexcept
@@ -141,8 +141,6 @@ take_next:
 	if ((next = tryTakeNextTask(curr))) {
 		goto run_task;
 	}
-
-	release();
 }
 
 bool Strand::Impl::enqueue(TaskBase *task) noexcept
@@ -169,7 +167,7 @@ bool Strand::Impl::enqueue(TaskBase *task) noexcept
 		return true;
 	}
 
-	share();
+	addRef();
 	return tryTakeNextTask(task);
 }
 
@@ -217,7 +215,7 @@ TaskBase *Strand::Impl::tryTakeNextTask(TaskBase *task) noexcept
 
 void Strand::Impl::afterAcquire(TaskBase *task) noexcept
 {
-	share();
+	addRef();
 
 	head_ = task;
 	task->link(&dummy_);
