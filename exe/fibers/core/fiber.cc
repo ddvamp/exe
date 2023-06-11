@@ -166,6 +166,11 @@ Fiber *createFiber(FiberRoutine &&routine, IExecutor *executor)
 
 namespace self {
 
+FiberId getId() noexcept
+{
+	return Fiber::self().getId();
+}
+
 IExecutor &getExecutor() noexcept
 {
 	return *Fiber::self().getExecutor();

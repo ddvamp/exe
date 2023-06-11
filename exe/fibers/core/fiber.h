@@ -5,11 +5,14 @@
 #ifndef DDV_EXE_FIBERS_CORE_FIBER_H_
 #define DDV_EXE_FIBERS_CORE_FIBER_H_ 1
 
+#include <atomic>
+
 #include "exe/executors/executor.h"
 #include "exe/executors/task.h"
 #include "exe/fibers/api.h"
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/coroutine.h"
+#include "exe/fibers/core/id.h"
 #include "exe/fibers/core/stack.h"
 
 namespace exe::fibers {
@@ -21,12 +24,20 @@ private:
 	Coroutine coroutine_;
 	IExecutor *executor_;
 	IAwaiter *awaiter_ = nullptr;
+	FiberId const id_ = getNextId();
+
+	inline static ::std::atomic<FiberId> next_id_ = kInvalidFiberId + 1;
 
 public:
 	// reference to currently active fiber
 	[[nodiscard]] static Fiber &self() noexcept;
 
 	Fiber(FiberRoutine &&, ::context::Stack &&, IExecutor *) noexcept;
+
+	[[nodiscard]] FiberId getId() const noexcept
+	{
+		return id_;
+	}
 
 	[[nodiscard]] IExecutor *getExecutor() const noexcept
 	{
@@ -54,6 +65,11 @@ private:
 	void stop() noexcept;
 	void destroySelf() noexcept;
 	void releaseResources() noexcept;
+
+	static FiberId getNextId() noexcept
+	{
+		return next_id_.fetch_add(1, ::std::memory_order_relaxed);
+	}
 };
 
 // create an self-ownership fiber

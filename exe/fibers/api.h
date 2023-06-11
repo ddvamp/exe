@@ -7,6 +7,7 @@
 
 #include "exe/executors/executor.h"
 #include "exe/fibers/core/awaiter.h"
+#include "exe/fibers/core/id.h"
 #include "exe/fibers/core/routine.h"
 
 namespace exe::fibers {
@@ -25,6 +26,8 @@ void go(FiberRoutine &&routine);
 
 // precondition: fiber context
 namespace self {
+
+[[nodiscard]] FiberId getId() noexcept;
 
 [[nodiscard]] IExecutor &getExecutor() noexcept;
 
