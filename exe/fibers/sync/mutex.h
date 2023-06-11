@@ -7,13 +7,13 @@
 
 #include <atomic>
 #include <mutex>
+#include <utility>
 
 #include "exe/fibers/api.h"
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/handle.h"
 
 #include "utils/intrusive/forward_list.h"
-#include "utils/utility.h"
 
 namespace exe::fibers {
 
@@ -71,9 +71,12 @@ public:
 
 	[[nodiscard]] bool try_lock() noexcept
 	{
-		return dummy_.next_.load(::std::memory_order_relaxed) == &dummy_ &&
+		auto expected = &dummy_;
+
+		return
+			dummy_.next_.load(::std::memory_order_relaxed) == expected &&
 			dummy_.next_.compare_exchange_weak(
-				::utils::temporary(&dummy_),
+				expected,
 				nullptr,
 				::std::memory_order_acquire,
 				::std::memory_order_relaxed
@@ -98,127 +101,122 @@ public:
 	}
 
 private:
-	// sets new known next owner and returns FiberHandle of previous one
-	FiberHandle replaceKnownNextOwner(Node *next) noexcept
-	{
-		auto curr = ::std::exchange(head_, next);
-
-		[[assume(curr)]];
-		auto info = static_cast<FiberInfo *>(curr);
-
-		return ::std::move(info->handle_);
-	}
-
-	// puts fiber in the waiting queue (in any case) and returns true only if
-	// no ownership was obtained by the current THREAD at the same time
-	bool giveNodeOrGetControl(Node *node) noexcept
-	{
-		return !tail_.exchange(node, ::std::memory_order_acq_rel)
-			->	next_.exchange(node, ::std::memory_order_acq_rel);
-	}
-
-	// Takes fiber from the waiting queue (following known next owner or dummy)
-	// and return it
-	// Otherwise, if there isn't one yet, gives ownership and returns nullptr
-	Node *getNodeOrGiveControl() const noexcept
-	{
-		// be optimistic
-		auto node = head_->next_.load(::std::memory_order_acquire);
-			
-		if (!node) {
-			head_->next_.compare_exchange_strong(
-				node,
-				head_,
-				::std::memory_order_release,
-				::std::memory_order_acquire
-			);
-		}
-
-		return node;
-	}
-	
-	// Gets exclusive ownership of known next owner and returns his FiberHandle
-	// Otherwise, passes control and returns invalid FiberHandle
-	FiberHandle getFiberFromKnownNextOwner() noexcept
-	{
-		if (auto node = head_->next_.load(::std::memory_order_acquire);
-			// be optimistic
-			node ||
-			
-			tail_.compare_exchange_strong(
-				::utils::temporary(::utils::decay_copy(head_)),
-				node = &dummy_,
-				::std::memory_order_release,
-				::std::memory_order_relaxed
-			) ||
-			
-			(node = getNodeOrGiveControl())
-		) {
-			return replaceKnownNextOwner(node);
-		}
-
-		return FiberHandle::invalid();
-	}
-
-	// sets known next owner instead of dummy and tries to get his FiberHandle
-	// (tries to exclusively take ownership of it)
-	FiberHandle getFiberFrom(Node *next) noexcept
-	{
-		// cleanup
-		dummy_.next_.store(nullptr, ::std::memory_order_relaxed);
-
-		head_ = next;
-
-		return getFiberFromKnownNextOwner();
-	}
-
-	// returns true if it is known which fiber is the next owner
-	bool isNextOwnerKnown() const noexcept
-	{
-		return head_ != &dummy_;
-	}
-
 	FiberHandle lockImpl(FiberInfo *node) noexcept
 	{
-		if (giveNodeOrGetControl(node)) [[likely]] {
-			// successfully put the current fiber in the waiting queue
-			return FiberHandle::invalid();
-		}
-		// Getting control over the mutex state
-		// The current fiber has become shared (by waiting queue)
+		auto owner = putFiber(node);
 
-		if (isNextOwnerKnown()) [[unlikely]] {
-			// There is another fiber in front of the current one
-			// The mutex exclusively owns it, so it can be scheduled
-			// The current fiber becomes the next one for scheduling (owner)
-			replaceKnownNextOwner(node).schedule();
+		if (!owner) [[likely]] {
 			return FiberHandle::invalid();
 		}
-		// The current fiber is next one for scheduling, but
-		// it still doesn't own the lock because it has just been shared
-		// It is necessary to prevent sharing
-		return getFiberFrom(node); // ~ getNodeOrGiveControl
+
+		if (isActualFiber(owner)) [[unlikely]] {
+			setNext(node);
+			extractFiber(owner).schedule();
+			return FiberHandle::invalid();
+		}
+
+		dummy_.link(nullptr);
+		return takeLastFiber(node); // ~ putFiber
 	}
 
 	FiberHandle unlockImpl() noexcept
 	{
-		if (isNextOwnerKnown()) [[unlikely]] {
-			// there is the fiber for scheduling, but it may be shared, so
-			// try to exclusively take ownership of it, and
-			// if successful, schedule it
-			return getFiberFromKnownNextOwner(); // ~ getNodeOrGiveControl
-		}
-		// the next fiber for scheduling is unknown, so
-		// try to get fiber from the waiting queue
+		auto owner = getNext();
 
-		if (auto node = getNodeOrGiveControl(); node) [[unlikely]] {
-			// if the next fiber for scheduling has been received, record it
-			// as the next owner and follow the steps above
-			return getFiberFrom(node); // ~ getNodeOrGiveControl
+		if (isActualFiber(owner)) [[unlikely]] {
+			return takeFiber(owner); // ~ putFiber
 		}
-		// the next fiber for scheduling was not received and control was given
+
+		if ((owner = tryTakeNextFiber(owner))) [[unlikely]] {
+			dummy_.link(nullptr);
+			return takeFiber(owner); // ~ putFiber
+		}
 
 		return FiberHandle::invalid();
+	}
+
+	FiberHandle takeFiber(Node *owner) noexcept
+	{
+		if (auto next = loadNext(owner)) {
+			setNext(next);
+			return extractFiber(owner);
+		}
+
+		return takeLastFiber(owner);
+	}
+
+	FiberHandle takeLastFiber(Node *owner) noexcept
+	{
+		auto next = &dummy_;
+
+		if (tryPutDummy(owner) ||
+
+			(next = tryTakeNextFiber(owner))
+		) {
+			setNext(next);
+			return extractFiber(owner);
+		}
+
+		return FiberHandle::invalid();
+	}
+
+	bool isActualFiber(Node *node) const noexcept
+	{
+		return node != &dummy_;
+	}
+
+	Node *getNext() const noexcept
+	{
+		return head_;
+	}
+
+	void setNext(Node *node) noexcept
+	{
+		head_ = node;
+	}
+
+	static FiberHandle extractFiber(Node *node) noexcept
+	{
+		[[assume(node)]];
+		return ::std::move(*static_cast<FiberInfo *>(node)).handle_;
+	}
+
+	static Node *loadNext(Node *node) noexcept
+	{
+		return node->next_.load(::std::memory_order_acquire);
+	}
+
+	Node *putFiber(Node *node) noexcept
+	{
+		return
+			tail_.exchange(node, ::std::memory_order_acq_rel)->
+			next_.exchange(node, ::std::memory_order_acq_rel);
+	}
+
+	bool tryPutDummy(Node *expected) noexcept
+	{
+		return tail_.compare_exchange_strong(
+			expected,
+			&dummy_,
+			::std::memory_order_release,
+			::std::memory_order_relaxed
+		);
+	}
+
+	Node *tryTakeNextFiber(Node *node) noexcept
+	{
+		setNext(node);
+
+		auto next = static_cast<Node *>(nullptr);
+			
+		node->next_.compare_exchange_strong(
+			next,
+			node,
+			::std::memory_order_release,
+			::std::memory_order_acquire
+		);
+
+		return next;
 	}
 };
 

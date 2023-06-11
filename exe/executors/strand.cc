@@ -49,6 +49,10 @@ private:
 
 	bool enqueue(TaskBase *task) noexcept;
 
+	bool isActualTask(TaskBase *task) const noexcept;
+
+	TaskBase *putTask(TaskBase *task) noexcept;
+
 	bool tryAcquire() noexcept;
 
 	bool tryPutDummy(TaskBase *expected) noexcept;
@@ -111,7 +115,7 @@ void Strand::Impl::execute(TaskBase *task) noexcept
 	auto curr = head_;
 	auto next = curr->next_.load(::std::memory_order_relaxed);
 
-	if (next != &dummy_) [[unlikely]] {
+	if (isActualTask(next)) [[unlikely]] {
 		goto run_task;
 	}
 
@@ -152,11 +156,9 @@ bool Strand::Impl::enqueue(TaskBase *task) noexcept
 
 	task->link(nullptr);
 
-	auto prev =
-		tail_.exchange(task, ::std::memory_order_acq_rel)->
-		next_.exchange(task, ::std::memory_order_acq_rel);
+	auto prev = putTask(task);
 	
-	if (prev != &dummy_) [[likely]] {
+	if (isActualTask(prev)) [[likely]] {
 		return prev;
 	}
 
@@ -169,6 +171,18 @@ bool Strand::Impl::enqueue(TaskBase *task) noexcept
 
 	addRef();
 	return tryTakeNextTask(task);
+}
+
+bool Strand::Impl::isActualTask(TaskBase *task) const noexcept
+{
+	return task != &dummy_;
+}
+
+TaskBase *Strand::Impl::putTask(TaskBase *task) noexcept
+{
+	return
+		tail_.exchange(task, ::std::memory_order_acq_rel)->
+		next_.exchange(task, ::std::memory_order_acq_rel);
 }
 
 bool Strand::Impl::tryAcquire() noexcept
