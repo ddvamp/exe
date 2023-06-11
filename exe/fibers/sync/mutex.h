@@ -13,6 +13,7 @@
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/handle.h"
 
+#include "utils/debug.h"
 #include "utils/intrusive/forward_list.h"
 
 namespace exe::fibers {
@@ -57,6 +58,54 @@ private:
 	Node *head_ = &dummy_; // known next owner or dummy
 	::std::atomic<Node *> tail_ = &dummy_; // last added or dummy
 
+#ifndef UTILS_DISABLE_ASSERT
+	::std::atomic<FiberId> owner_ = kInvalidFiberId;
+
+	FiberId getOwner() const noexcept
+	{
+		return owner_.load(::std::memory_order_relaxed);
+	}
+
+	void setOwner(FiberId id) noexcept
+	{
+		owner_.store(id, ::std::memory_order_relaxed);
+	}
+
+	void checkOwner() const noexcept
+	{
+		UTILS_CHECK(
+			getOwner() == self::getId(),
+			"the mutex is not locked"
+		);
+	}
+
+	void checkRecursive() const noexcept
+	{
+		UTILS_CHECK(
+			getOwner() != self::getId(),
+			"attempt to recursively lock a mutex"
+		);
+	}
+
+	void checkLock() noexcept
+	{
+		UTILS_CHECK(
+			getOwner() == kInvalidFiberId,
+			"attempt to lock a already locked mutex"
+		);
+		setOwner(self::getId());
+	}
+
+	void checkUnlock() noexcept
+	{
+		UTILS_CHECK(
+			getOwner() == self::getId(),
+			"attempt to unlock a mutex without ownership"
+		);
+		setOwner(kInvalidFiberId);
+	}
+#endif
+
 public:
 	~Mutex() = default;
 
@@ -71,6 +120,8 @@ public:
 
 	[[nodiscard]] bool try_lock() noexcept
 	{
+		UTILS_RUN(checkRecursive);
+
 		auto expected = &dummy_;
 
 		return
@@ -89,10 +140,14 @@ public:
 			auto awaiter = LockAwaiter(this);
 			self::suspend(awaiter);
 		}
+
+		UTILS_RUN(checkLock);
 	}
 
 	void unlock() noexcept
 	{
+		UTILS_RUN(checkUnlock);
+
 		auto next = unlockImpl();
 
 		if (next.isValid()) {

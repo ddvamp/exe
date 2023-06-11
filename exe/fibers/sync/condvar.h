@@ -73,6 +73,8 @@ public:
 
 	void wait() noexcept
 	{
+		UTILS_RUN(mutex_.checkOwner);
+
 		WaitAwaiter awaiter{this};
 		self::suspend(awaiter);
 	}
@@ -80,6 +82,8 @@ public:
 	template <typename Predicate>
 	void wait(Predicate &&stop_waiting) noexcept
 	{
+		UTILS_RUN(mutex_.checkOwner);
+
 		while (!stop_waiting()) {
 			wait();
 		}
@@ -145,6 +149,8 @@ private:
 
 	[[nodiscard]] ::std::uint64_t notifyImpl(::std::uint64_t count) noexcept
 	{
+		UTILS_RUN(mutex_.checkOwner);
+
 		if (waiters_.count_ == 0) {
 			return 0;
 		}
