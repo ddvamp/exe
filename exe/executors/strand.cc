@@ -3,10 +3,9 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
 #include <atomic>
+#include <utility>
 
 #include "exe/executors/strand.h"
-
-#include "utils/abort.h"
 
 namespace exe::executors {
 
@@ -22,7 +21,7 @@ private:
 	};
 
 private:
-	IExecutor &where_;
+	INothrowExecutor &where_;
 
 	::std::atomic_uint64_t owners_ = 1;
 
@@ -31,11 +30,11 @@ private:
 	::std::atomic<TaskBase *> tail_ = &dummy_;
 
 public:
-	explicit Impl(IExecutor &where) noexcept
+	explicit Impl(INothrowExecutor &where) noexcept
 		: where_(where)
 	{}
 
-	void execute(TaskBase *task) noexcept;
+	void submit(TaskBase *task) noexcept;
 
 	void release() noexcept
 	{
@@ -47,7 +46,7 @@ public:
 private:
 	void run() noexcept override;
 
-	bool enqueue(TaskBase *task) noexcept;
+	void submitSelf() noexcept;
 
 	bool isActualTask(TaskBase *task) const noexcept;
 
@@ -76,7 +75,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Strand::Strand(IExecutor &where)
+Strand::Strand(INothrowExecutor &where)
 	: impl_(::new Impl(where))
 {}
 
@@ -85,28 +84,38 @@ Strand::~Strand()
 	impl_->release();
 }
 
-/* virtual */ void Strand::doExecute(TaskBase *task) noexcept
+/* virtual */ void Strand::submit(TaskBase *task) noexcept
 {
-	impl_->execute(task);
+	impl_->submit(task);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void Strand::Impl::execute(TaskBase *task) noexcept
+void Strand::Impl::submit(TaskBase *task) noexcept
 {
-	if (enqueue(task)) {
-		// start a new critical section
-		// (relying on correct synchronization by executor)
+	if (tryAcquire()) {
+		afterAcquire(task);
+		return;
+	}
 
-		// TODO: exception handling
-		try {
-			where_.execute(this);
-		} catch (...) {
-			UTILS_ABORT(
-				"exception while trying to start "
-				"a critical section of strand"
-			);
+	task->link(nullptr);
+
+	auto prev = putTask(task);
+	
+	if (!isActualTask(prev)) [[unlikely]] {
+		dummy_.link(nullptr);
+
+		if (tryPutDummy(task)) {
+			afterAcquire(task);
+			return;
 		}
+
+		addRef();
+		prev = tryTakeNextTask(task);
+	}
+
+	if (prev) {
+		submitSelf();
 	}
 }
 
@@ -147,30 +156,9 @@ take_next:
 	}
 }
 
-bool Strand::Impl::enqueue(TaskBase *task) noexcept
+void Strand::Impl::submitSelf() noexcept
 {
-	if (tryAcquire()) {
-		afterAcquire(task);
-		return true;
-	}
-
-	task->link(nullptr);
-
-	auto prev = putTask(task);
-	
-	if (isActualTask(prev)) [[likely]] {
-		return prev;
-	}
-
-	dummy_.link(nullptr);
-
-	if (tryPutDummy(task)) {
-		afterAcquire(task);
-		return true;
-	}
-
-	addRef();
-	return tryTakeNextTask(task);
+	where_.submit(this);
 }
 
 bool Strand::Impl::isActualTask(TaskBase *task) const noexcept
@@ -233,6 +221,8 @@ void Strand::Impl::afterAcquire(TaskBase *task) noexcept
 
 	head_ = task;
 	task->link(&dummy_);
+
+	submitSelf();
 }
 
 } // namespace exe::executors

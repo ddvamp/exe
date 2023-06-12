@@ -40,14 +40,15 @@ protected:
 
 
 	template <concepts::Future F>
-	[[nodiscard]] static executors::IExecutor &getExecutor(F const &f) noexcept
+	[[nodiscard]] static executors::INothrowExecutor &getExecutor(F const &f)
+		noexcept
 		requires (has_executor_v<F>)
 	{
 		return f.getState().getExecutor();
 	}
 
 	template <typename F>
-	[[nodiscard]] static executors::IExecutor &getExecutor(
+	[[nodiscard]] static executors::INothrowExecutor &getExecutor(
 		FutureHolder<F> const &f) noexcept
 	{
 		return f.raw.getState().getExecutor();
@@ -56,7 +57,7 @@ protected:
 
 
 	template <concepts::Future F>
-	static auto setExecutor(F f, executors::IExecutor &where) noexcept
+	static auto setExecutor(F f, executors::INothrowExecutor &where) noexcept
 	{
 		f.getState().setExecutor(where);
 		return F::with_executor(f.release());
@@ -64,7 +65,7 @@ protected:
 
 	template <typename F>
 	static auto setExecutor(SemiFutureHolder<F> f,
-		executors::IExecutor &where) noexcept
+		executors::INothrowExecutor &where) noexcept
 	{
 		f.raw.getState().setExecutor(where);
 		return FutureHolder<F>(f.raw);

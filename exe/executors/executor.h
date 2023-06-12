@@ -5,31 +5,36 @@
 #ifndef DDV_EXE_EXECUTORS_EXECUTOR_H_
 #define DDV_EXE_EXECUTORS_EXECUTOR_H_ 1
 
-#include <source_location>
+#include <concepts>
 
 #include "exe/executors/task.h"
 
-#include "utils/debug.h"
-
 namespace exe::executors {
 
-// executors are to function execution as allocators are to memory allocation
+// Executors are to function execution as allocators are to memory allocation
 class IExecutor {
 public:
 	virtual ~IExecutor() = default;
 
-	// precondition: task != nullptr
-	void execute(TaskBase *task, 
-		[[maybe_unused]] ::std::source_location location =
-		::std::source_location::current())
-	{
-		UTILS_ASSERT(task, "nullptr instead of a task", location);
-		doExecute(task);
-	}
-
-private:
-	virtual void doExecute(TaskBase *) = 0;
+	virtual void submit(TaskBase *) = 0;
 };
+
+class INothrowExecutor : public IExecutor {
+public:
+	void submit(TaskBase *) noexcept override = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace concepts {
+
+template <typename E>
+concept Executor = ::std::derived_from<E, IExecutor>;
+
+template <typename E>
+concept NothrowExecutor = ::std::derived_from<E, INothrowExecutor>;
+
+} // namespace concepts
 
 } // namespace exe::executors
 

@@ -54,6 +54,10 @@ public:
 	// requires explicit start of threads
 	ThreadPool(::std::size_t workers, defer_start_t);
 
+	static ThreadPool *current() noexcept;
+
+	void submit(TaskBase *task) override;
+
 	// wait until the number of tasks drops to zero
 	void waitIdle();
 
@@ -63,11 +67,7 @@ public:
 	// wait for all tasks to complete and join threads
 	void stop();
 
-	static ThreadPool *current() noexcept;
-
 private:
-	void doExecute(TaskBase *task) override;
-
 	void workLoop();
 
 	void joinWorkerThreads();

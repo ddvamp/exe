@@ -17,7 +17,7 @@ namespace exe::executors {
 //
 // Sending critical sections is wait-free except for
 // launching a new critical sections of the strand itself
-class Strand final : public IExecutor {
+class Strand final : public INothrowExecutor {
 private:
 	class Impl;
 
@@ -33,10 +33,9 @@ public:
 	void operator= (Strand &&) = delete;
 
 public:
-	explicit Strand(IExecutor &where);
+	explicit Strand(INothrowExecutor &where);
 
-private:
-	void doExecute(TaskBase *critical_section) noexcept override;
+	void submit(TaskBase *critical_section) noexcept override;
 };
 
 } // namespace exe::executors

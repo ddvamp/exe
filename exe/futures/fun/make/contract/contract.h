@@ -69,8 +69,8 @@ private:
 
 	void cancel() noexcept
 	{
-		f.reset();
-		State::destroy(p.release());
+		State::destroy(f.release());
+		p.reset();
 	}
 };
 

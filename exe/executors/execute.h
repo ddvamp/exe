@@ -5,13 +5,12 @@
 #ifndef DDV_EXE_EXECUTORS_EXECUTE_H_
 #define DDV_EXE_EXECUTORS_EXECUTE_H_ 1
 
+#include <memory>
 #include <type_traits>
 #include <utility>
 
 #include "exe/executors/executor.h"
 #include "exe/executors/task.h"
-
-#include "utils/abort.h"
 
 namespace exe::executors {
 
@@ -44,23 +43,28 @@ public:
 	void run() noexcept override
 	{
 		fn_();
+		destroySelf();
+	}
+
+private:
+	void destroySelf() noexcept
+	{
 		delete this;
 	}
 };
 
 } // namespace detail
 
-template <typename F>
-void execute(IExecutor &where, F &&f)
+template <concepts::Executor E, typename Fn>
+void submit(E &where, Fn &&f)
 {
-	auto task = ::new detail::Task<F>(::std::forward<F>(f));
+	using Task = detail::Task<::std::remove_cvref_t<Fn>>;
 
-	// TODO: exception handling
-	try {
-		where.execute(task);
-	} catch (...) {
-		UTILS_ABORT("exception during executors::execute");
-	}
+	auto task = ::std::make_unique<Task>(::std::forward<Fn>(f));
+
+	where.submit(task.get());
+
+	task.release();
 }
 
 } // namespace exe::executors

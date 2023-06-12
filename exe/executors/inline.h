@@ -11,16 +11,21 @@
 
 namespace exe::executors {
 
-// executes task immediately at place
-class InlineExecutor : public IExecutor {
-private:
-	void doExecute(TaskBase *task) noexcept override
+// Executes task immediately at place
+class InlineExecutor : public INothrowExecutor {
+public:
+	void submit(TaskBase *task) noexcept override
 	{
+		UTILS_ASSERT(
+			task,
+			"nullptr instead of the task"
+		);
+
 		task->run();
 	}
 };
 
-[[nodiscard]] inline IExecutor &getInlineExecutor() noexcept
+[[nodiscard]] inline InlineExecutor &getInlineExecutor() noexcept
 {
 	static InlineExecutor instance;
 	return instance;

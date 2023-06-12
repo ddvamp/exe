@@ -6,6 +6,7 @@
 #define DDV_EXE_FUTURES_FUN_MAKE_SUBMIT_H_ 1
 
 #include <exception>
+#include <memory>
 #include <type_traits>
 #include <utility>
 
@@ -15,8 +16,6 @@
 #include "exe/futures/fun/traits/map.h"
 
 #include "result/result.h"
-
-#include "utils/abort.h"
 
 namespace exe::futures {
 
@@ -39,14 +38,26 @@ public:
 	void run() noexcept override
 	{
 		::std::move(p_).setResult(::utils::map_safely(fn_));
+		destroySelf();
+	}
+
+	void reset() noexcept
+	{
+		::std::move(p_).setResult(::utils::error(nullptr));
+		destroySelf();
+	}
+
+private:
+	void destroySelf() noexcept
+	{
 		delete this;
 	}
 };
 
 } // namespace detail
 
-template <typename Fn>
-auto submit(executors::IExecutor &where, Fn fn)
+template <executors::concepts::Executor E, typename Fn>
+auto submit(E &where, Fn fn)
 	requires (
 		::std::is_nothrow_destructible_v<Fn> &&
 		::std::is_invocable_v<Fn &> &&
@@ -57,15 +68,24 @@ auto submit(executors::IExecutor &where, Fn fn)
 
 	auto contract = Contract<T>();
 
-	auto task = ::new detail::Task(::std::move(fn), ::std::move(contract).p);
+	auto task =
+		[]<typename Task, typename Deleter>
+		(Task *task, Deleter deleter) noexcept {
+			return ::std::unique_ptr<Task, Deleter>(task, deleter);
+		}(
+			::new detail::Task(::std::move(fn), ::std::move(contract).p),
+			[](auto *ptr) noexcept { ptr->reset(); }
+		);
 
-	try {
-		where.execute(task);
-	} catch (...) {
-		UTILS_ABORT("exception while submitting a task in executor");
+	where.submit(task.get());
+
+	task.release();
+
+	if constexpr (executors::concepts::NothrowExecutor<E>) {
+		return ::std::move(contract).f | futures::via(where);
+	} else {
+		return ::std::move(contract).f;
 	}
-
-	return ::std::move(contract).f | futures::via(where);
 }
 
 } // namespace exe::futures

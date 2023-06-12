@@ -91,8 +91,13 @@ ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 	UTILS_ASSERT(workers != 0, "zero-size thread pool was requested");
 }
 
-/* virtual */ void ThreadPool::doExecute(TaskBase *task)
+/* virtual */ void ThreadPool::submit(TaskBase *task)
 {
+	UTILS_ASSERT(
+		task,
+		"nullptr instead of the task"
+	);
+
 	UTILS_VERIFY(
 		tasks_.put(::utils::builder{
 			[this, task]() noexcept {

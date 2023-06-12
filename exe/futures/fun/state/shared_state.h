@@ -18,7 +18,6 @@
 
 #include "result/result.h"
 
-#include "utils/abort.h"
 #include "utils/debug.h"
 
 namespace exe::futures::detail {
@@ -39,7 +38,7 @@ private:
 	::std::optional<Result> result_;
 	::std::optional<Callback> callback_;
 	::concurrency::Meeting meeting_{2};
-	executors::IExecutor *executor_ = nullptr;
+	executors::INothrowExecutor *executor_ = nullptr;
 
 public:
 	[[nodiscard]] static SharedState *create()
@@ -52,12 +51,12 @@ public:
 		state->destroySelf();
 	}
 
-	[[nodiscard]] executors::IExecutor &getExecutor() const noexcept
+	[[nodiscard]] executors::INothrowExecutor &getExecutor() const noexcept
 	{
 		return *executor_;
 	}
 
-	void setExecutor(executors::IExecutor &where) noexcept
+	void setExecutor(executors::INothrowExecutor &where) noexcept
 	{
 		executor_ = &where;
 	}
@@ -85,12 +84,7 @@ private:
 
 	void scheduleCallback() noexcept
 	{
-		// TODO: exception handling
-		try {
-			executor_->execute(this);
-		} catch (...) {
-			UTILS_ABORT("exception when scheduling execution of callback");
-		}
+		executor_->submit(this);
 	}
 
 	void notify() noexcept
