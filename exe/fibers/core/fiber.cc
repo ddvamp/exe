@@ -70,7 +70,7 @@ public:
 }
 
 Fiber::Fiber(FiberRoutine &&routine, ::context::Stack &&stack,
-	IExecutor *executor) noexcept
+	INothrowExecutor *executor) noexcept
 	: stack_(::std::move(stack))
 	, coroutine_(::std::move(routine), stack_.view())
 	, executor_(executor)
@@ -78,12 +78,7 @@ Fiber::Fiber(FiberRoutine &&routine, ::context::Stack &&stack,
 
 void Fiber::schedule() noexcept
 {
-	// TODO: exception handling
-	try {
-		executor_->execute(this);
-	} catch (...) {
-		UTILS_ABORT("exception while trying to schedule fiber");
-	}
+	executor_->submit(this);
 }
 
 void Fiber::resume() noexcept
@@ -98,7 +93,7 @@ void Fiber::suspend(IAwaiter *awaiter) noexcept
 	stop();
 }
 
-void Fiber::teleportTo(IExecutor *executor) noexcept
+void Fiber::teleportTo(INothrowExecutor *executor) noexcept
 {
 	executor_ = executor;
 
@@ -153,7 +148,7 @@ void Fiber::stop() noexcept
 	coroutine_.suspend();
 }
 
-Fiber *createFiber(FiberRoutine &&routine, IExecutor *executor)
+Fiber *createFiber(FiberRoutine &&routine, INothrowExecutor *executor)
 {
 	return new Fiber{::std::move(routine), allocateStack(), executor};
 }
@@ -171,7 +166,7 @@ FiberId getId() noexcept
 	return Fiber::self().getId();
 }
 
-IExecutor &getExecutor() noexcept
+INothrowExecutor &getExecutor() noexcept
 {
 	return *Fiber::self().getExecutor();
 }
@@ -193,14 +188,14 @@ void switchTo(FiberHandle &&next) noexcept
 	suspend(awaiter);
 }
 
-void teleportTo(IExecutor &executor)
+void teleportTo(INothrowExecutor &executor)
 {
 	Fiber::self().teleportTo(&executor);
 }
 
 } // namespace self
 
-void go(IExecutor &executor, FiberRoutine &&routine)
+void go(INothrowExecutor &executor, FiberRoutine &&routine)
 {
 	UTILS_ASSERT(routine, "empty routine for fiber");
 

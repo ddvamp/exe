@@ -12,12 +12,12 @@
 
 namespace exe::fibers {
 
-using executors::IExecutor;
+using executors::INothrowExecutor;
 
 // Start fiber on where
 //
 // Precondition: routine == true
-void go(IExecutor &where, FiberRoutine &&routine);
+void go(INothrowExecutor &where, FiberRoutine &&routine);
 
 // Start fiber on executor of current fiber
 //
@@ -29,7 +29,7 @@ namespace self {
 
 [[nodiscard]] FiberId getId() noexcept;
 
-[[nodiscard]] IExecutor &getExecutor() noexcept;
+[[nodiscard]] INothrowExecutor &getExecutor() noexcept;
 
 // For synchronization primitives
 // Do not use directly
@@ -43,7 +43,7 @@ void yield() noexcept;
 void switchTo(FiberHandle &&next) noexcept;
 
 // reschedule current fiber on executor
-void teleportTo(IExecutor &executor);
+void teleportTo(INothrowExecutor &executor);
 
 } // namespace self
 

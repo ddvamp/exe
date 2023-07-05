@@ -22,7 +22,7 @@ class [[nodiscard]] Fiber : public executors::TaskBase {
 private:
 	::context::Stack stack_;
 	Coroutine coroutine_;
-	IExecutor *executor_;
+	INothrowExecutor *executor_;
 	IAwaiter *awaiter_ = nullptr;
 	FiberId const id_ = getNextId();
 
@@ -32,14 +32,14 @@ public:
 	// reference to currently active fiber
 	[[nodiscard]] static Fiber &self() noexcept;
 
-	Fiber(FiberRoutine &&, ::context::Stack &&, IExecutor *) noexcept;
+	Fiber(FiberRoutine &&, ::context::Stack &&, INothrowExecutor *) noexcept;
 
 	[[nodiscard]] FiberId getId() const noexcept
 	{
 		return id_;
 	}
 
-	[[nodiscard]] IExecutor *getExecutor() const noexcept
+	[[nodiscard]] INothrowExecutor *getExecutor() const noexcept
 	{
 		return executor_;
 	}
@@ -53,7 +53,7 @@ public:
 	void suspend(IAwaiter *) noexcept;
 
 	// reschedule current fiber on executor
-	void teleportTo(IExecutor *) noexcept;
+	void teleportTo(INothrowExecutor *) noexcept;
 
 	// ITask
 	void run() noexcept override;
@@ -73,7 +73,7 @@ private:
 };
 
 // create an self-ownership fiber
-[[nodiscard]] Fiber *createFiber(FiberRoutine &&, IExecutor *);
+[[nodiscard]] Fiber *createFiber(FiberRoutine &&, INothrowExecutor *);
 
 } // namespace exe::fibers
 
