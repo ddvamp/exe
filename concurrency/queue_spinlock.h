@@ -53,7 +53,49 @@ public:
 		void operator= (Guard &&) = delete;
 	};
 
+	// TODO: better naming, guard <-> manual relation, adopt_lock
+	class ManualGuard {
+	private:
+		QueueSpinlock &lock_;
+		Node node_;
+		bool fast_;
+
+	public:
+		explicit ManualGuard(QueueSpinlock &lock) noexcept
+			: lock_(lock)
+			, fast_(lock.try_lock())
+		{
+			if (!fast_) [[likely]] {
+				lock.lockInit(node_);
+			}
+		}
+
+		void unlock() noexcept
+		{
+			lock_.unlockFini(node_, fast_);
+		}
+
+		~ManualGuard() = default;
+
+		ManualGuard(ManualGuard const &) = delete;
+		void operator= (ManualGuard const &) = delete;
+
+		ManualGuard(ManualGuard &&) = delete;
+		void operator= (ManualGuard &&) = delete;
+	};
+
 public:
+	// TODO: better naming?
+	[[nodiscard]] auto lock_with_guard() noexcept
+	{
+		return Guard{*this};
+	}
+
+	[[nodiscard]] auto lock_with_manual() noexcept
+	{
+		return ManualGuard{*this};
+	}
+
 	[[nodiscard]] bool try_lock() noexcept
 	{
 		return dummy_.free_.load(::std::memory_order_relaxed) &&
