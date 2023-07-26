@@ -6,6 +6,7 @@
 #define DDV_CONCURRENCY_QUEUE_SPINLOCK_H_ 1
 
 #include <atomic>
+#include <mutex>
 
 #include "utils/concurrency/relax.h"
 #include "utils/intrusive/forward_list.h"
@@ -25,48 +26,44 @@ private:
 
 public:
 	// for case of high contention
-	class Guard {
+	class LockToken {
 	private:
 		QueueSpinlock &lock_;
 		Node node_;
 		bool fast_;
 
 	public:
-		explicit Guard(QueueSpinlock &lock) noexcept
-			: lock_(lock)
-			, fast_(lock.try_lock())
-		{
-			if (!fast_) [[likely]] {
-				lock.lockInit(node_);
-			}
-		}
+		~LockToken() = default;
 
-		~Guard()
-		{
-			lock_.unlockFini(node_, fast_);
-		}
+		LockToken(LockToken const &) = delete;
+		void operator= (LockToken const &) = delete;
 
-		Guard(Guard const &) = delete;
-		void operator= (Guard const &) = delete;
-
-		Guard(Guard &&) = delete;
-		void operator= (Guard &&) = delete;
-	};
-
-	// TODO: better naming, guard <-> manual relation, adopt_lock
-	class ManualGuard {
-	private:
-		QueueSpinlock &lock_;
-		Node node_;
-		bool fast_;
+		LockToken(LockToken &&) = delete;
+		void operator= (LockToken &&) = delete;
 
 	public:
-		explicit ManualGuard(QueueSpinlock &lock) noexcept
-			: lock_(lock)
-			, fast_(lock.try_lock())
+		explicit LockToken(QueueSpinlock &spinlock) noexcept
+			: lock_(spinlock)
 		{
+			lock();
+		}
+
+		LockToken(QueueSpinlock &spinlock, ::std::defer_lock_t) noexcept
+			: lock_(spinlock)
+		{}
+
+		LockToken(QueueSpinlock &spinlock, ::std::adopt_lock_t) noexcept
+			: lock_(spinlock)
+			, fast_(true)
+		{}
+
+	public:
+		void lock() noexcept
+		{
+			fast_ = lock_.try_lock();
+
 			if (!fast_) [[likely]] {
-				lock.lockInit(node_);
+				lock_.lockInit(node_);
 			}
 		}
 
@@ -74,28 +71,43 @@ public:
 		{
 			lock_.unlockFini(node_, fast_);
 		}
-
-		~ManualGuard() = default;
-
-		ManualGuard(ManualGuard const &) = delete;
-		void operator= (ManualGuard const &) = delete;
-
-		ManualGuard(ManualGuard &&) = delete;
-		void operator= (ManualGuard &&) = delete;
 	};
 
-public:
-	// TODO: better naming?
+	[[nodiscard]] auto lock_with_token() noexcept
+	{
+		return LockToken(*this);
+	}
+
+	[[nodiscard]] auto get_deferred_token() noexcept
+	{
+		return LockToken(*this, ::std::defer_lock);
+	}
+
+	// precondition: locked
+	[[nodiscard]] auto get_adopted_token() noexcept
+	{
+		return LockToken(*this, ::std::adopt_lock);
+	}
+
+	// for case of high contention
+	class Guard : protected LockToken {
+	public:
+		explicit Guard(QueueSpinlock &lock) noexcept
+			: LockToken(lock)
+		{}
+
+		~Guard()
+		{
+			unlock();
+		}
+	};
+
 	[[nodiscard]] auto lock_with_guard() noexcept
 	{
-		return Guard{*this};
+		return Guard(*this);
 	}
 
-	[[nodiscard]] auto lock_with_manual() noexcept
-	{
-		return ManualGuard{*this};
-	}
-
+public:
 	[[nodiscard]] bool try_lock() noexcept
 	{
 		return dummy_.free_.load(::std::memory_order_relaxed) &&
