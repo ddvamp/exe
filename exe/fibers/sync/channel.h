@@ -20,6 +20,7 @@
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/handle.h"
 
+#include "utils/defer.h"
 #include "utils/intrusive/forward_list.h"
 
 namespace utils {
@@ -311,113 +312,113 @@ private:
 };
 
 
-template <typename T>
-class ChannelState {
-private:
-	struct ProxyPtr {
+class ChannelWaitQueue {
+public:
+	struct NodeImpl {
 		void *object_;
-	};
-
-	struct FiberInfo
-		: ProxyPtr
-		, ::utils::intrusive_concurrent_forward_list_node<FiberInfo> {
 		FiberHandle handle_;
 	};
 
-	class WaitQueue {
-	private:
-		FiberInfo *head_ = nullptr;
-		FiberInfo *tail_;
+	struct Node
+		: NodeImpl
+		, ::utils::intrusive_concurrent_forward_list_node<Node> {};
 
-	public:
-		[[nodiscard]] bool empty() const noexcept
-		{
-			return !head_;
+private:
+	Node *head_ = nullptr;
+	Node *tail_;
+
+public:
+	[[nodiscard]] bool empty() const noexcept
+	{
+		return !head_;
+	}
+
+	void push(Node *node) noexcept
+	{
+		if (empty()) {
+			head_ = tail_ = node;
+		} else {
+			::std::exchange(tail_, node)->link(node);
 		}
+	}
 
-		void push(FiberInfo *info) noexcept
-		{
-			if (empty()) {
-				head_ = tail_ = info;
-			} else {
-				::std::exchange(tail_, info).link(info);
-			}
-		}
+	// precondition: empty() == false
+	[[nodiscard]] Node *take() noexcept
+	{
+		return ::std::exchange(
+			head_,
+			head_->next_.load(::std::memory_order_relaxed)
+		);
+	}
+};
 
-		// precondition: empty() == false
-		[[nodiscard]] FiberInfo *take() noexcept
-		{
-			return ::std::exchange(
-				head_,
-				head_.next_.load(::std::memory_order_relaxed)
-			);
-		}
-	};
 
-	class ChannelAwaiter : public IAwaiter {
-	private:
-		FiberInfo info_;
-		::concurrency::QueueSpinlock::ManualGuard &lock_;
-		WaitQueue &queue_;
+class ChannelAwaiter : public IAwaiter {
+private:
+	ChannelWaitQueue::Node fiber_info_;
+	::concurrency::QueueSpinlock::LockToken &lock_;
 
-	public:
-		explicit ChannelAwaiter(void *object,
-			::concurrency::QueueSpinlock::ManualGuard &lock,
-			WaitQueue &queue) noexcept
-			: info_{object}
-			, lock_(lock)
-			, queue_(queue)
-		{}
+public:
+	template <typename T>
+	ChannelAwaiter(T &object, ::concurrency::QueueSpinlock::LockToken &lock, 
+		ChannelWaitQueue &queue) noexcept
+		: fiber_info_{::std::addressof(object)}
+		, lock_(lock)
+	{
+		queue.push(&fiber_info_);
+	}
 
-		void awaitSuspend(FiberHandle &&) noexcept override
-		{
-			// nothing
-		}
+	void awaitSuspend(FiberHandle &&) noexcept override
+	{
+		// nothing
+	}
 
-		[[nodiscard]] FiberHandle awaitSymmetricSuspend(
-			FiberHandle &&current) noexcept override
-		{
-			info_.handle_ = ::std::move(current);
-			queue_.push(&info_);
-			lock_.unlock();
-			return FiberHandle::invalid();
-		}
-	};
+	[[nodiscard]] FiberHandle awaitSymmetricSuspend(
+		FiberHandle &&current) noexcept override
+	{
+		fiber_info_.handle_ = ::std::move(current);
+		lock_.unlock();
+		return FiberHandle::invalid();
+	}
+};
 
+
+template <typename T>
+class ChannelState {
 private:
 	::concurrency::QueueSpinlock spinlock_; // protects channel state
 
 	::std::atomic_size_t state_/* = ? TODO*/; // size/closed
-	WaitQueue recvq_;
-	WaitQueue sendq_;
+	ChannelWaitQueue recvq_;
+	ChannelWaitQueue sendq_;
 
 	ChannelBuffer<T> buffer_;
 
 public:
 	bool send(T value)
 	{
-		auto lock = spinlock_.lock_with_manual();
+		auto token = spinlock_.get_token();
 
 		if (buffer_.full()) {
-			ChannelAwaiter awaiter(::std::addressof(value), lock, sendq_);
+			auto awaiter = ChannelAwaiter(value, token, sendq_);
 			self::suspend(awaiter);
 
 			return true;
 		}
 
+		auto unlocker = ::utils::defer([&]() noexcept { token.unlock(); });
+
 		if (recvq_.empty()) {
 			buffer_.push(::std::move(value));
 
-			lock.unlock();
 			return true;
 		}
 
 		auto info = recvq_.take();
 		static_cast<::std::optional<T> *>(info->object_)
 			->emplace(::std::move(value));
-		::std::move(info->handle_).schedule();
+		::std::move(*info).handle_.schedule();
 
-		lock.unlock();
 		return true;
 	}
 
@@ -428,14 +429,16 @@ public:
 	{
 		::std::optional<T> result;
 
-		auto lock = spinlock_.lock_with_manual();
+		auto token = spinlock_.get_token();
 
 		if (buffer_.empty()) {
-			ChannelAwaiter awaiter(::std::addressof(result), lock, recvq_);
+			auto awaiter = ChannelAwaiter(result, token, recvq_);
 			self::suspend(awaiter);
 
 			return result;
 		}
+
+		auto unlocker = ::utils::defer([&]() noexcept { token.unlock(); });
 
 		result.emplace(::std::move(buffer_.front()));
 		buffer_.pop();
@@ -443,10 +446,9 @@ public:
 		if (!sendq_.empty()) {
 			auto info = sendq_.take();
 			buffer_.push(::std::move(*static_cast<T *>(info->object_)));
-			::std::move(info->handle_).schedule();
+			::std::move(*info).handle_.schedule();
 		}
 
-		lock.unlock();
 		return result;
 	}
 

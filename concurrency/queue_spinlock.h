@@ -73,7 +73,7 @@ public:
 		}
 	};
 
-	[[nodiscard]] auto lock_with_token() noexcept
+	[[nodiscard]] auto get_token() noexcept
 	{
 		return LockToken(*this);
 	}
