@@ -20,6 +20,7 @@
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/handle.h"
 
+#include "utils/debug.h"
 #include "utils/defer.h"
 #include "utils/intrusive/forward_list.h"
 
@@ -275,7 +276,7 @@ public:
 	}
 
 	// TODO: exceptions, by ref, emplace
-	void push(T value)
+	void push(T &&value)
 	{
 		::std::ranges::construct_at(
 			getPtr() + getSendIdx(),
@@ -386,48 +387,34 @@ public:
 template <typename T>
 class ChannelState {
 private:
+	using OptT = ::std::optional<T>;
+
 	::concurrency::QueueSpinlock spinlock_; // protects channel state
 
-	::std::atomic_size_t state_/* = ? TODO*/; // size/closed
+	::std::atomic_size_t state_; // size + 1 bit closed
 	ChannelWaitQueue recvq_;
 	ChannelWaitQueue sendq_;
 
 	ChannelBuffer<T> buffer_;
 
 public:
-	bool send(T value)
+	void send(T &&value)
 	{
-		auto token = spinlock_.get_token();
-
-		if (buffer_.full()) {
-			auto awaiter = ChannelAwaiter(value, token, sendq_);
-			self::suspend(awaiter);
-
-			return true;
-		}
-
-		auto unlocker = ::utils::defer([&]() noexcept { token.unlock(); });
-
-		if (recvq_.empty()) {
-			buffer_.push(::std::move(value));
-
-			return true;
-		}
-
-		auto info = recvq_.take();
-		static_cast<::std::optional<T> *>(info->object_)
-			->emplace(::std::move(value));
-		::std::move(*info).handle_.schedule();
-
-		return true;
+		sendImpl(value, /* nonblocking */ false);
 	}
 
-	bool trySend(T value)
-	{}
-
-	::std::optional<T> receive()
+	// TODO: how not to lose value when false?
+	OptT trySend(T &&value)
 	{
-		::std::optional<T> result;
+		return
+			isOpenAndFull() || !sendImpl(value, /* nonblocking */ true)
+			? OptT(::std::move(value))
+			: OptT(::std::nullopt);
+	}
+
+	OptT receive()
+	{
+		OptT result;
 
 		auto token = spinlock_.get_token();
 
@@ -452,7 +439,7 @@ public:
 		return result;
 	}
 
-	::std::pair<::std::optional<T>, bool> tryReceive()
+	::std::pair<OptT, bool> tryReceive()
 	{}
 
 	void close()
@@ -467,8 +454,77 @@ protected:
 	}
 
 	explicit ChannelState(::std::size_t const capacity) noexcept
-		: buffer_(capacity)
+		: state_(capacity << 1)
+		, buffer_(capacity)
 	{}
+
+private:
+	::std::size_t getState() const noexcept
+	{
+		return state_.load(::std::memory_order_relaxed);
+	}
+
+	bool isOpenAndFull() const noexcept
+	{
+		return getState() == 0;
+	}
+
+	static ::std::pair<bool, bool> isOpenAndFullApart(
+		::std::size_t const state) noexcept
+	{
+		constexpr auto mask = ::std::size_t{1};
+
+		return {
+			(state & mask) == 0,
+			(state & ~mask) == 0
+		};
+	}
+
+	bool sendImpl(T &value, bool nonblocking)
+	{
+		auto token = spinlock_.get_token();
+
+		auto const state = getState();
+		auto const [open, full] = isOpenAndFullApart(state);
+
+		// TODO: how to handle go panic?
+		UTILS_ASSERT(open, "send on closed channel");
+
+		if (full) {
+			if (nonblocking) {
+				return false;
+			}
+
+			auto awaiter = ChannelAwaiter(value, token, sendq_);
+			self::suspend(awaiter);
+
+			// check if it was woken up when closing
+			[[maybe_unused]] auto const got_object =
+				[this]() noexcept {
+					auto const state = getState();
+					auto const [open, _] = isOpenAndFullApart(state);
+
+					return open;
+				};
+			UTILS_ASSERT(got_object(), "send on closed channel");
+
+			return true;
+		}
+
+		auto unlocker = ::utils::defer([&]() noexcept { token.unlock(); });
+
+		if (recvq_.empty()) {
+			buffer_.push(::std::move(value));
+			state_.store(state - 2, ::std::memory_order_relaxed);
+			return true;
+		}
+
+		auto info = recvq_.take();
+		static_cast<OptT *>(info->object_)
+			->emplace(::std::move(value));
+		::std::move(*info).handle_.schedule();
+		return true;
+	}
 };
 
 
@@ -576,6 +632,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO: подумать на счёт массивов, текущая реализация - not array T
+//		 могут ли бросать конструкторы
 template <::std::destructible T>
 class Channel {
 	template <typename ...>
@@ -591,29 +648,34 @@ public:
 		: impl_(Impl::create(capacity))
 	{}
 
-	void send(T value)
+	// TODO: exceptions
+	auto send(T value)
 	{
-		impl_->send(::std::move(value));
+		return impl_->send(::std::move(value));
 	}
 
-	bool trySend(T value)
+	// TODO: exceptions
+	auto trySend(T value)
 	{
 		return impl_->trySend(::std::move(value));
 	}
 
-	::std::optional<T> receive()
+	// TODO: exceptions
+	auto receive()
 	{
 		return impl_->receive();
 	}
 
-	::std::pair<::std::optional<T>, bool> tryReceive()
+	// TODO: exceptions
+	auto tryReceive()
 	{
 		return impl_->tryReceive();
 	}
 
-	void close()
+	// TODO: exceptions
+	auto close()
 	{
-		impl_->close();
+		return impl_->close();
 	}
 };
 
