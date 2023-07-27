@@ -323,7 +323,7 @@ public:
 	struct Node {
 		void *object_;
 		FiberHandle handle_;
-		Node *next_;
+		Node *next_ = nullptr;
 		bool success_;
 
 		void schedule(bool success) noexcept
@@ -351,8 +351,10 @@ public:
 
 	void push(Node *node) noexcept
 	{
-		if (empty(::std::memory_order_relaxed)) {
-			head_.store(tail_ = node, ::std::memory_order_relaxed);
+		constexpr auto order = ::std::memory_order_relaxed;
+
+		if (empty(order)) {
+			head_.store(tail_ = node, order);
 		} else {
 			::std::exchange(tail_, node)->next_ = node;
 		}
@@ -361,8 +363,19 @@ public:
 	// precondition: empty() == false
 	[[nodiscard]] Node *take() noexcept
 	{
-		auto const result = head_.load(::std::memory_order_relaxed);
-		head_.store(result->next_, ::std::memory_order_relaxed);
+		constexpr auto order = ::std::memory_order_relaxed;
+
+		auto const result = head_.load(order);
+		head_.store(result->next_, order);
+		return result;
+	}
+
+	[[nodiscard]] Node *takeAll() noexcept
+	{
+		constexpr auto order = ::std::memory_order_relaxed;
+
+		auto const result = head_.load(order);
+		head_.store(nullptr, order);
 		return result;
 	}
 };
@@ -411,7 +424,7 @@ private:
 	::concurrency::QueueSpinlock spinlock_; // protects channel state
 
 	::std::atomic_size_t size_ = 0;
-	::std::atomic_flag closed_;
+	::std::atomic_bool closed_ = false;
 
 	ChannelWaitQueue recvq_;
 	ChannelWaitQueue sendq_;
@@ -428,7 +441,7 @@ public:
 	OptT trySend(T &&value) noexcept
 	{
 		return
-			(!closed_.test(::std::memory_order_relaxed) && full()) ||
+			(!closed_.load(::std::memory_order_relaxed) && full()) ||
 			!sendImpl(value, /* nonblocking */ true)
 			? OptT(::std::move(value))
 			: OptT(::std::nullopt);
@@ -448,7 +461,7 @@ public:
 		::std::pair<OptT, bool> result;
 
 		if (empty()) {
-			if (!closed_.test(::std::memory_order_seq_cst)) [[likely]] {
+			if (!closed_.load(::std::memory_order_seq_cst)) [[likely]] {
 				return result;
 			}
 
@@ -465,7 +478,26 @@ public:
 
 	void close() noexcept
 	{
+		constexpr auto order = ::std::memory_order_relaxed;
 
+		auto token = spinlock_.get_token();
+
+		UTILS_ASSERT(!closed_.load(order), "close of closed channel");
+
+		closed_.store(true, order);
+
+		// fast assertion
+		UTILS_ASSERT(sendq_.empty(order), "send on closed channel");
+
+		auto *receiver = recvq_.takeAll();
+
+		token.unlock();
+
+		while (receiver) {
+			// load next_ before schedule
+			::std::exchange(receiver, receiver->next_)
+				->schedule(/* success */ false);
+		}
 	}
 
 protected:
@@ -519,7 +551,7 @@ private:
 		auto token = spinlock_.get_token();
 
 		// TODO: how to handle go panic?
-		auto const is_open = !closed_.test(order);
+		auto const is_open = !closed_.load(order);
 		UTILS_ASSERT(is_open, "send on closed channel");
 
 		auto const has_receivers = !recvq_.empty(order);
@@ -570,7 +602,7 @@ private:
 
 		auto token = spinlock_.get_token();
 
-		auto const is_closed = closed_.test(order);
+		auto const is_closed = closed_.load(order);
 		auto const has_elements = !buffer_.empty();
 		auto const has_senders = !sendq_.empty(order);
 
