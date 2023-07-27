@@ -21,11 +21,16 @@
 #include "exe/fibers/core/handle.h"
 
 #include "utils/debug.h"
-#include "utils/defer.h"
-#include "utils/intrusive/forward_list.h"
 
 namespace utils {
 
+// TODO: make variadic, make all, move to utils library
+bool any(bool fst, bool snd) noexcept
+{
+	return fst + snd != 0;
+}
+
+// TODO: move to utils library
 template <::std::destructible Derived>
 class RefCounter {
 private:
@@ -315,41 +320,50 @@ private:
 
 class ChannelWaitQueue {
 public:
-	struct NodeImpl {
+	struct Node {
 		void *object_;
 		FiberHandle handle_;
+		Node *next_;
+		bool success_;
+
+		void schedule(bool success) noexcept
+		{
+			success_ = success;
+			::std::move(handle_).schedule();
+		}
+
+		template <typename T>
+		T &getObj() const noexcept
+		{
+			return *static_cast<T *>(object_);
+		}
 	};
 
-	struct Node
-		: NodeImpl
-		, ::utils::intrusive_concurrent_forward_list_node<Node> {};
-
 private:
-	Node *head_ = nullptr;
+	::std::atomic<Node *> head_ = nullptr;
 	Node *tail_;
 
 public:
-	[[nodiscard]] bool empty() const noexcept
+	[[nodiscard]] bool empty(::std::memory_order order) const noexcept
 	{
-		return !head_;
+		return !head_.load(order);
 	}
 
 	void push(Node *node) noexcept
 	{
-		if (empty()) {
-			head_ = tail_ = node;
+		if (empty(::std::memory_order_relaxed)) {
+			head_.store(tail_ = node, ::std::memory_order_relaxed);
 		} else {
-			::std::exchange(tail_, node)->link(node);
+			::std::exchange(tail_, node)->next_ = node;
 		}
 	}
 
 	// precondition: empty() == false
 	[[nodiscard]] Node *take() noexcept
 	{
-		return ::std::exchange(
-			head_,
-			head_->next_.load(::std::memory_order_relaxed)
-		);
+		auto const result = head_.load(::std::memory_order_relaxed);
+		head_.store(result->next_, ::std::memory_order_relaxed);
+		return result;
 	}
 };
 
@@ -381,6 +395,11 @@ public:
 		lock_.unlock();
 		return FiberHandle::invalid();
 	}
+
+	[[nodiscard]] bool success() const noexcept
+	{
+		return fiber_info_.success_;
+	}
 };
 
 
@@ -391,58 +410,60 @@ private:
 
 	::concurrency::QueueSpinlock spinlock_; // protects channel state
 
-	::std::atomic_size_t state_; // size + 1 bit closed
+	::std::atomic_size_t size_ = 0;
+	::std::atomic_flag closed_;
+
 	ChannelWaitQueue recvq_;
 	ChannelWaitQueue sendq_;
 
 	ChannelBuffer<T> buffer_;
 
 public:
-	void send(T &&value)
+	void send(T &&value) noexcept
 	{
 		sendImpl(value, /* nonblocking */ false);
 	}
 
 	// TODO: how not to lose value when false?
-	OptT trySend(T &&value)
+	OptT trySend(T &&value) noexcept
 	{
 		return
-			isOpenAndFull() || !sendImpl(value, /* nonblocking */ true)
+			(!closed_.test(::std::memory_order_relaxed) && full()) ||
+			!sendImpl(value, /* nonblocking */ true)
 			? OptT(::std::move(value))
 			: OptT(::std::nullopt);
 	}
 
-	OptT receive()
+	OptT receive() noexcept
 	{
 		OptT result;
 
-		auto token = spinlock_.get_token();
-
-		if (buffer_.empty()) {
-			auto awaiter = ChannelAwaiter(result, token, recvq_);
-			self::suspend(awaiter);
-
-			return result;
-		}
-
-		auto unlocker = ::utils::defer([&]() noexcept { token.unlock(); });
-
-		result.emplace(::std::move(buffer_.front()));
-		buffer_.pop();
-
-		if (!sendq_.empty()) {
-			auto info = sendq_.take();
-			buffer_.push(::std::move(*static_cast<T *>(info->object_)));
-			::std::move(*info).handle_.schedule();
-		}
+		receiveImpl(result, /* nonblocking */ false);
 
 		return result;
 	}
 
-	::std::pair<OptT, bool> tryReceive()
-	{}
+	::std::pair<OptT, bool> tryReceive() noexcept
+	{
+		::std::pair<OptT, bool> result;
 
-	void close()
+		if (empty()) {
+			if (!closed_.test(::std::memory_order_seq_cst)) [[likely]] {
+				return result;
+			}
+
+			if (empty()) {
+				result.second = true;
+				return result;
+			}
+		}
+
+		result.second = receiveImpl(result.first, /* nonblocking */ true);
+
+		return result;
+	}
+
+	void close() noexcept
 	{
 
 	}
@@ -454,76 +475,144 @@ protected:
 	}
 
 	explicit ChannelState(::std::size_t const capacity) noexcept
-		: state_(capacity << 1)
-		, buffer_(capacity)
+		: buffer_(capacity)
 	{}
 
 private:
-	::std::size_t getState() const noexcept
+	::std::size_t capacity() const noexcept
 	{
-		return state_.load(::std::memory_order_relaxed);
+		return buffer_.capacity();
 	}
 
-	bool isOpenAndFull() const noexcept
+	bool unbuffered() const noexcept
 	{
-		return getState() == 0;
+		return capacity() == 0;
 	}
 
-	static ::std::pair<bool, bool> isOpenAndFullApart(
-		::std::size_t const state) noexcept
+	// TODO: есть ли более оптимальные ордеринги?
+	bool empty() const noexcept
 	{
-		constexpr auto mask = ::std::size_t{1};
+		auto const order = ::std::memory_order_seq_cst;
 
-		return {
-			(state & mask) == 0,
-			(state & ~mask) == 0
-		};
+		if (unbuffered()) [[unlikely]] {
+			return sendq_.empty(order);
+		}
+
+		return size_.load(order) == 0;
 	}
 
-	bool sendImpl(T &value, bool nonblocking)
+	bool full() const noexcept
 	{
+		auto const order = ::std::memory_order_relaxed;
+
+		if (unbuffered()) [[unlikely]] {
+			return recvq_.empty(order);
+		}
+
+		return size_.load(order) == capacity();
+	}
+
+	bool sendImpl(T &value, bool const nonblocking) noexcept
+	{
+		constexpr auto order = ::std::memory_order_relaxed;
+
 		auto token = spinlock_.get_token();
 
-		auto const state = getState();
-		auto const [open, full] = isOpenAndFullApart(state);
-
 		// TODO: how to handle go panic?
-		UTILS_ASSERT(open, "send on closed channel");
+		auto const is_open = !closed_.test(order);
+		UTILS_ASSERT(is_open, "send on closed channel");
 
-		if (full) {
-			if (nonblocking) {
-				return false;
+		auto const has_receivers = !recvq_.empty(order);
+		if (has_receivers) {
+			auto * const receiver = recvq_.take();
+
+			token.unlock();
+
+			auto &object = receiver->getObj<OptT>();
+			object.emplace(::std::move(value));
+
+			receiver->schedule(/* success */ true);
+
+			return true;
+		}
+
+		auto const has_slots = !buffer_.full();
+		if (has_slots) {
+			buffer_.push(::std::move(value));
+
+			auto const new_size = size_.load(order) + 1;
+			size_.store(new_size, order);
+
+			token.unlock();
+			return true;
+		}
+
+		if (nonblocking) [[unlikely]] {
+			token.unlock();
+			return false;
+		}
+
+		auto awaiter = ChannelAwaiter(value, token, sendq_);
+		self::suspend(awaiter);
+
+		// check if it was woken up when closing
+		UTILS_ASSERT(
+			awaiter.success(),
+			"send on closed channel"
+		);
+
+		return true;
+	}
+
+	bool receiveImpl(OptT &opt, bool const nonblocking) noexcept
+	{
+		constexpr auto order = ::std::memory_order_relaxed;
+
+		auto token = spinlock_.get_token();
+
+		auto const is_closed = closed_.test(order);
+		auto const has_elements = !buffer_.empty();
+		auto const has_senders = !sendq_.empty(order);
+
+		if (has_senders) {
+			auto * const sender = sendq_.take();
+			auto &object = sender->getObj<T>();
+
+			if (has_elements) [[likely]] {
+				opt.emplace(::std::move(buffer_.front()));
+				buffer_.pop();
+				buffer_.push(::std::move(object));
+			} else {
+				opt.emplace(::std::move(object));
 			}
 
-			auto awaiter = ChannelAwaiter(value, token, sendq_);
-			self::suspend(awaiter);
+			token.unlock();
 
-			// check if it was woken up when closing
-			[[maybe_unused]] auto const got_object =
-				[this]() noexcept {
-					auto const state = getState();
-					auto const [open, _] = isOpenAndFullApart(state);
+			sender->schedule(/* success */ true);
 
-					return open;
-				};
-			UTILS_ASSERT(got_object(), "send on closed channel");
-
-			return true;
+			return is_closed;
 		}
 
-		auto unlocker = ::utils::defer([&]() noexcept { token.unlock(); });
+		if (has_elements) {
+			opt.emplace(::std::move(buffer_.front()));
+			buffer_.pop();
 
-		if (recvq_.empty()) {
-			buffer_.push(::std::move(value));
-			state_.store(state - 2, ::std::memory_order_relaxed);
-			return true;
+			auto const new_size = size_.load(order) - 1;
+			size_.store(new_size, order);
+
+			token.unlock();
+			return is_closed;
 		}
 
-		auto info = recvq_.take();
-		static_cast<OptT *>(info->object_)
-			->emplace(::std::move(value));
-		::std::move(*info).handle_.schedule();
-		return true;
+		if (::utils::any(is_closed, nonblocking)) [[unlikely]] {
+			token.unlock();
+			return is_closed;
+		}
+
+		auto awaiter = ChannelAwaiter(opt, token, recvq_);
+		self::suspend(awaiter);
+
+		return !awaiter.success();
 	}
 };
 
@@ -547,6 +636,7 @@ public:
 	void destroySelf() const noexcept
 	{
 		// TODO: проверка на пустоту очередей (в деструкторе)?
+		//		 autoclose?
 		this->~Self();
 		deallocate(this);
 	}
@@ -632,7 +722,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO: подумать на счёт массивов, текущая реализация - not array T
-//		 могут ли бросать конструкторы
+//		 T is_nothrow_move_constructible
 template <::std::destructible T>
 class Channel {
 	template <typename ...>
@@ -647,33 +737,31 @@ public:
 	explicit Channel(::std::size_t const capacity)
 		: impl_(Impl::create(capacity))
 	{}
-
-	// TODO: exceptions
-	auto send(T value)
+	
+	// precondition: channel is not closed
+	auto send(T value) noexcept
 	{
 		return impl_->send(::std::move(value));
 	}
 
-	// TODO: exceptions
-	auto trySend(T value)
+	// precondition: channel is not closed
+	auto trySend(T value) noexcept
 	{
 		return impl_->trySend(::std::move(value));
 	}
 
-	// TODO: exceptions
-	auto receive()
+	auto receive() noexcept
 	{
 		return impl_->receive();
 	}
 
-	// TODO: exceptions
-	auto tryReceive()
+	auto tryReceive() noexcept
 	{
 		return impl_->tryReceive();
 	}
 
-	// TODO: exceptions
-	auto close()
+	// precondition: there is no senders
+	auto close() noexcept
 	{
 		return impl_->close();
 	}
