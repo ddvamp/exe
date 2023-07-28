@@ -164,21 +164,21 @@ template <typename ...Ts>
 [[nodiscard]] constexpr bool all_of(Ts ...ts) noexcept
 	requires (are_all_same_v<bool, Ts...>)
 {
-	return (0 + ... + static_cast<int>(ts)) == sizeof...(ts);
+	return (1 & ... & static_cast<int>(ts)) == 1;
 }
 
 template <typename ...Ts>
 [[nodiscard]] constexpr bool any_of(Ts ...ts) noexcept
 	requires (are_all_same_v<bool, Ts...>)
 {
-	return (0 + ... + static_cast<int>(ts)) != 0;
+	return (0 | ... | static_cast<int>(ts)) == 1;
 }
 
 template <typename ...Ts>
 [[nodiscard]] constexpr bool none_of(Ts ...ts) noexcept
 	requires (are_all_same_v<bool, Ts...>)
 {
-	return (0 + ... + static_cast<int>(ts)) == 0;
+	return (0 | ... | static_cast<int>(ts)) == 0;
 }
 
 } // namespace utils
