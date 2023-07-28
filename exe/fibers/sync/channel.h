@@ -12,7 +12,6 @@
 #include <memory>
 #include <optional>
 #include <type_traits>
-#include <utility>
 
 #include "concurrency/queue_spinlock.h"
 
@@ -22,16 +21,7 @@
 
 #include "utils/debug.h"
 #include "utils/refer/ref_counted_ptr.h"
-
-namespace utils {
-
-// TODO: make variadic, make all, move to utils library
-bool any(bool fst, bool snd) noexcept
-{
-	return fst + snd != 0;
-}
-
-} // namespace utils
+#include "utils/utility.h"
 
 namespace exe::fibers {
 
@@ -457,7 +447,7 @@ private:
 			return is_closed;
 		}
 
-		if (::utils::any(is_closed, nonblocking)) [[unlikely]] {
+		if (::utils::any_of(is_closed, nonblocking)) [[unlikely]] {
 			token.unlock();
 			return is_closed;
 		}

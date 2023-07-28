@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <utility>
 
-#include "type_traits.h"
+#include "utils/type_traits.h"
 
 namespace utils {
 
@@ -153,6 +153,32 @@ template <::std::size_t I, typename ...Ts>
 {
 	using Ttype = tuple_val<I, pack_element_t<I, Ts...>>;
 	return static_cast<Ttype &>(t).val_;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+// to check bool values without laziness/unnecessary branches
+
+template <typename ...Ts>
+[[nodiscard]] constexpr bool all_of(Ts ...ts) noexcept
+	requires (are_all_same_v<bool, Ts...>)
+{
+	return (0 + ... + static_cast<int>(ts)) == sizeof...(ts);
+}
+
+template <typename ...Ts>
+[[nodiscard]] constexpr bool any_of(Ts ...ts) noexcept
+	requires (are_all_same_v<bool, Ts...>)
+{
+	return (0 + ... + static_cast<int>(ts)) != 0;
+}
+
+template <typename ...Ts>
+[[nodiscard]] constexpr bool none_of(Ts ...ts) noexcept
+	requires (are_all_same_v<bool, Ts...>)
+{
+	return (0 + ... + static_cast<int>(ts)) == 0;
 }
 
 } // namespace utils
