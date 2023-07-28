@@ -42,10 +42,10 @@
 		- condition variable
 		- wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
 		- wait point (обобщенная wait group)
-		- (go) channels (in-process)
-			- implementation (in-process)
-			- [ ] select
 	- [ ] futures support
+- ***[(go) channels for fibers](https://github.com/ddvamp/exe/blob/main/exe/fibers/sync/channel.h)*** (имплементация каналов из языка go)
+	- implementation
+	- [ ] select
 - ***[(functional) futures](https://github.com/ddvamp/exe/tree/main/exe/futures/fun)*** (фьючи в функциональном стиле)
 	- constructors (пораждают фьючи)
 		- contract (канал future-promise)
