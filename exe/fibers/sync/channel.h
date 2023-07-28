@@ -8,7 +8,7 @@
 #include <atomic>
 #include <bit>
 #include <concepts>
-#include <functional>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -21,6 +21,7 @@
 #include "exe/fibers/core/handle.h"
 
 #include "utils/debug.h"
+#include "utils/refer/ref_counted_ptr.h"
 
 namespace utils {
 
@@ -30,187 +31,7 @@ bool any(bool fst, bool snd) noexcept
 	return fst + snd != 0;
 }
 
-// TODO: move to utils library
-template <::std::destructible Derived>
-class RefCounter {
-private:
-	mutable ::std::atomic_size_t ref_cnt_ = 1;
-
-public:
-	::std::size_t useCount() const noexcept
-	{
-		return ref_cnt_.load(::std::memory_order_relaxed);
-	}
-
-	void incRef() const noexcept
-	{
-		ref_cnt_.fetch_add(1, ::std::memory_order_relaxed);
-	}
-
-	void decRef() const noexcept
-	{
-		if (1 == ref_cnt_.fetch_sub(1, ::std::memory_order_acq_rel)) {
-			destroySelf();
-		}
-	}
-
-private:
-	auto self() const noexcept
-	{
-		static_assert(::std::derived_from<Derived, RefCounter>);
-
-		return static_cast<Derived const *>(this);
-	}
-
-	void destroySelf() const noexcept
-	{
-		self()->destroySelf();
-	}
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-// TODO: add check for destroySelf
-template <typename T>
-inline constexpr bool is_ref_counted_v = ::std::derived_from<
-	::std::remove_cv_t<T>,
-	RefCounter<::std::remove_cv_t<T>>
->;
-
-template <typename T>
-struct is_ref_counted : ::std::bool_constant<is_ref_counted_v<T>> {};
-
-
-namespace concepts {
-
-template <typename T>
-concept RefCounted = is_ref_counted_v<T>;
-
-} // namespace concepts
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <concepts::RefCounted T>
-class RefHolder {
-private:
-	T *ptr_ = nullptr;
-
-public:
-	~RefHolder()
-	{
-		decRef();
-	}
-
-	RefHolder(RefHolder const &that) noexcept
-		: ptr_(that.ptr_)
-	{
-		incRef();
-	}
-
-	RefHolder(RefHolder &&that) noexcept
-	{
-		that.swap(*this);
-	}
-
-	RefHolder &operator= (RefHolder that) noexcept
-	{
-		that.swap(*this);
-		return *this;
-	}
-
-public:
-	constexpr RefHolder() noexcept = default;
-
-	constexpr RefHolder(::std::nullptr_t) noexcept
-	{}
-
-	explicit RefHolder(T *ptr) noexcept
-		: ptr_(ptr)
-	{}
-
-	[[nodiscard]] ::std::size_t useCount() const noexcept
-	{
-		return ptr_ ? ptr_->useCount() : 0;
-	}
-
-	void swap(RefHolder &that) noexcept
-	{
-		::std::swap(ptr_, that.ptr_);
-	}
-
-	void reset() noexcept
-	{
-		RefHolder().swap(*this);
-	}
-
-	void reset(T *ptr) noexcept
-	{
-		RefHolder(ptr).swap(*this);
-	}
-
-	[[nodiscard]] T *get() const noexcept
-	{
-		return ptr_;
-	}
-
-	[[nodiscard]] T &operator* () const noexcept
-	{
-		return *get();
-	}
-
-	[[nodiscard]] T *operator-> () const noexcept
-	{
-		return get();
-	}
-
-	explicit operator bool() const noexcept
-	{
-		return ptr_;
-	}
-
-private:
-	void incRef() const noexcept
-	{
-		if (ptr_) {
-			ptr_->incRef();
-		}
-	}
-
-	void decRef() const noexcept
-	{
-		if (ptr_) {
-			ptr_->decRef();
-		}
-	}
-};
-
-
-template <typename T>
-[[nodiscard]] bool operator== (RefHolder<T> const &lhs,
-	RefHolder<T> const &rhs) noexcept
-{
-	return ::std::ranges::equal_to{}(lhs.get(), rhs.get());
-}
-
-template <typename T>
-[[nodiscard]] auto operator<=> (RefHolder<T> const &lhs,
-	RefHolder<T> const &rhs) noexcept
-{
-	return ::std::compare_three_way{}(lhs.get(), rhs.get());
-}
-
-
-template <typename T>
-void swap(RefHolder<T> &lhs, RefHolder<T> &rhs) noexcept
-{
-	lhs.swap(rhs);
-}
-
 } // namespace utils
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 namespace exe::fibers {
 
@@ -651,7 +472,7 @@ private:
 
 template <typename T>
 class ChannelImpl final
-	: public ::utils::RefCounter<ChannelImpl<T>>
+	: public ::utils::RefCounted<ChannelImpl<T>>
 	, public ChannelState<T> {
 private:
 	using Self = ChannelImpl;
@@ -667,8 +488,8 @@ public:
 
 	void destroySelf() const noexcept
 	{
-		// TODO: проверка на пустоту очередей (в деструкторе)?
-		//		 autoclose?
+		// TODO: удаление в случае последнего владельца -> очереди должны быть пустые
+		// должен ли быть выполнен close к этому моменту?
 		this->~Self();
 		deallocate(this);
 	}
@@ -763,7 +584,7 @@ class Channel {
 	using Impl = detail::ChannelImpl<T>;
 
 private:
-	::utils::RefHolder<Impl> impl_;
+	::utils::RefCountedPtr<Impl> impl_;
 
 public:
 	explicit Channel(::std::size_t const capacity)
