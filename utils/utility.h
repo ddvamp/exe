@@ -161,24 +161,24 @@ template <::std::size_t I, typename ...Ts>
 // to check bool values without laziness/unnecessary branches
 
 template <typename ...Ts>
-[[nodiscard]] constexpr bool all_of(Ts ...ts) noexcept
-	requires (are_all_same_v<bool, Ts...>)
+[[nodiscard]] constexpr bool all_of(Ts &&...ts) noexcept
+	requires (all_true_v<::std::is_constructible_v<bool, Ts>...>)
 {
-	return (1 & ... & static_cast<int>(ts)) == 1;
+	return (1 & ... & static_cast<int>(static_cast<bool>(::std::forward<Ts>(ts)))) == 1;
 }
 
 template <typename ...Ts>
-[[nodiscard]] constexpr bool any_of(Ts ...ts) noexcept
-	requires (are_all_same_v<bool, Ts...>)
+[[nodiscard]] constexpr bool any_of(Ts &&...ts) noexcept
+	requires (all_true_v<::std::is_constructible_v<bool, Ts>...>)
 {
-	return (0 | ... | static_cast<int>(ts)) == 1;
+	return (0 | ... | static_cast<int>(static_cast<bool>(::std::forward<Ts>(ts)))) == 1;
 }
 
 template <typename ...Ts>
-[[nodiscard]] constexpr bool none_of(Ts ...ts) noexcept
-	requires (are_all_same_v<bool, Ts...>)
+[[nodiscard]] constexpr bool none_of(Ts &&...ts) noexcept
+	requires (all_true_v<::std::is_constructible_v<bool, Ts>...>)
 {
-	return (0 | ... | static_cast<int>(ts)) == 0;
+	return (0 | ... | static_cast<int>(static_cast<bool>(::std::forward<Ts>(ts)))) == 0;
 }
 
 } // namespace utils
