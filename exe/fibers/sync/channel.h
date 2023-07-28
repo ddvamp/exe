@@ -33,7 +33,6 @@ template <typename ...>
 class Selector;
 
 
-// TODO: void types, check for T const
 template <typename T>
 class ChannelBuffer {
 private:
@@ -47,7 +46,8 @@ private:
 	};
 
 public:
-	static auto calculateStorageSize(::std::size_t const capacity) noexcept
+	[[nodiscard]] static auto calculateStorageSize(
+		::std::size_t const capacity) noexcept
 	{
 		return ::std::bit_ceil(capacity);
 	}
@@ -55,7 +55,6 @@ public:
 	~ChannelBuffer() noexcept
 	{
 		if constexpr (!::std::is_trivially_destructible_v<T>) {
-			// TODO: better algorithm?
 			while (!empty()) {
 				pop();
 			}
@@ -91,8 +90,7 @@ public:
 		return getPtr()[getRecvIdx()];
 	}
 
-	// TODO: exceptions, by ref, emplace
-	void push(T &&value)
+	void push(T &&value) noexcept
 	{
 		::std::ranges::construct_at(
 			getPtr() + getSendIdx(),
@@ -332,7 +330,7 @@ private:
 		return capacity() == 0;
 	}
 
-	// TODO: есть ли более оптимальные ордеринги?
+	// TODO: is there any better memory orderings?
 	bool empty() const noexcept
 	{
 		auto const order = ::std::memory_order_seq_cst;
@@ -460,7 +458,8 @@ private:
 };
 
 
-template <typename T>
+template <::std::destructible T>
+	requires (::std::is_nothrow_move_constructible_v<T>)
 class ChannelImpl final
 	: public ::utils::RefCounted<ChannelImpl<T>>
 	, public ChannelState<T> {
@@ -478,8 +477,8 @@ public:
 
 	void destroySelf() const noexcept
 	{
-		// TODO: удаление в случае последнего владельца -> очереди должны быть пустые
-		// должен ли быть выполнен close к этому моменту?
+		// TODO: last owner -> queues are empty (check?)
+		// should the channel be closed?
 		this->~Self();
 		deallocate(this);
 	}
@@ -489,28 +488,21 @@ private:
 		: ChannelState<T>(capacity)
 	{}
 
-	// высчитать количество памяти под имплеентацию на count элементов
 	static ::std::size_t calculateImplSize(::std::size_t const count)
 	{
-		// базовые размер и выравнивание для имплементации с 1 элементом
 		constexpr auto size = sizeof(Self);
 		constexpr auto align = alignof(Self);
 
-		// доп. память не требуется
 		if (count <= 1) {
 			return size;
 		}
 
-		// максимальный доступный объём памяти
 		constexpr auto max_size = ::std::size_t{} - 1;
 
-		// дополнительное количество элементов
 		auto const extra_count = count - 1;
 
-		// размер одного элемента
 		constexpr auto element_size = sizeof(T);
 
-		// переполняется ли размер всех доп. элементов
 		if constexpr ([[maybe_unused]] auto overflow_is_possible =
 			element_size > 1) {
 			constexpr auto max_possible = max_size / element_size;
@@ -519,17 +511,12 @@ private:
 			}
 		}
 
-		// размер всех дополнительных элементов
 		auto const extra_size = extra_count * element_size;
 
-		// хватит ли памяти на доп. элементы и выравнивание
-		// логически: size + extra_size + align - 1 > max_size
 		if (extra_size > max_size - size - (align - 1)) {
 			throw ::std::bad_array_new_length{};
 		}
 
-		// поправка align - 1 необходима для правильного выравнивания,
-		// поскольку выравнивание элементов может быть меньше, чем имплементации
 		return size + extra_size + (align - 1) & ~(align - 1);
 	}
 
@@ -564,14 +551,15 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// TODO: подумать на счёт массивов, текущая реализация - not array T
-//		 T is_nothrow_move_constructible
-template <::std::destructible T>
+// TODO: better specialization for void types
+template <typename T>
 class Channel {
 	template <typename ...>
 	friend class detail::Selector;
 
-	using Impl = detail::ChannelImpl<T>;
+	using element_type = ::std::remove_cv_t<T>;
+
+	using Impl = detail::ChannelImpl<element_type>;
 
 private:
 	::utils::RefCountedPtr<Impl> impl_;
@@ -582,31 +570,83 @@ public:
 	{}
 	
 	// precondition: channel is not closed
-	auto send(T value) noexcept
+	void send(element_type value) noexcept
 	{
-		return impl_->send(::std::move(value));
+		impl_->send(::std::move(value));
 	}
 
 	// precondition: channel is not closed
-	auto trySend(T value) noexcept
+	// returns object on failure
+	[[nodiscard]] auto trySend(element_type value) noexcept
 	{
 		return impl_->trySend(::std::move(value));
 	}
 
-	auto receive() noexcept
+	// returns object on success
+	[[nodiscard]] auto receive() noexcept
 	{
 		return impl_->receive();
 	}
 
-	auto tryReceive() noexcept
+	// first == true (contains object) on success, second == true on close
+	[[nodiscard]] auto tryReceive() noexcept
 	{
 		return impl_->tryReceive();
 	}
 
 	// precondition: there is no senders
-	auto close() noexcept
+	void close() noexcept
 	{
-		return impl_->close();
+		impl_->close();
+	}
+};
+
+template <typename T>
+	requires (::std::is_void_v<T>)
+class Channel<T> {
+	template <typename ...>
+	friend class detail::Selector;
+
+	using Impl = detail::ChannelImpl<::utils::unit_t>;
+
+private:
+	::utils::RefCountedPtr<Impl> impl_;
+
+public:
+	explicit Channel(::std::size_t const capacity)
+		: impl_(Impl::create(capacity))
+	{}
+	
+	// precondition: channel is not closed
+	void send() noexcept
+	{
+		impl_->send(::utils::unit_t{});
+	}
+
+	// precondition: channel is not closed
+	// returns true on failure (consistent with primary template)
+	[[nodiscard]] bool trySend() noexcept
+	{
+		return impl_->trySend(::utils::unit_t{});
+	}
+
+	// returns true on success
+	[[nodiscard]] bool receive() noexcept
+	{
+		return impl_->receive();
+	}
+
+	// first == true on success, second == true on close
+	[[nodiscard]] ::std::pair<bool, bool> tryReceive() noexcept
+	{
+		auto const [fst, snd] = impl_->tryReceive();
+		return {fst, snd};
+	}
+
+	// precondition: there is no senders
+	void close() noexcept
+	{
+		impl_->close();
 	}
 };
 
