@@ -13,13 +13,15 @@
 
 namespace utils {
 
-template <concepts::RefCounted T>
+template <typename T>
 class RefCountedPtr {
 private:
 	T *ptr_ = nullptr;
 
+	[[no_unique_address]] detail::RefValidator<T> v_;
+
 public:
-	~RefCountedPtr() noexcept
+	constexpr ~RefCountedPtr() noexcept
 	{
 		decRef();
 	}
@@ -47,11 +49,11 @@ public:
 	constexpr RefCountedPtr(::std::nullptr_t) noexcept
 	{}
 
-	explicit RefCountedPtr(T *ptr) noexcept
+	constexpr explicit RefCountedPtr(T *ptr) noexcept
 		: ptr_(ptr)
 	{}
 
-	[[nodiscard]] ::std::size_t useCount() const noexcept
+	[[nodiscard]] auto useCount() const noexcept
 	{
 		return ptr_ ? ptr_->useCount() : 0;
 	}

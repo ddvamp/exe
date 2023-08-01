@@ -7,34 +7,60 @@
 
 #include <atomic>
 #include <concepts>
-#include <cstddef>
 #include <type_traits>
-#include <utility>
 
 namespace utils {
 
+template <typename Derived>
+class RefCounted;
+
 ////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+inline constexpr bool is_ref_counted_v =
+	::std::derived_from<T, RefCounted<::std::remove_cv_t<T>>> &&
+	requires (::std::remove_cv_t<T> const &t) {
+		{ t.destroySelf() } noexcept;
+	};
+
+template <typename T>
+struct is_ref_counted : ::std::bool_constant<is_ref_counted_v<T>> {};
 
 namespace concepts {
 
 template <typename T>
-concept RefDestructible =
-	::std::destructible<T> &&
-	requires (T const &t) {
-		{ t.destroySelf() } noexcept;
-	};
+concept RefCounted = is_ref_counted_v<T>;
 
 } // namespace concepts
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <concepts::RefDestructible Derived>
+namespace detail {
+
+template <typename T>
+struct RefValidator {
+	constexpr Validator() noexcept
+	{
+		static_assert(
+			concepts::RefCounted<T>,
+			"Class does not inherit RefCounted"
+		);
+	}
+};
+
+} // namespace detail
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Derived>
 class RefCounted {
 private:
 	mutable ::std::atomic_size_t ref_cnt_ = 1;
 
+	[[no_unique_address]] detail::RefValidator<Derived> v_;
+
 public:
-	[[nodiscard]] ::std::size_t useCount() const noexcept
+	[[nodiscard]] auto useCount() const noexcept
 	{
 		return ref_cnt_.load(::std::memory_order_relaxed);
 	}
@@ -47,42 +73,10 @@ public:
 	void decRef() const noexcept
 	{
 		if (1 == ref_cnt_.fetch_sub(1, ::std::memory_order_acq_rel)) {
-			destroySelf();
+			static_cast<Derived const *>(this)->destroySelf();
 		}
 	}
-
-private:
-	auto self() const noexcept
-	{
-		static_assert(::std::derived_from<Derived, RefCounted>);
-
-		return static_cast<Derived const *>(this);
-	}
-
-	void destroySelf() const noexcept
-	{
-		self()->destroySelf();
-	}
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T>
-inline constexpr bool is_ref_counted_v = ::std::derived_from<
-	::std::remove_cv_t<T>,
-	RefCounted<::std::remove_cv_t<T>>
->;
-
-template <typename T>
-struct is_ref_counted : ::std::bool_constant<is_ref_counted_v<T>> {};
-
-
-namespace concepts {
-
-template <typename T>
-concept RefCounted = is_ref_counted_v<T>;
-
-} // namespace concepts
 
 } // namespace utils
 
