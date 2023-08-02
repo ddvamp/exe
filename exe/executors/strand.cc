@@ -3,52 +3,78 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
 #include <atomic>
+#include <new>
 #include <utility>
 
 #include "exe/executors/strand.h"
 
+#include "utils/debug/assert.h"
+
 namespace exe::executors {
 
-class alignas(64) Strand::Impl : private TaskBase {
+class alignas(::std::hardware_destructive_interference_size) Strand::Impl
+	: private TaskBase
+	, public ::utils::RefCounted<Impl> {
 private:
 	struct DummyTask : TaskBase {
 		DummyTask() noexcept
 		{
-			next_.store(this, ::std::memory_order_relaxed);
+			link(this);
 		}
 
-		void run() noexcept override {}
+		void run() noexcept override
+		{
+			// do nothing
+		}
 	};
 
 private:
 	INothrowExecutor &where_;
-
-	::std::atomic_uint64_t owners_ = 1;
-
 	DummyTask dummy_;
 	TaskBase *head_ = &dummy_;
 	::std::atomic<TaskBase *> tail_ = &dummy_;
 
 public:
+	[[nodiscard]] static Impl *create(INothrowExecutor &where)
+	{
+		return ::new Impl(where);
+	}
+
+	void destroySelf() const noexcept
+	{
+		delete this;
+	}
+
+public:
 	explicit Impl(INothrowExecutor &where) noexcept
 		: where_(where)
-	{}
+	{
+		static_assert(
+			sizeof(Impl) <= ::std::hardware_destructive_interference_size,
+			"Size has exceeded the cache line."
+			"Think about separating the fields."
+		);
+	}
+
+	[[nodiscard]] INothrowExecutor &getExecutor() const noexcept
+	{
+		return where_;
+	}
 
 	void submit(TaskBase *task) noexcept;
-
-	void release() noexcept
-	{
-		if (owners_.fetch_sub(1, ::std::memory_order_acq_rel) == 1) {
-			destroySelf();
-		}
-	}
 
 private:
 	void run() noexcept override;
 
+	void runSelf() noexcept;
+
+	void afterAcquire(TaskBase *task) noexcept;
+
 	void submitSelf() noexcept;
 
 	bool isActualTask(TaskBase *task) const noexcept;
+
+	static TaskBase *loadNext(TaskBase *task) noexcept;
 
 	TaskBase *putTask(TaskBase *task) noexcept;
 
@@ -57,36 +83,26 @@ private:
 	bool tryPutDummy(TaskBase *expected) noexcept;
 
 	TaskBase *tryTakeNextTask(TaskBase *task) noexcept;
-
-	static TaskBase *loadNext(TaskBase *task) noexcept;
-
-	void afterAcquire(TaskBase *task) noexcept;
-
-	void addRef() noexcept
-	{
-		owners_.fetch_add(1, ::std::memory_order_relaxed);
-	}
-
-	void destroySelf() noexcept
-	{
-		delete this;
-	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Strand::Strand(INothrowExecutor &where)
-	: impl_(::new Impl(where))
+	: impl_(Impl::create(where))
 {}
 
-Strand::~Strand()
-{
-	impl_->release();
-}
+Strand::~Strand() noexcept = default;
 
 /* virtual */ void Strand::submit(TaskBase *task) noexcept
 {
+	UTILS_ASSERT(task, "nullptr instead of task");
+
 	impl_->submit(task);
+}
+
+INothrowExecutor &Strand::getExecutor() const noexcept
+{
+	return impl_->getExecutor();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,25 +117,34 @@ void Strand::Impl::submit(TaskBase *task) noexcept
 	task->link(nullptr);
 
 	auto prev = putTask(task);
-	
-	if (!isActualTask(prev)) [[unlikely]] {
-		dummy_.link(nullptr);
-
-		if (tryPutDummy(task)) {
-			afterAcquire(task);
-			return;
-		}
-
-		addRef();
-		prev = tryTakeNextTask(task);
+	if (!prev) [[likely]] {
+		return;
 	}
 
-	if (prev) {
+	if (isActualTask(prev)) [[likely]] {
+		submitSelf();
+		return;
+	}
+	
+	dummy_.link(nullptr);
+
+	if (tryPutDummy(task)) {
+		afterAcquire(task);
+		return;
+	}
+
+	if (tryTakeNextTask(task)) {
 		submitSelf();
 	}
 }
 
 /* virtual */ void Strand::Impl::run() noexcept
+{
+	runSelf();
+	decRef();
+}
+
+void Strand::Impl::runSelf() noexcept
 {
 	auto curr = head_;
 	auto next = curr->next_.load(::std::memory_order_relaxed);
@@ -136,7 +161,6 @@ dummy_next:
 		goto take_next;
 	}
 
-	release();
 	return;
 
 run_task:
@@ -156,14 +180,28 @@ take_next:
 	}
 }
 
+void Strand::Impl::afterAcquire(TaskBase *task) noexcept
+{
+	head_ = task;
+	task->link(&dummy_);
+
+	submitSelf();
+}
+
 void Strand::Impl::submitSelf() noexcept
 {
+	incRef();
 	where_.submit(this);
 }
 
 bool Strand::Impl::isActualTask(TaskBase *task) const noexcept
 {
 	return task != &dummy_;
+}
+
+/* static */ TaskBase *Strand::Impl::loadNext(TaskBase *task) noexcept
+{
+	return task->next_.load(::std::memory_order_acquire);
 }
 
 TaskBase *Strand::Impl::putTask(TaskBase *task) noexcept
@@ -208,21 +246,6 @@ TaskBase *Strand::Impl::tryTakeNextTask(TaskBase *task) noexcept
 	);
 
 	return next;
-}
-
-/* static */ TaskBase *Strand::Impl::loadNext(TaskBase *task) noexcept
-{
-	return task->next_.load(::std::memory_order_acquire);
-}
-
-void Strand::Impl::afterAcquire(TaskBase *task) noexcept
-{
-	addRef();
-
-	head_ = task;
-	task->link(&dummy_);
-
-	submitSelf();
 }
 
 } // namespace exe::executors

@@ -7,6 +7,8 @@
 
 #include "exe/executors/executor.h"
 
+#include "utils/refer/ref_counted_ptr.h"
+
 namespace exe::executors {
 
 // Adapter for an executors that allows to
@@ -21,10 +23,10 @@ class Strand final : public INothrowExecutor {
 private:
 	class Impl;
 
-	Impl *impl_;
+	::utils::RefCountedPtr<Impl> impl_;
 
 public:
-	~Strand();
+	~Strand() noexcept;
 
 	Strand(Strand const &) = delete;
 	void operator= (Strand const &) = delete;
@@ -34,6 +36,8 @@ public:
 
 public:
 	explicit Strand(INothrowExecutor &where);
+
+	[[nodiscard]] INothrowExecutor &getExecutor() const noexcept;
 
 	void submit(TaskBase *critical_section) noexcept override;
 };
