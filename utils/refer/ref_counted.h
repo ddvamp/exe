@@ -9,6 +9,8 @@
 #include <concepts>
 #include <type_traits>
 
+#include "utils/macro.h"
+
 namespace utils {
 
 template <typename Derived>
@@ -57,7 +59,7 @@ class RefCounted {
 private:
 	mutable ::std::atomic_size_t ref_cnt_ = 1;
 
-	[[no_unique_address]] detail::RefValidator<Derived> v_;
+	UTILS_NO_UNIQUE_ADDRESS detail::RefValidator<Derived> v_;
 
 public:
 	[[nodiscard]] auto useCount() const noexcept

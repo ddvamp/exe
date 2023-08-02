@@ -12,6 +12,8 @@
 #include "exe/executors/executor.h"
 #include "exe/executors/task.h"
 
+#include "utils/macro.h"
+
 namespace exe::executors {
 
 namespace detail {
@@ -25,7 +27,7 @@ requires (
 )
 class Task : public TaskBase {
 protected:
-	[[no_unique_address]] F fn_;
+	UTILS_NO_UNIQUE_ADDRESS F fn_;
 
 public:
 	Task(F const &f)

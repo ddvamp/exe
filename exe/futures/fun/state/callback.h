@@ -10,6 +10,7 @@
 
 #include "result/result.h"
 
+#include "utils/macro.h"
 #include "utils/type_traits.h"
 #include "utils/utility.h"
 
@@ -37,8 +38,8 @@ requires (
 )
 class Callback {
 private:
-	[[no_unique_address]] Fn fn_;
-	[[no_unique_address]] ::utils::tuple<Args...> args_;
+	UTILS_NO_UNIQUE_ADDRESS Fn fn_;
+	UTILS_NO_UNIQUE_ADDRESS ::utils::tuple<Args...> args_;
 
 public:
 	template <typename TFn, typename ...TArgs>

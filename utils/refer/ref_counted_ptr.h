@@ -9,6 +9,7 @@
 #include <functional>
 #include <utility>
 
+#include "utils/macro.h"
 #include "utils/refer/ref_counted.h"
 
 namespace utils {
@@ -18,7 +19,7 @@ class RefCountedPtr {
 private:
 	T *ptr_ = nullptr;
 
-	[[no_unique_address]] detail::RefValidator<T> v_;
+	UTILS_NO_UNIQUE_ADDRESS detail::RefValidator<T> v_;
 
 public:
 	constexpr ~RefCountedPtr() noexcept

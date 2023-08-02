@@ -17,6 +17,8 @@
 
 #include "result/result.h"
 
+#include "utils/macro.h"
+
 namespace exe::futures {
 
 namespace detail {
@@ -26,7 +28,7 @@ class Task : public executors::TaskBase {
 private:
 	using T = traits::map_result_t<F &>::value_type;
 
-	[[no_unique_address]] F fn_;
+	UTILS_NO_UNIQUE_ADDRESS F fn_;
 	Promise<T> p_;
 
 public:

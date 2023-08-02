@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <utility>
 
+#include "utils/macro.h"
 #include "utils/type_traits.h"
 
 namespace utils {
@@ -103,7 +104,7 @@ requires (
 )
 class builder {
 private:
-	[[no_unique_address]] Fn fn_;
+	UTILS_NO_UNIQUE_ADDRESS Fn fn_;
 
 public:
 	explicit builder(Fn const &fn)
@@ -130,7 +131,7 @@ public:
 
 template <::std::size_t I, typename T>
 struct tuple_val {
-	[[no_unique_address]] T val_;
+	UTILS_NO_UNIQUE_ADDRESS T val_;
 };
 
 template <typename, typename ...Ts>

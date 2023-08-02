@@ -10,6 +10,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "utils/macro.h"
+
 namespace utils {
 
 namespace detail {
@@ -61,7 +63,7 @@ struct failure_guard_policy {
 template <detail::suitable_for_deferred_action T>
 class [[nodiscard]] defer {
 protected:
-	[[no_unique_address]] T action_;
+	UTILS_NO_UNIQUE_ADDRESS T action_;
 
 public:
 	~defer()
@@ -101,7 +103,7 @@ template <
 class [[nodiscard]] scope_guard : protected Policy {
 protected:
 	bool active_;
-	[[no_unique_address]] T action_;
+	UTILS_NO_UNIQUE_ADDRESS T action_;
 
 public:
 	~scope_guard()

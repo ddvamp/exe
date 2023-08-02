@@ -11,4 +11,10 @@
 // evaluates expression and discards it
 #define UTILS_IGNORE(expr) static_cast<void>(expr)
 
+#if defined(_MSC_VER) && _MSC_VER >= 1929
+#	define UTILS_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#else
+#	define UTILS_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#endif
+
 #endif /* DDV_UTILS_MACRO_H_ */
