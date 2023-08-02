@@ -39,7 +39,7 @@ namespace detail {
 
 template <typename T>
 struct RefValidator {
-	constexpr Validator() noexcept
+	constexpr RefValidator() noexcept
 	{
 		static_assert(
 			concepts::RefCounted<T>,
