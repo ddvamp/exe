@@ -124,14 +124,12 @@ public:
 
 		auto expected = &dummy_;
 
-		return
-			dummy_.next_.load(::std::memory_order_relaxed) == expected &&
-			dummy_.next_.compare_exchange_weak(
-				expected,
-				nullptr,
-				::std::memory_order_acquire,
-				::std::memory_order_relaxed
-			);
+		return dummy_.next_.compare_exchange_weak(
+			expected,
+			nullptr,
+			::std::memory_order_acquire,
+			::std::memory_order_relaxed
+		);
 	}
 
 	void lock() noexcept
