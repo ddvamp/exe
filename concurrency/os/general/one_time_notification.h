@@ -5,6 +5,7 @@
 #ifndef DDV_CONCURRENCY_OS_GENERAL_ONE_TIME_NOTIFICATION_H_
 #define DDV_CONCURRENCY_OS_GENERAL_ONE_TIME_NOTIFICATION_H_ 1
 
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <utility>
@@ -17,16 +18,25 @@ namespace concurrency {
 // and sharing data with it
 class OneTimeNotification {
 private:
-	bool notified_ = false;
+	::std::atomic_bool ready_ = false;
 	::std::mutex m_; // protects the condvar
 	::std::condition_variable its_time_;
 
 public:
+	[[nodiscard]] bool isReady() const noexcept
+	{
+		return ready_.load(::std::memory_order_acquire);
+	}
+
 	void wait()
 	{
+		if (isReady()) {
+			return;
+		}
+
 		auto lock = ::std::unique_lock(m_);
 
-		while (!notified_) {
+		while (notReady()) {
 			its_time_.wait(lock);
 		}
 	}
@@ -36,19 +46,24 @@ public:
 		{
 			auto lock = ::std::lock_guard(m_);
 
-			UTILS_VERIFY(
-				!::std::exchange(notified_, true),
-				"one-time notification sent twice"
-			);
+			UTILS_ASSERT(notReady(), "one-time notification sent twice");
+
+			ready_.store(true, ::std::memory_order_release);
 		}
 
 		its_time_.notify_all();
 	}
 
 	// in case of instance reuse
-	void clear() noexcept
+	void reset() noexcept
 	{
-		notified_ = false;
+		ready_.store(false, ::std::memory_order_relaxed);
+	}
+
+private:
+	bool notReady() const noexcept
+	{
+		return !ready_.load(::std::memory_order_relaxed);
 	}
 };
 

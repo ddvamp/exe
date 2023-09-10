@@ -26,6 +26,11 @@ private:
 	WaitingAtomic state_ = State::initial;
 
 public:
+	[[nodiscard]] bool isReady() const noexcept
+	{
+		return state_.load(::std::memory_order_acquire) == State::notified;
+	}
+
 	void wait() noexcept
 	{
 		state_.wait(State::initial, ::std::memory_order_acquire);
@@ -46,7 +51,7 @@ public:
 	}
 
 	// in case of instance reuse
-	void clear() noexcept
+	void reset() noexcept
 	{
 		state_.store(State::initial, ::std::memory_order_relaxed);
 	}
