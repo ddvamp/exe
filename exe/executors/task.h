@@ -11,7 +11,7 @@ namespace exe::executors {
 
 class ITask {
 public:
-	virtual ~ITask() = default;
+	virtual ~ITask() noexcept = default;
 
 	// the user must take care of passing arguments, returning values,
 	// and handling exceptions himself
