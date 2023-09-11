@@ -33,6 +33,8 @@ public:
 			!is_ready_.test_and_set(::std::memory_order_release),
 			"one-shot event happened twice"
 		);
+
+		is_ready_.notify_all();
 	}
 
 	// In case of instance reuse
