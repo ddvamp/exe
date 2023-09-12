@@ -57,11 +57,15 @@ struct RefValidator {
 template <typename Derived>
 class RefCounted {
 private:
-	mutable ::std::atomic_size_t ref_cnt_ = 1;
+	mutable ::std::atomic_size_t ref_cnt_;
 
 	UTILS_NO_UNIQUE_ADDRESS detail::RefValidator<Derived> v_;
 
 public:
+	explicit RefCounted(::std::size_t count = 1) noexcept
+		: ref_cnt_(count)
+	{}
+
 	[[nodiscard]] auto useCount() const noexcept
 	{
 		return ref_cnt_.load(::std::memory_order_relaxed);
