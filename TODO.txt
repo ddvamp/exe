@@ -1,0 +1,12 @@
+интрузивный аллокатор стеков
+создание файберов и рутин прямо на стеке
+обобщенная функция go (см. boost.fiber)
+поддержка structured bindings в utils::tuple
+исключения в executors
+exe::Result и namespace exe::result
+StringBuilder::combine
+stack string?
+Multithreaded logger
+настраиваемое переключение FPenv при контекст switch
+n-to-one/one-to-one fiber events
+ready future state (без рандеву/синхронизации)

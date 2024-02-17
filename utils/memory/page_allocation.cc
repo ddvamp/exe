@@ -12,7 +12,8 @@
 #if __has_include(<unistd.h>)
 #	include "utils/memory/os/posix/page_allocation.h"
 #else
-#	error "not POSIX-compliant environment"
+//#	error "not POSIX-compliant environment"
+#	include "os/Windows/page_allocation.h"
 #endif
 
 namespace utils {

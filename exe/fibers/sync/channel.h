@@ -34,16 +34,13 @@ class Selector;
 
 
 template <typename T>
-class ChannelBuffer {
+class alignas(T, ::std::size_t) ChannelBuffer {
 private:
+	T * const data_;
 	::std::size_t recv_ = 0;
 	::std::size_t send_ = 0;
 	::std::size_t const capacity_;
-
 	::std::size_t const index_mask_ = calculateStorageSize(capacity_) - 1;
-	union {
-		T storage_;
-	};
 
 public:
 	[[nodiscard]] static auto calculateStorageSize(
@@ -54,15 +51,18 @@ public:
 
 	~ChannelBuffer() noexcept
 	{
-		if constexpr (!::std::is_trivially_destructible_v<T>) {
-			while (!empty()) {
-				pop();
-			}
+		while (!empty()) {
+			pop();
 		}
 	}
 
-	explicit ChannelBuffer(::std::size_t const capacity) noexcept
-		: capacity_(capacity)
+	~ChannelBuffer() noexcept
+		requires (::std::is_trivially_destructible_v<T>)
+		= default;
+
+	ChannelBuffer(T * const data, ::std::size_t const capacity) noexcept
+		: data_(data)
+		, capacity_(capacity)
 	{}
 
 	[[nodiscard]] ::std::size_t capacity() const noexcept
@@ -110,9 +110,9 @@ public:
 	}
 
 private:
-	auto getPtr() noexcept
+	auto getPtr() const noexcept
 	{
-		return ::std::addressof(storage_);
+		return data_;
 	}
 
 	auto getRecvIdx() const noexcept
@@ -226,7 +226,7 @@ public:
 
 
 template <typename T>
-class ChannelState {
+class alignas(T, 2) ChannelState {
 private:
 	using OptT = ::std::optional<T>;
 
