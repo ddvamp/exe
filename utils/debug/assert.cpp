@@ -14,7 +14,7 @@ namespace utils::detail {
 void do_assert(::std::string_view const expr, ::std::string_view const msg, 
     ::std::source_location const loc) noexcept {
     ::std::cerr << ::std::format("Debug error! Assertion '{}' failed at "
-        "{}:{} : {} with message '{}'. Abort!\n", expr, loc.file_name(),
+        "{}:{}: {} with message '{}'. Abort!\n", expr, loc.file_name(),
         loc.line(), loc.function_name(), msg) << ::std::flush;
 
     ::std::abort();
