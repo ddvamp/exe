@@ -1,0 +1,2 @@
+wait_group.hpp
+  - exception safety
