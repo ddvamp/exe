@@ -69,17 +69,17 @@ void lock_impl(It const begin, It const end) {
     it = begin;
 }
 
-} // namespace detail
-
 template <typename Lock>
 inline constexpr bool is_basic_lockable_v = requires (Lock &lock) {
     { lock.lock() };
-    { lock.unlock() } noexcept;
+    { lock.unlock() }; // must be nothrow
 };
+
+} // namespace detail
 
 template <typename ...Locks>
 void lock(Locks &...locks) requires (is_all_of_v<(sizeof...(Locks) > 1),
-    is_basic_lockable_v<Locks>...>) {
+    detail::is_basic_lockable_v<Locks>...>) {
     if constexpr (is_all_same_v<Locks...>) { 
         ::std::array arr{::std::addressof(locks)...};
         detail::lock_impl(arr.begin(), arr.end());
