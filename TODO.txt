@@ -1,2 +1,5 @@
 wait_group.hpp
   - exception safety
+
+pause.hpp
+  - think about busy loop
