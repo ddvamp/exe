@@ -9,6 +9,7 @@
 #include <atomic>
 #include <new>
 
+#include <utils/debug/assert.hpp>
 #include <utils/pause.hpp>
 
 namespace concurrency {
@@ -19,13 +20,26 @@ private:
         ::std::atomic_flag locked_;
 
 public:
+    ~Spinlock() {
+        UTILS_ASSERT(!IsLocked(), "Spinlock is destroyed during use");
+    }
+
+    Spinlock(Spinlock const &) = delete;
+    void operator= (Spinlock const &) = delete;
+
+    Spinlock(Spinlock &&) = delete;
+    void operator= (Spinlock &&) = delete;
+
+public:
+    Spinlock() = default;
+
     [[nodiscard]] bool TryLock() noexcept {
         return !locked_.test_and_set(::std::memory_order_acquire);
     }
 
     void Lock() noexcept {
         while (!TryLock()) {
-            while (locked_.test(::std::memory_order_relaxed)) {
+            while (IsLocked()) {
                 ::utils::pause();
             }
         }
@@ -48,6 +62,11 @@ public:
 
     void unlock() noexcept {
         Unlock();
+    }
+
+private:
+    [[nodiscard]] bool IsLocked() const noexcept {
+        return locked_.test(::std::memory_order_relaxed);
     }
 };
 
