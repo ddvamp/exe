@@ -108,12 +108,14 @@ public:
     //   - resource_deadlock_would_occur (mutex)
     void Wait() {
         if (IsReady()) [[likely]] {
+            // Fast path
             return;
         }
 
         auto const state =
             state_.fetch_add(kOneWaiter, ::std::memory_order_acquire);
-        if (GetCount(state) == 0) [[unlikely]] {
+        if (GetCount(state) == 0) [[likely]] {
+            // Fast path
             return;
         }
 
