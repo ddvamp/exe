@@ -7,6 +7,7 @@
 #define DDVAMP_CONCURRENCY_SPINLOCK_HPP_INCLUDED_ 1
 
 #include <atomic>
+#include <new>
 
 #include <utils/pause.hpp>
 
@@ -14,17 +15,19 @@ namespace concurrency {
 
 class Spinlock {
 private:
-    ::std::atomic_flag locked_;
+    alignas (::std::hardware_destructive_interference_size)
+        ::std::atomic_flag locked_;
 
 public:
     [[nodiscard]] bool TryLock() noexcept {
-        return !locked_.test(::std::memory_order_relaxed) &&
-            !locked_.test_and_set(::std::memory_order_acquire);
+        return !locked_.test_and_set(::std::memory_order_acquire);
     }
 
     void Lock() noexcept {
         while (!TryLock()) {
-            ::utils::pause();
+            while (locked_.test(::std::memory_order_relaxed)) {
+                ::utils::pause();
+            }
         }
     }
 
