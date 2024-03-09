@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <mutex>
 
-#include <utils/debug.hpp>
+#include <utils/debug/assert.hpp>
 #include <utils/utility.hpp>
 
 namespace concurrency {
