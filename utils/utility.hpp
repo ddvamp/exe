@@ -12,6 +12,20 @@
 
 namespace utils {
 
+/**
+ *	@brief		Convert an rvalue to an lvalue.
+ *	@param t	A thing of arbitrary type.
+ *	@return		The parameter explicitly converted to an lvalue-reference.
+ *
+ *	This function can be used to convert an prvalue to an lvalue.
+ *	In this case temporary materialization occurs.
+ */
+template <typename T>
+[[nodiscard]] inline constexpr T &temporary(T &&t) noexcept
+    requires (!::std::is_lvalue_reference_v<T>) {
+    return static_cast<T &>(t);
+}
+
 // To check bool values without laziness/unnecessary branches
 
 template <typename ...Ts>
