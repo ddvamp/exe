@@ -7,7 +7,7 @@
 #define DDVAMP_CONCURRENCY_SPINLOCK_HPP_INCLUDED_ 1
 
 #include <atomic>
-#include <new>
+#include <new> // std::hardware_destructive_interference_size
 
 #include <utils/debug/assert.hpp>
 #include <utils/pause.hpp>

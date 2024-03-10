@@ -8,7 +8,7 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <cstdint>
+#include <cstdint> // std::uint64_t
 #include <mutex>
 
 #include <utils/debug/assert.hpp>
