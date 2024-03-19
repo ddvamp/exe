@@ -11,7 +11,6 @@
 
 #include <utils/debug/assert.hpp>
 #include <utils/intrusive/forward_list.hpp>
-#include <utils/macro.hpp>
 #include <utils/pause.hpp>
 #include <utils/utility.hpp>
 
