@@ -11,4 +11,4 @@
 #include "debug/run.hpp"
 #include "debug/unreachable.hpp"
 
-#endif /* DDVAMP_UTILS_DEBUG_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_DEBUG_HPP_INCLUDED_ */

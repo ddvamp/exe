@@ -8,27 +8,27 @@
 
 // No-op
 #ifndef UTILS_NOTHING
-#   define UTILS_NOTHING static_cast<void>(0)
+# define UTILS_NOTHING static_cast<void>(0)
 #else
-#   error "UTILS_NOTHING macro is already defined somewhere else"
+# error "UTILS_NOTHING macro is already defined somewhere else"
 #endif
 
 // Evaluates expr and discards it
 #ifndef UTILS_IGNORE
-#   define UTILS_IGNORE(expr) static_cast<void>(expr)
+# define UTILS_IGNORE(expr) static_cast<void>(expr)
 #else
-#   error "UTILS_IGNORE macro is already defined somewhere else"
+# error "UTILS_IGNORE macro is already defined somewhere else"
 #endif
 
 // MSVC workaround
 #ifndef UTILS_NO_UNIQUE_ADDRESS
-#   if defined(_MSC_VER) && _MSC_VER >= 1929
-#       define UTILS_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
-#   else
-#       define UTILS_NO_UNIQUE_ADDRESS [[no_unique_address]]
-#   endif
+# if defined(_MSC_VER) && _MSC_VER >= 1929
+#   define UTILS_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+# else
+#   define UTILS_NO_UNIQUE_ADDRESS [[no_unique_address]]
+# endif
 #else
-#   error "UTILS_NO_UNIQUE_ADDRESS macro is already defined somewhere else"
+# error "UTILS_NO_UNIQUE_ADDRESS macro is already defined somewhere else"
 #endif
 
-#endif /* DDVAMP_UTILS_MACRO_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_MACRO_HPP_INCLUDED_ */

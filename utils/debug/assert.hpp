@@ -16,43 +16,45 @@
 namespace utils::detail {
 
 [[noreturn]] void do_assert(::std::string_view const expression,
-    ::std::string_view const message, ::std::source_location const location =
-    ::std::source_location::current()) noexcept;
+                            ::std::string_view const message,
+                            ::std::source_location const location =
+                                ::std::source_location::current()) noexcept;
 
-} // namespace utils::detail
+}  // namespace utils::detail
 
 // Runtime check with passing an error message and location
 #ifndef UTILS_CHECK
-#   define UTILS_CHECK(expr, ...)                               \
-        do {                                                    \
-            if (!(expr)) [[unlikely]] {                         \
-                ::utils::detail::do_assert(#expr, __VA_ARGS__); \
-            }                                                   \
-        } while (false)
+# define UTILS_CHECK(expr, ...)                          \
+      do {                                               \
+        if (expr) [[likely]] {                           \
+          break;                                         \
+        }                                                \
+        ::utils::detail::do_assert(#expr, __VA_ARGS__);  \
+      } while (false)
 #else
-#   error "UTILS_CHECK macro is already defined somewhere else"
+# error "UTILS_CHECK macro is already defined somewhere else"
 #endif
 
 // Debug assert with passing an error message and location
 #ifndef UTILS_ASSERT
-#   ifndef UTILS_DISABLE_DEBUG
-#	    define UTILS_ASSERT(expr, ...) UTILS_CHECK(expr, __VA_ARGS__)
-#   else
-#	    define UTILS_ASSERT(expr, ...) UTILS_NOTHING
-#   endif
+# ifndef UTILS_DISABLE_DEBUG
+#	  define UTILS_ASSERT(expr, ...) UTILS_CHECK(expr, __VA_ARGS__)
+# else
+#	  define UTILS_ASSERT(expr, ...) UTILS_NOTHING
+# endif
 #else
-#   error "UTILS_ASSERT macro is already defined somewhere else"
+# error "UTILS_ASSERT macro is already defined somewhere else"
 #endif
 
 // Similar to UTILS_ASSERT, but anyway calculates expr
 #ifndef UTILS_VERIFY
-#   ifndef UTILS_DISABLE_DEBUG
-#	    define UTILS_VERIFY(expr, ...) UTILS_CHECK(expr, __VA_ARGS__)
-#   else
-#	    define UTILS_VERIFY(expr, ...) UTILS_IGNORE(expr)
-#   endif
+# ifndef UTILS_DISABLE_DEBUG
+#	  define UTILS_VERIFY(expr, ...) UTILS_CHECK(expr, __VA_ARGS__)
+# else
+#	  define UTILS_VERIFY(expr, ...) UTILS_IGNORE(expr)
+# endif
 #else
-#   error "UTILS_VERIFY macro is already defined somewhere else"
+# error "UTILS_VERIFY macro is already defined somewhere else"
 #endif
 
-#endif /* DDVAMP_UTILS_DEBUG_ASSERT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_DEBUG_ASSERT_HPP_INCLUDED_ */

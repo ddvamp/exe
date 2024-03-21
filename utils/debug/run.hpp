@@ -12,13 +12,13 @@
 
 // Run function during debug
 #ifndef UTILS_DEBUG_RUN
-#   ifndef UTILS_DISABLE_DEBUG
-#	    define UTILS_DEBUG_RUN(func, ...) func(__VA_ARGS__)
-#   else
-#	    define UTILS_DEBUG_RUN(func, ...) UTILS_NOTHING
-#   endif
+# ifndef UTILS_DISABLE_DEBUG
+#   define UTILS_DEBUG_RUN(func, ...) func(__VA_ARGS__)
+# else
+#	  define UTILS_DEBUG_RUN(func, ...) UTILS_NOTHING
+# endif
 #else
-#   error "UTILS_DEBUG_RUN macro is already defined somewhere else"
+# error "UTILS_DEBUG_RUN macro is already defined somewhere else"
 #endif
 
-#endif /* DDVAMP_UTILS_DEBUG_RUN_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_DEBUG_RUN_HPP_INCLUDED_ */

@@ -12,12 +12,13 @@
 namespace utils::detail {
 
 void do_unreachable(::std::string_view const msg,
-    ::std::source_location const loc) noexcept {
-    ::std::cerr << ::std::format("Debug error! Unreachable point has been "
-        "reached at {}:{}: {} with message '{}'. Abort!\n", loc.file_name(),
-        loc.line(), loc.function_name(), msg) << ::std::flush;
-
-    ::std::abort();
+                    ::std::source_location const loc) noexcept {
+  auto const output = ::std::format("Debug error! Unreachable point has been "
+                                    "reached at {}:{}: {} with message '{}'. "
+                                    "Abort!\n", loc.file_name(), loc.line(),
+                                    loc.function_name(), msg);
+  ::std::cerr << output << ::std::flush;
+  ::std::abort();
 }
 
-} // namespace utils::detail
+}  // namespace utils::detail

@@ -24,15 +24,15 @@ struct values {};
 
 
 template <bool ...Vs>
-inline constexpr bool is_all_of_v =
-    ::std::is_same_v<values<true, Vs...>, values<Vs..., true>>;
+inline constexpr bool is_all_of_v = ::std::is_same_v<values<true, Vs...>,
+                                                     values<Vs..., true>>;
 
 template <bool ...Vs>
 struct is_all_of : ::std::bool_constant<is_all_of_v<Vs...>> {};
 
 template <bool ...Vs>
-inline constexpr bool is_none_of_v =
-    ::std::is_same_v<values<false, Vs...>, values<Vs..., false>>;
+inline constexpr bool is_none_of_v = ::std::is_same_v<values<false, Vs...>,
+                                                      values<Vs..., false>>;
 
 template <bool ...Vs>
 struct is_none_of : ::std::bool_constant<is_none_of_v<Vs...>> {};
@@ -48,8 +48,8 @@ template <typename ...>
 inline constexpr bool is_all_same_v = true;
 
 template <typename T, typename ...Ts>
-inline constexpr bool is_all_same_v<T, Ts...> =
-    ::std::is_same_v<types<T, Ts...>, types<Ts..., T>>;
+inline constexpr bool is_all_same_v<T, Ts...> = ::std::is_same_v<
+    types<T, Ts...>, types<Ts..., T>>;
 
 template <typename ...Ts>
 struct is_all_same : ::std::bool_constant<is_all_same_v<Ts...>> {};
@@ -69,18 +69,18 @@ struct proxies<::std::index_sequence<Is...>, Ts...> : proxy<Ts, Is>... {};
 template <typename ...Ts>
 using proxies_t = proxies<::std::index_sequence_for<Ts...>, Ts...>;
 
-} // namespace detail
+}  // namespace detail
 
 
 template <typename ...Ts>
-inline constexpr bool is_all_unique_v =
-    requires (detail::proxies_t<Ts...> *p, void (*use)(...)) {
-        use(static_cast<type<Ts> *>(p)...);
-    };
+inline constexpr bool is_all_unique_v = requires (detail::proxies_t<Ts...> *p,
+                                                  void (*use)(...)) {
+  use(static_cast<type<Ts> *>(p)...);
+};
 
 template <typename ...Ts>
 struct is_all_unique : ::std::bool_constant<is_all_unique_v<Ts...>> {};
 
-} // namespace utils
+}  // namespace utils
 
-#endif /* DDVAMP_UTILS_TYPE_TRAITS_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_TYPE_TRAITS_HPP_INCLUDED_ */

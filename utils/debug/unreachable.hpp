@@ -14,17 +14,17 @@
 
 namespace utils::detail {
 
-[[noreturn]] void do_unreachable(::std::string_view const message,
+[[noreturn]] void do_unreachable(
+    ::std::string_view const message,
     ::std::source_location const location =
-    ::std::source_location::current()) noexcept;
+        ::std::source_location::current()) noexcept;
 
-} // namespace utils::detail
+}  // namespace utils::detail
 
 // Debug unreachable with passing an error message and location
 #ifndef UTILS_UNREACHABLE
 #	ifndef UTILS_DISABLE_DEBUG
-#		define UTILS_UNREACHABLE(...)                    \
-            ::utils::detail::do_unreachable(__VA_ARGS__)
+#		define UTILS_UNREACHABLE(...) ::utils::detail::do_unreachable(__VA_ARGS__)
 #	else
 #		define UTILS_UNREACHABLE(...) ::std::unreachable()
 #	endif
@@ -32,4 +32,4 @@ namespace utils::detail {
 #	error "UTILS_UNREACHABLE macro is already defined somewhere else"
 #endif
 
-#endif /* DDVAMP_UTILS_DEBUG_UNREACHABLE_H_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_DEBUG_UNREACHABLE_H_INCLUDED_ */

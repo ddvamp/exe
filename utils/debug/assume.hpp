@@ -14,25 +14,27 @@
 namespace utils::detail {
 
 [[noreturn]] void do_assume(::std::string_view const expression,
-    ::std::string_view const message, ::std::source_location const location =
-    ::std::source_location::current()) noexcept;
+                            ::std::string_view const message,
+                            ::std::source_location const location =
+                                ::std::source_location::current()) noexcept;
 
-} // namespace utils::detail
+}  // namespace utils::detail
 
 // Debug assume with passing an error message and location
 #ifndef UTILS_ASSUME
-#   ifndef UTILS_DISABLE_DEBUG
-#	    define UTILS_ASSUME(expr, ...)                              \
-            do {                                                    \
-                if (!(expr)) [[unlikely]] {                         \
-                    ::utils::detail::do_assume(#expr, __VA_ARGS__); \
-                }                                                   \
-            } while (false)
-#   else
-#	    define UTILS_ASSUME(expr, ...) [[assume(expr)]]
-#   endif
+# ifndef UTILS_DISABLE_DEBUG
+#	  define UTILS_ASSUME(expr, ...)                         \
+        do {                                               \
+          if (expr) [[likely]] {                           \
+            break;                                         \
+          }                                                \
+          ::utils::detail::do_assume(#expr, __VA_ARGS__);  \
+        } while (false)
+# else
+#	  define UTILS_ASSUME(expr, ...) [[assume(expr)]]
+# endif
 #else
-#   error "UTILS_ASSUME macro is already defined somewhere else"
+# error "UTILS_ASSUME macro is already defined somewhere else"
 #endif
 
-#endif /* DDVAMP_UTILS_DEBUG_ASSUME_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_DEBUG_ASSUME_HPP_INCLUDED_ */

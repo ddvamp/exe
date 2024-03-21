@@ -13,15 +13,15 @@ namespace utils {
 
 // Abnormal program termination with passing an error message and location
 [[noreturn]] void abort(::std::string_view const message,
-	::std::source_location const location =
-	::std::source_location::current()) noexcept;
+                        ::std::source_location const location =
+                            ::std::source_location::current()) noexcept;
 
-} // namespace utils
+}  // namespace utils
 
 #ifndef UTILS_ABORT
 #	define UTILS_ABORT(...) ::utils::abort(__VA_ARGS__) 
 #else
-#   error "UTILS_ABORT macro is already defined somewhere else"
+# error "UTILS_ABORT macro is already defined somewhere else"
 #endif
 
-#endif /* DDVAMP_UTILS_ABORT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_ABORT_HPP_INCLUDED_ */

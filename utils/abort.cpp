@@ -11,13 +11,13 @@
 
 namespace utils {
 
-void abort(::std::string_view const msg,
-	::std::source_location const loc) noexcept {
-	::std::cerr << ::std::format("Error at {}:{}: {} with message '{}'. "
-		"Abort!\n", loc.file_name(), loc.line(),
-		loc.function_name(), msg) << ::std::flush;
-
-	::std::abort();
+void abort(::std::string_view const msg, ::std::source_location const loc)
+    noexcept {
+  auto const output = ::std::format("Error at {}:{}: {} with message '{}'. "
+                                    "Abort!\n", loc.file_name(), loc.line(),
+                                    loc.function_name(), msg);
+  ::std::cerr << output << ::std::flush;
+  ::std::abort();
 }
 
-} // namespace utils
+}  // namespace utils
