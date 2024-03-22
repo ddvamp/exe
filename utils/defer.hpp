@@ -18,8 +18,8 @@ inline constexpr bool is_suitable_for_deferred_action_v = is_all_of_v<
     ::std::is_class_v<T>,
     ::std::is_nothrow_move_constructible_v<T>,
     ::std::is_nothrow_destructible_v<T>,
-    ::std::is_invocable_v<T &> &&
-    ::std::is_void_v<::std::invoke_result_t<T &>>>;
+    ::std::is_invocable_v<T &&> &&
+    ::std::is_void_v<::std::invoke_result_t<T &&>>>;
 
 // RAII class for performing an action at the end of a scope
 template <typename T>
@@ -29,7 +29,7 @@ class [[nodiscard]] defer final {
   UTILS_NO_UNIQUE_ADDRESS T action_;
 
  public:
-  constexpr ~defer() noexcept (::std::is_nothrow_invocable_v<T &>) {
+  constexpr ~defer() noexcept (::std::is_nothrow_invocable_v<T &&>) {
     ::std::move(action_)();
   }
 
