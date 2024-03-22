@@ -30,7 +30,7 @@ class [[nodiscard]] defer final {
 
  public:
   constexpr ~defer() noexcept (::std::is_nothrow_invocable_v<T &>) {
-    action_();
+    ::std::move(action_)();
   }
 
   defer(defer const &) = delete;
