@@ -55,7 +55,7 @@ void Submit(S &scheduler, Fn &&fn) {
 
 template <concepts::NothrowScheduler S, typename Fn>
 void Submit(S &scheduler, Fn &&fn) {
-  auto const *task = ::new detail::Task(::std::forward<Fn>(fn));
+  auto const task = ::new detail::Task(::std::forward<Fn>(fn));
   scheduler.Submit(task);
 }
 

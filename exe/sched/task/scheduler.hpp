@@ -31,7 +31,8 @@ template <typename S>
 concept Scheduler = ::std::derived_from<S, IScheduler>;
 
 template <typename S>
-concept NothrowScheduler = ::std::derived_from<S, INothrowScheduler>;
+concept NothrowScheduler = Scheduler<S> &&
+                           ::std::derived_from<S, INothrowScheduler>;
 
 }  // namespace concepts
 
