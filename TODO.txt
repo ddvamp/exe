@@ -6,3 +6,9 @@ pause.hpp
 
 wait_point.hpp
   - check the solution
+
+submit.hpp
+  - exception safety
+
+thread_pool.hpp
+  - exception handling
