@@ -11,12 +11,13 @@
 
 #include <utils/debug/assert.hpp>
 #include <utils/intrusive/forward_list.hpp>
-#include <utils/pause.hpp>
 #include <utils/utility.hpp>
+
+#include "pause.hpp"
 
 namespace concurrency {
 
-class QueueSpinlock {
+class QSpinlock {
  private:
   struct Node : ::utils::intrusive_concurrent_forward_list_node<Node> {
     ::std::atomic_bool locked_ = false;
@@ -26,27 +27,27 @@ class QueueSpinlock {
   static_assert(::std::atomic_bool::is_always_lock_free);
 
   alignas (::std::hardware_destructive_interference_size)
-    Node dummy_{};
+      Node dummy_{};
   alignas (::std::hardware_destructive_interference_size)
-    ::std::atomic<Node *> tail_ = &dummy_;
+      ::std::atomic<Node *> tail_ = &dummy_;
 
  public:
-  ~QueueSpinlock() {
-    UTILS_ASSERT(!IsLocked(), "QueueSpinlock is destroyed during use");
+  ~QSpinlock() {
+    UTILS_ASSERT(!IsLocked(), "QSpinlock is destroyed during use");
   }
 
-  QueueSpinlock(QueueSpinlock const &) = delete;
-  void operator= (QueueSpinlock const &) = delete;
+  QSpinlock(QSpinlock const &) = delete;
+  void operator= (QSpinlock const &) = delete;
 
-  QueueSpinlock(QueueSpinlock &&) = delete;
-  void operator= (QueueSpinlock &&) = delete;
+  QSpinlock(QSpinlock &&) = delete;
+  void operator= (QSpinlock &&) = delete;
 
  public:
-  QueueSpinlock() = default;
+  QSpinlock() = default;
 
   class Token final {
    private:
-    QueueSpinlock &lock_;
+    QSpinlock &lock_;
     Node node_;
 
    public:
@@ -59,7 +60,7 @@ class QueueSpinlock {
     void operator= (Token &&) = delete;
 
    public:
-    explicit Token(QueueSpinlock &spinlock) noexcept
+    explicit Token(QSpinlock &spinlock) noexcept
         : lock_(spinlock), node_{&spinlock.dummy_} {}
 
     [[nodiscard]] bool TryLock() noexcept {
@@ -110,7 +111,7 @@ class QueueSpinlock {
     void operator= (Guard &&) = delete;
 
    public:
-    explicit Guard(QueueSpinlock &lock) noexcept : token_(lock) {
+    explicit Guard(QSpinlock &lock) noexcept : token_(lock) {
       token_.Lock();
     }
   };
@@ -147,7 +148,7 @@ class QueueSpinlock {
     auto const pred = tail_.exchange(&node, ::std::memory_order_acq_rel);
     if (pred == &dummy_) [[likely]] {
       while (!TryLock()) {
-        ::utils::pause();
+        pause();
       }
 
       return;
@@ -156,7 +157,7 @@ class QueueSpinlock {
     pred->next_.store(&node, ::std::memory_order_release);
 
     while (node.locked_.load(::std::memory_order_acquire)) {
-      ::utils::pause();
+      pause();
     }
   }
 
@@ -179,7 +180,7 @@ class QueueSpinlock {
 
     Node *succ;
     while (!(succ = node.next_.load(::std::memory_order_relaxed))) {
-      ::utils::pause();
+      pause();
     }
 
     return succ;

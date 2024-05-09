@@ -3,18 +3,18 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_UTILS_LOCK_HPP_INCLUDED_
-#define DDVAMP_UTILS_LOCK_HPP_INCLUDED_ 1
+#ifndef DDVAMP_CONCURRENCY_LOCK_HPP_INCLUDED_
+#define DDVAMP_CONCURRENCY_LOCK_HPP_INCLUDED_ 1
 
 #include <algorithm>  // std::ranges::sort
 #include <array>
 #include <memory>  // std::addressof
 #include <mutex>  // std::scoped_lock
 
-#include "defer.hpp"
-#include "type_traits.hpp"
+#include <utils/defer.hpp>
+#include <utils/type_traits.hpp>
 
-namespace utils {
+namespace concurrency {
 
 namespace detail {
 
@@ -56,7 +56,7 @@ void lock_impl(It const begin, It const end) {
 
   auto it = begin;
 
-  defer unlock_on_exception([&]() noexcept {
+  ::utils::defer unlock_on_exception([&]() noexcept {
     if (it == begin) [[likely]] {
       return;
     }
@@ -81,9 +81,10 @@ inline constexpr bool is_basic_lockable_v = requires (Lock &lock) {
 }  // namespace detail
 
 template <typename ...Locks>
-void lock(Locks &...locks) requires (is_all_of_v<(sizeof...(Locks) > 1),
-                                     detail::is_basic_lockable_v<Locks>...>) {
-  if constexpr (is_all_same_v<Locks...>) { 
+void lock(Locks &...locks) requires (
+    ::utils::is_all_of_v<(sizeof...(Locks) > 1),
+    detail::is_basic_lockable_v<Locks>...>) {
+  if constexpr (::utils::is_all_same_v<Locks...>) { 
     ::std::array arr{::std::addressof(locks)...};
     detail::lock_impl(arr.begin(), arr.end());
   } else {
@@ -99,13 +100,13 @@ void lock(Locks &...locks) requires (is_all_of_v<(sizeof...(Locks) > 1),
 template <typename ...Mutexes>
 ::std::scoped_lock<Mutexes...> make_scoped_lock(Mutexes &...ms) {
   if constexpr (sizeof...(Mutexes) > 1) {
-    utils::lock(ms...);
+    concurrency::lock(ms...);
     return ::std::scoped_lock{::std::adopt_lock, ms...};
   } else {
     return ::std::scoped_lock{ms...};
   }
 }
 
-}  // namespace utils
+}  // namespace concurrency
 
-#endif  /* DDVAMP_UTILS_LOCK_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONCURRENCY_LOCK_HPP_INCLUDED_ */

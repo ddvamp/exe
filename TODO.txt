@@ -3,6 +3,7 @@ wait_group.hpp
 
 pause.hpp
   - think about busy loop
+  - implement exponential backoff strategy
 
 wait_point.hpp
   - check the solution

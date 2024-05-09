@@ -10,14 +10,15 @@
 #include <new>  // std::hardware_destructive_interference_size
 
 #include <utils/debug/assert.hpp>
-#include <utils/pause.hpp>
+
+#include "pause.hpp"
 
 namespace concurrency {
 
 class Spinlock {
  private:
   alignas (::std::hardware_destructive_interference_size)
-    ::std::atomic_flag locked_;
+      ::std::atomic_flag locked_;
 
  public:
   ~Spinlock() {
@@ -40,7 +41,7 @@ class Spinlock {
   void Lock() noexcept {
     while (!TryLock()) {
       while (IsLocked()) {
-        ::utils::pause();
+        pause();
       }
     }
   }
