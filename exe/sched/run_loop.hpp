@@ -35,7 +35,7 @@ class RunLoop final : public task::INothrowScheduler {
    ::std::size_t RunAtMost(::std::size_t const limit) noexcept;
 
    bool RunNext() noexcept {
-     return RunAtMost(1) == 1;
+     return RunAtMost(1) != 0;
    }
 
    ::std::size_t Run() noexcept {
@@ -47,7 +47,7 @@ class RunLoop final : public task::INothrowScheduler {
    }
 
  private:
-   [[nodiscard]] task::TaskBase *PopNext() noexcept;
+   [[nodiscard]] task::TaskBase *Pop() noexcept;
 };
 
 }  // namespace exe::sched

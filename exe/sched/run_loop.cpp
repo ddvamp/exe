@@ -23,13 +23,13 @@ RunLoop::~RunLoop() {
 ::std::size_t RunLoop::RunAtMost(::std::size_t const limit) noexcept {
   auto remains = limit;
   while (::utils::all_of(!IsEmpty(), remains != 0)) {
-    PopNext()->Run();
+    Pop()->Run();
     --remains;
   }
   return limit - remains;
 }
 
-task::TaskBase *RunLoop::PopNext() noexcept {
+task::TaskBase *RunLoop::Pop() noexcept {
   return ::std::exchange(head_, head_->next_.load(::std::memory_order_relaxed));
 }
 
