@@ -28,7 +28,7 @@ class QSpinlock {
 
   alignas (::std::hardware_destructive_interference_size)
       Node dummy_{};
-  alignas (::std::hardware_destructive_interference_size)
+  // alignas (::std::hardware_destructive_interference_size) Is it necessary?
       ::std::atomic<Node *> tail_ = &dummy_;
 
  public:
