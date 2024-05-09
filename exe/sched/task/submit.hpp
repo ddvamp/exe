@@ -9,10 +9,11 @@
 #include <memory>
 #include <utility>
 
-#include "scheduler.hpp"
-#include "task.hpp"
 #include <utils/macro.hpp>
 #include <utils/type_traits.hpp>
+
+#include "scheduler.hpp"
+#include "task.hpp"
 
 namespace exe::sched::task {
 
