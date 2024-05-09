@@ -41,7 +41,7 @@ class Spinlock {
   void Lock() noexcept {
     while (!TryLock()) {
       while (IsLocked()) {
-        pause();
+        Pause();
       }
     }
   }

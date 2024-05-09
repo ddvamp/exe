@@ -22,7 +22,7 @@ class ITask {
 
 class TaskBase
     : public ITask,
-      public ::concurrency::intrusive_forward_list_node<TaskBase> {
+      public ::concurrency::IntrusiveForwardListNode<TaskBase> {
  protected:
   ~TaskBase() = default;
 };

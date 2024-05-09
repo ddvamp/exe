@@ -11,11 +11,11 @@ RunLoop::~RunLoop() {
 
 /* virtual */ void RunLoop::Submit(task::TaskBase *task) noexcept {
   UTILS_ASSERT(task, "nullptr instead of the task");
-  task->link(nullptr);
+  task->Link(nullptr);
   if (IsEmpty()) {
     head_ = tail_ = task;
   } else {
-    tail_->link(task);
+    tail_->Link(task);
     tail_ = task;
   }
 }

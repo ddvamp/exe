@@ -13,22 +13,21 @@ namespace concurrency {
 
 namespace detail {
 
-struct default_node_tag;
+struct SelfTag;
 
 }  // namespace detail
 
-template <typename T = detail::default_node_tag>
-struct intrusive_forward_list_node {
-  using node = ::std::conditional_t<
-      ::std::is_same_v<T, detail::default_node_tag>,
-      intrusive_forward_list_node, T>;
+template <typename T = detail::SelfTag>
+struct IntrusiveForwardListNode {
+  using Node = ::std::conditional_t<::std::is_same_v<T, detail::SelfTag>,
+                                    IntrusiveForwardListNode, T>;
 
   // To guarantee the expected implementation
-  static_assert(::std::atomic<node *>::is_always_lock_free);
+  static_assert(::std::atomic<Node *>::is_always_lock_free);
 
-  ::std::atomic<node *> next_ = nullptr;
+  ::std::atomic<Node *> next_ = nullptr;
 
-  void link(node *next) noexcept {
+  void Link(Node *next) noexcept {
     next_.store(next, ::std::memory_order_relaxed);
   }
 };

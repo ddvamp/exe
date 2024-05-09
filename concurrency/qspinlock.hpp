@@ -19,7 +19,7 @@ namespace concurrency {
 
 class QSpinlock {
  private:
-  struct Node : intrusive_forward_list_node<Node> {
+  struct Node : IntrusiveForwardListNode<Node> {
     ::std::atomic_bool locked_ = false;
   };
 
@@ -142,13 +142,13 @@ class QSpinlock {
   }
 
   void LockCold(Node &node) noexcept {
-    node.link(nullptr);
+    node.Link(nullptr);
     node.locked_.store(true, ::std::memory_order_relaxed);
 
     auto const pred = tail_.exchange(&node, ::std::memory_order_acq_rel);
     if (pred == &dummy_) [[likely]] {
       while (!TryLock()) {
-        pause();
+        Pause();
       }
 
       return;
@@ -157,7 +157,7 @@ class QSpinlock {
     pred->next_.store(&node, ::std::memory_order_release);
 
     while (node.locked_.load(::std::memory_order_acquire)) {
-      pause();
+      Pause();
     }
   }
 
@@ -168,7 +168,7 @@ class QSpinlock {
     }
 
     succ->locked_.store(false, ::std::memory_order_release);
-    node.link(&dummy_);
+    node.Link(&dummy_);
   }
 
   [[nodiscard]] Node *UnlockCold(Node &node) noexcept {
@@ -180,7 +180,7 @@ class QSpinlock {
 
     Node *succ;
     while (!(succ = node.next_.load(::std::memory_order_relaxed))) {
-      pause();
+      Pause();
     }
 
     return succ;

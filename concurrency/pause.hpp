@@ -18,7 +18,7 @@
 namespace concurrency {
 
 // Spin loop hint
-inline void pause() noexcept {
+inline void Pause() noexcept {
 #if defined(DDVAMP_PAUSE_OPTION_GNU_)
 #	undef DDVAMP_PAUSE_OPTION_GNU_
   __builtin_ia32_pause();

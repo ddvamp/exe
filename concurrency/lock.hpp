@@ -19,29 +19,29 @@ namespace concurrency {
 namespace detail {
 
 template <typename T>
-void lock(void *m) {
+void Lock(void *m) {
   static_cast<T *>(m)->lock();
 }
 
 template <typename T>
-void unlock(void *m) noexcept {
+void Unlock(void *m) noexcept {
   static_cast<T *>(m)->unlock();
 }
 
-struct any_mutex {
+struct AnyMutex {
   void *m_;
   void (*lock_)(void *);
   void (*unlock_)(void *) noexcept;
 
-  void lock() const {
+  void Lock() const {
     lock_(m_);
   }
 
-  void unlock() const noexcept {
+  void Unlock() const noexcept {
     unlock_(m_);
   }
 
-  any_mutex const *operator-> () const noexcept {
+  AnyMutex const *operator-> () const noexcept {
     return this;
   }
 
@@ -51,7 +51,7 @@ struct any_mutex {
 };
 
 template <typename It>
-void lock_impl(It const begin, It const end) {
+void LockImpl(It const begin, It const end) {
   ::std::ranges::sort(begin, end);
 
   auto it = begin;
@@ -81,26 +81,26 @@ inline constexpr bool is_basic_lockable_v = requires (Lock &lock) {
 }  // namespace detail
 
 template <typename ...Locks>
-void lock(Locks &...locks) requires (
+void Lock(Locks &...locks) requires (
     ::utils::is_all_of_v<(sizeof...(Locks) > 1),
     detail::is_basic_lockable_v<Locks>...>) {
   if constexpr (::utils::is_all_same_v<Locks...>) { 
     ::std::array arr{::std::addressof(locks)...};
-    detail::lock_impl(arr.begin(), arr.end());
+    detail::LockImpl(arr.begin(), arr.end());
   } else {
-    ::std::array arr{detail::any_mutex{.m_ = const_cast<void *>(
-                                           static_cast<void const volatile *>(
-                                               ::std::addressof(locks))),
-                                       .lock_ = detail::lock<Locks>,
-                                       .unlock_ = detail::unlock<Locks>}...};
-    detail::lock_impl(arr.begin(), arr.end());
+    ::std::array arr{detail::AnyMutex{.m_ = const_cast<void *>(
+                                          static_cast<void const volatile *>(
+                                              ::std::addressof(locks))),
+                                      .lock_ = detail::Lock<Locks>,
+                                      .unlock_ = detail::Unlock<Locks>}...};
+    detail::LockImpl(arr.begin(), arr.end());
   }
 }
 
 template <typename ...Mutexes>
-::std::scoped_lock<Mutexes...> make_scoped_lock(Mutexes &...ms) {
+::std::scoped_lock<Mutexes...> MakeScopedLock(Mutexes &...ms) {
   if constexpr (sizeof...(Mutexes) > 1) {
-    concurrency::lock(ms...);
+    concurrency::Lock(ms...);
     return ::std::scoped_lock{::std::adopt_lock, ms...};
   } else {
     return ::std::scoped_lock{ms...};
