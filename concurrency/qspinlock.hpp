@@ -10,16 +10,16 @@
 #include <new>  // std::hardware_destructive_interference_size
 
 #include <utils/debug/assert.hpp>
-#include <utils/intrusive/forward_list.hpp>
 #include <utils/utility.hpp>
 
+#include "intrusive/forward_list.hpp"
 #include "pause.hpp"
 
 namespace concurrency {
 
 class QSpinlock {
  private:
-  struct Node : ::utils::intrusive_concurrent_forward_list_node<Node> {
+  struct Node : intrusive_forward_list_node<Node> {
     ::std::atomic_bool locked_ = false;
   };
 
