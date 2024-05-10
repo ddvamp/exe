@@ -12,7 +12,7 @@
 
 namespace utils {
 
-class page_allocation {
+class [[nodiscard]] page_allocation {
  private:
   ::std::byte *begin_ = nullptr;
   ::std::size_t size_ = 0;
@@ -57,7 +57,7 @@ class page_allocation {
   [[nodiscard]] static ::std::size_t max_pages() noexcept;
 
   // Precondition: count != 0 && count <= max_pages()
-  [[nodiscard]] static page_allocation allocate_pages(
+  static page_allocation allocate_pages(
       ::std::size_t const count);
 
   // Precondition: page_count != 0 &&
@@ -65,7 +65,7 @@ class page_allocation {
   void protect_pages(::std::size_t const page_offset,
                      ::std::size_t const page_count);
 
-  [[nodiscard]] static page_allocation acquire(memory_view view) noexcept;
+  static page_allocation acquire(memory_view view) noexcept;
 
   [[nodiscard]] memory_view release() noexcept {
     auto res = view();
