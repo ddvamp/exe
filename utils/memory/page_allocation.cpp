@@ -29,13 +29,15 @@ namespace utils {
   return kMaxPages;
 }
 
-namespace {
-
-::std::size_t pages_to_bytes(::std::size_t const count) noexcept {
-  return page_allocation::page_size() * count;
+/* static */ ::std::size_t page_allocation::pages_to_bytes(
+    ::std::size_t const page_count) noexcept {
+  return page_count * page_size();
 }
 
-}  // namespace
+/* static */ ::std::size_t page_allocation::bytes_to_pages(
+    ::std::size_t const at_least) noexcept {
+  return at_least / page_size() + (at_least % page_size() != 0 ? 1 : 0);
+}
 
 // Precondition: count != 0 && count <= max_pages()
 /* static */ page_allocation page_allocation::allocate_pages(

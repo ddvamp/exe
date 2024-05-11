@@ -56,6 +56,11 @@ class [[nodiscard]] page_allocation {
   [[nodiscard]] static ::std::size_t page_size() noexcept;
   [[nodiscard]] static ::std::size_t max_pages() noexcept;
 
+  [[nodiscard]] static ::std::size_t pages_to_bytes(
+      ::std::size_t const page_count) noexcept;
+  [[nodiscard]] static ::std::size_t bytes_to_pages(
+      ::std::size_t const at_least) noexcept;
+
   // Precondition: count != 0 && count <= max_pages()
   static page_allocation allocate_pages(
       ::std::size_t const count);
