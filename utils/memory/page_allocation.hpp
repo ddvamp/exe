@@ -72,7 +72,7 @@ class [[nodiscard]] page_allocation {
 
   static page_allocation acquire(memory_view view) noexcept;
 
-  [[nodiscard]] memory_view release() noexcept {
+  [[nodiscard]] memory_view release() && noexcept {
     auto res = view();
     reset();
     return res;
