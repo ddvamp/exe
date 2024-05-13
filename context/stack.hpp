@@ -59,7 +59,7 @@ class [[nodiscard]] Stack {
   }
 
  private:
-  Stack(::utils::page_allocation allocation) noexcept
+  Stack(::utils::page_allocation &&allocation) noexcept
       : allocation_(::std::move(allocation)) {}
 };
 
