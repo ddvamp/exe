@@ -30,7 +30,7 @@ class [[nodiscard]] Stack {
  public:
   Stack() = default;
 
-  static Stack allocatePages(::std::size_t const count) {
+  static Stack AllocatePages(::std::size_t const count) {
     UTILS_ASSERT(count != 0, "An empty Stack was requested");
 
     Stack res(::utils::page_allocation::allocate_pages(count + 1));
@@ -38,23 +38,23 @@ class [[nodiscard]] Stack {
     return res;
   }
 
-  static Stack allocateBytes(::std::size_t const at_least) {
-    return allocatePages(::utils::page_allocation::bytes_to_pages(at_least));
+  static Stack AllocateBytes(::std::size_t const at_least) {
+    return AllocatePages(::utils::page_allocation::bytes_to_pages(at_least));
   }
 
-  [[nodiscard]] ::std::size_t allocationSize() const noexcept {
+  [[nodiscard]] ::std::size_t AllocationSize() const noexcept {
     return allocation_.size();
   }
 
-  [[nodiscard]] ::utils::memory_view view() noexcept {
+  [[nodiscard]] ::utils::memory_view View() noexcept {
     return allocation_.view();
   }
 
-  static Stack acquire(::utils::memory_view view) noexcept {
+  static Stack Acquire(::utils::memory_view view) noexcept {
     return ::utils::page_allocation::acquire(view);
   }
 
-  [[nodiscard]] ::utils::memory_view release() noexcept {
+  [[nodiscard]] ::utils::memory_view Release() noexcept {
     return allocation_.release();
   }
 
