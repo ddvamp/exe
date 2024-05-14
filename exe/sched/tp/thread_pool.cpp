@@ -8,7 +8,7 @@
 #include <utils/abort.hpp>
 #include <utils/debug/assert.hpp>
 
-namespace exe::sched {
+namespace exe::sched::tp {
 
 namespace {
 
@@ -35,7 +35,7 @@ void ThreadPool::WorkLoop() noexcept try {
 
   // TODO: Exception handling (mutex.lock())
   while (auto task = tasks_.Pop()) {
-    (*task)->Run();
+    task->Run();
   }
 } catch (...) {
   UTILS_ABORT("Exception inside ThreadPool's worker thread");
@@ -84,4 +84,4 @@ void ThreadPool::Stop() {
   JoinWorkerThreads();
 }
 
-}  // namespace exe::sched
+}  // namespace exe::sched::tp
