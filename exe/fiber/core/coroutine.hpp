@@ -6,8 +6,6 @@
 #ifndef DDVAMP_EXE_FIBER_CORE_COROUTINE_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_CORE_COROUTINE_HPP_INCLUDED_ 1
 
-#include <utility>
-
 #include <context/context.hpp>
 #include <utils/memory/view.hpp>
 
@@ -17,42 +15,38 @@ namespace exe::fiber {
 
 // Basis for suspended execution of fibers
 class Coroutine : public ::context::ITrampoline {
+ public:
+  enum class Status {
+    active,
+    inactive,
+    completed
+  };
+
  private:
   Body body_;
   ::context::ExecutionContext context_;
-  bool is_completed_ = false;
+  Status status_ = Status::inactive;
 
  public:
-  Coroutine(Body &&body, ::utils::memory_view stack) noexcept
-      : body_(::std::move(body))
-      , context_(stack, this) {}
+  Coroutine(Body &&body, ::utils::memory_view stack) noexcept;
 
-  [[nodiscard]] bool IsCompleted() const noexcept {
-    return is_completed_;
-  }
+  [[nodiscard]] bool IsCompleted() const noexcept;
 
   /* External call functions */
 
-  void Resume() noexcept {
-    context_.SwitchToSaved();
-  }
+  void Resume() noexcept;
 
   /* Internal call functions */
 
-  void Suspend() noexcept {
-    context_.SwitchToSaved();
-  }
+  void Suspend() noexcept;
 
-  [[noreturn]] void Cancel() noexcept {
-    is_completed_ = true;
-    context_.ExitToSaved();
-  }
+  [[noreturn]] void Cancel() noexcept;
 
  private:
-  [[noreturn]] void DoRun() noexcept override {
-    ::std::move(body_)();
-    Cancel();
-  }
+  [[noreturn]] void DoRun() noexcept override;
+
+  void ChangeStatus([[maybe_unused]] Status const from,
+                    Status const to) noexcept;
 };
 
 }  // namespace exe::fiber
