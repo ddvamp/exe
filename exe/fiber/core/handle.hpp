@@ -31,21 +31,21 @@ class [[nodiscard]] FiberHandle {
   FiberHandle() = default;
 
   static FiberHandle Invalid() noexcept {
-    return FiberHandle{};
+    return FiberHandle();
   }
 
   [[nodiscard]] bool IsValid() const noexcept {
     return fiber_;
   }
 
-  // Schedule execution on executor set on fiber
+  // Schedule execution on scheduler set on fiber
   //
   // Precondition: IsValid() == true
   void Schedule() && noexcept;
 
   // Execute fiber immediately
   //
-  // Precondition: isValid() == true
+  // Precondition: IsValid() == true
   void Resume() && noexcept;
 
  private:

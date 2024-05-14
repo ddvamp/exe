@@ -63,10 +63,7 @@ class [[nodiscard]] Fiber : public sched::task::TaskBase {
   void DestroySelf() noexcept;
   void ReleaseResources() noexcept;
 
-  [[nodiscard]] static FiberId GetNextId() noexcept {
-    static ::std::atomic<FiberId> next_id = kInvalidFiberId + 1;
-    return next_id.fetch_add(1, ::std::memory_order_relaxed);
-  }
+  [[nodiscard]] static FiberId GetNextId() noexcept;
 };
 
 // Create an self-ownership fiber

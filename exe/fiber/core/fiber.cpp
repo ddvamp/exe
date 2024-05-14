@@ -122,6 +122,11 @@ void Fiber::Stop() noexcept {
   coroutine_.Suspend();
 }
 
+/* static */ FiberId Fiber::GetNextId() noexcept {
+  static ::std::atomic<FiberId> next_id = kInvalidFiberId + 1;
+  return next_id.fetch_add(1, ::std::memory_order_relaxed);
+}
+
 Fiber *CreateFiber(Body &&body, IScheduler *scheduler) {
   return ::new Fiber(::std::move(body), AllocateStack(), scheduler);
 }
