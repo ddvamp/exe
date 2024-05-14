@@ -41,7 +41,7 @@ void Yield() noexcept;
 void SwitchTo(FiberHandle &&next) noexcept;
 
 // Reschedule current fiber on scheduler
-void TeleportTo(IScheduler &scheduler);
+void TeleportTo(IScheduler &scheduler) noexcept;
 
 }  // namespace self
 

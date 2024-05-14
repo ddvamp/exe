@@ -161,7 +161,7 @@ void SwitchTo(FiberHandle &&next) noexcept {
   Suspend(awaiter);
 }
 
-void TeleportTo(IScheduler &scheduler) {
+void TeleportTo(IScheduler &scheduler) noexcept {
   Fiber::Self().TeleportTo(&scheduler);
 }
 
