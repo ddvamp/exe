@@ -41,6 +41,8 @@ class Queue {
   Queue() = default;
 
   bool Push(task::TaskBase *task) {
+    UTILS_ASSERT(task, "nullptr instead of the task");
+
     ::std::lock_guard lock(m_);
 
     if (is_closed_) [[unlikely]] {

@@ -71,7 +71,6 @@ ThreadPool::ThreadPool(::std::size_t const workers, launch_t)
 
 /* virtual */ void ThreadPool::Submit(task::TaskBase *task) {
   UTILS_ASSERT(state_ == State::started, "Using thread pool before start");
-  UTILS_ASSERT(task, "nullptr instead of the task");
   UTILS_VERIFY(tasks_.Push(task), "Using thread pool after stop");
 }
 
