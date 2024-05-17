@@ -30,9 +30,8 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
     FiberHandle handle_;
   };
 
-  struct LockAwaiter final : IAwaiter {
+  struct LockAwaiter final : IAwaiter, FiberInfo {
     Mutex *m_;
-    FiberInfo info_;
 
     explicit LockAwaiter(Mutex *m) noexcept : m_(m) {}
 
@@ -41,14 +40,14 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
     }
 
     FiberHandle AwaitSymmetricSuspend(FiberHandle &&current) noexcept override {
-      info_.handle_ = ::std::move(current);
-      return m_->LockImpl(&info_);
+      handle_ = ::std::move(current);
+      return m_->LockImpl(this);
     }
   };
 
   using Node = FiberInfo::Node;
 
-  Node dummy_{&dummy_};
+  Node dummy_{.next_ = &dummy_};
   Node *head_ = &dummy_;  // known next owner or dummy
   ::std::atomic<Node *> tail_ = &dummy_;  // last added or dummy
   ::std::atomic<FiberId> owner_ = kInvalidFiberId;
