@@ -27,7 +27,7 @@ class Event {
     Event *event_;
     FiberHandle handle_;
 
-    explicit Waiter(Event *event) : event_(event) {}
+    explicit Waiter(Event *event) noexcept : event_(event) {}
 
     void AwaitSuspend(FiberHandle &&current) noexcept override {
       handle_ = ::std::move(current);

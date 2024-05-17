@@ -28,7 +28,7 @@ class Barrier {
     Barrier *barrier_;
     FiberHandle handle_;
 
-    explicit Waiter(Barrier *barrier) : barrier_(barrier) {}
+    explicit Waiter(Barrier *barrier) noexcept : barrier_(barrier) {}
 
     void AwaitSuspend(FiberHandle &&) noexcept override {
       // pass
