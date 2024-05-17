@@ -21,25 +21,22 @@ thread_local Fiber *current = nullptr;
   return current;
 }
 
-class YieldAwaiter : public ISuspendingAwaiter {
- public:
+struct YieldAwaiter final : ISuspendingAwaiter {
   void AwaitSuspend(FiberHandle &&h) noexcept override {
     ::std::move(h).Schedule();
   }
 };
 
-class SwitchAwaiter : public IAwaiter {
- private:
+struct SwitchAwaiter final : IAwaiter {
   FiberHandle &target_;
 
- public:
   explicit SwitchAwaiter(FiberHandle &target) noexcept : target_(target) {}
 
   void AwaitSuspend(FiberHandle &&) noexcept override {
-    // nothing
+    // pass
   }
 
-  [[nodiscard]] FiberHandle AwaitSymmetricSuspend(FiberHandle &&from) override {
+  FiberHandle AwaitSymmetricSuspend(FiberHandle &&from) override {
     // Prevents race condition
     ::utils::defer cleanup([&from]() noexcept {
         ::std::move(from).Schedule(); 

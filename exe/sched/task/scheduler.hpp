@@ -12,15 +12,13 @@
 
 namespace exe::sched::task {
 
-class IScheduler {
- public:
+struct IScheduler {
   virtual ~IScheduler() = default;
 
   virtual void Submit(TaskBase *) = 0;
 };
 
-class INothrowScheduler : public IScheduler {
- public:
+struct INothrowScheduler : IScheduler {
   void Submit(TaskBase *) noexcept override = 0;
 };
 

@@ -10,7 +10,7 @@
 
 namespace exe::sched::task {
 
-class ITask {
+struct ITask {
  protected:
   ~ITask() = default;
 
@@ -20,9 +20,7 @@ class ITask {
   virtual void Run() noexcept = 0;
 };
 
-class TaskBase
-    : public ITask,
-      public ::concurrency::IntrusiveForwardListNode<TaskBase> {
+struct TaskBase : ITask, ::concurrency::IntrusiveForwardListNode<TaskBase> {
  protected:
   ~TaskBase() = default;
 };

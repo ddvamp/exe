@@ -12,16 +12,14 @@
 
 namespace exe::fiber {
 
-class IAwaiter {
- public:
+struct IAwaiter {
   virtual ~IAwaiter() = default;
 
   virtual void AwaitSuspend(FiberHandle &&) = 0;
   virtual FiberHandle AwaitSymmetricSuspend(FiberHandle &&) = 0;
 };
 
-class ISuspendingAwaiter : public IAwaiter {
- public:
+struct ISuspendingAwaiter : IAwaiter {
   FiberHandle AwaitSymmetricSuspend(FiberHandle &&h) override {
     AwaitSuspend(::std::move(h));
     return FiberHandle::Invalid();
