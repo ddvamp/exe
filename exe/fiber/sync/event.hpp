@@ -18,6 +18,8 @@
 
 namespace exe::fiber {
 
+// A synchronization primitive for waiting for a notification
+// and sharing data through it
 class Event {
  private:
   struct Waiter final : ISuspendingAwaiter,
@@ -57,13 +59,14 @@ class Event {
  public:
   Event() = default;
 
-  // In case of instance reuse
+  // In case of an instance reuse
   void Reset() noexcept {
     dummy_.Link(nullptr);
   }
 
   void Wait() noexcept {
     if (IsFired()) {
+      // Fast path
       return;
     }
 
