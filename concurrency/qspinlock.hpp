@@ -17,19 +17,18 @@
 
 namespace concurrency {
 
-class QSpinlock {
+class alignas (::std::hardware_destructive_interference_size) QSpinlock {
  private:
   struct Node : IntrusiveForwardListNode<Node> {
     ::std::atomic_bool locked_ = false;
   };
 
+  Node dummy_;
+  ::std::atomic<Node *> tail_ = &dummy_;
+
   // To guarantee the expected implementation
   static_assert(::std::atomic_bool::is_always_lock_free);
-
-  alignas (::std::hardware_destructive_interference_size)
-      Node dummy_{};
-  // alignas (::std::hardware_destructive_interference_size) Is it necessary?
-      ::std::atomic<Node *> tail_ = &dummy_;
+  static_assert(::std::atomic<Node *>::is_always_lock_free);
 
  public:
   ~QSpinlock() {

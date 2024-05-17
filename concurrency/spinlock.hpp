@@ -15,10 +15,9 @@
 
 namespace concurrency {
 
-class Spinlock {
+class alignas (::std::hardware_destructive_interference_size) Spinlock {
  private:
-  alignas (::std::hardware_destructive_interference_size)
-      ::std::atomic_flag locked_;
+  ::std::atomic_flag locked_;
 
  public:
   ~Spinlock() {
