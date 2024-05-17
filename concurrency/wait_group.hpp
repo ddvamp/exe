@@ -61,7 +61,7 @@ class WaitGroup {
   // Sets the value of the counter at the beginning of the waiting session.
   // This call must happen after any previous session calls and
   // happen before any current session calls
-  void Reset(State const init = 1) noexcept {
+  void Reset(State const init = 0) noexcept {
     UTILS_ASSERT(init <= kMaxCount,
                  "The init value does not fit into the 32-bit counter");
     state_.store(init, ::std::memory_order_relaxed);

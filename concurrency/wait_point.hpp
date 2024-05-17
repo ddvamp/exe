@@ -94,9 +94,8 @@ class WaitPoint {
   // Throws: system_error
   // Error conditions:
   //  -  resource_unavailable_try_again (condvar)
-  explicit WaitPoint(State const already_have = 0)
-      : state_(SetHelpingBit(already_have)) {
-    UTILS_ASSERT(already_have < Mask::helping_bit,
+  explicit WaitPoint(State const init = 0) : state_(SetHelpingBit(init)) {
+    UTILS_ASSERT(init < Mask::helping_bit,
                  "Initializer does not fit into the counter");
   }
 
