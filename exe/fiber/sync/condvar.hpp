@@ -17,14 +17,15 @@ namespace exe::fiber {
 
 class CondVar {
  private:
-  struct Waiter final : ISuspendingAwaiter, Mutex::FiberInfo {
+  struct Waiter final : IAwaiter, Mutex::FiberInfo {
     CondVar *cv_;
 
     explicit Waiter(CondVar *cv) noexcept : cv_(cv) {}
 
-    void AwaitSuspend(FiberHandle &&current) noexcept override {
-      handle_ = ::std::move(current);
+    FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
+      handle_ = ::std::move(self);
       cv_->WaitImpl(this);
+      return FiberHandle::Invalid();
     }
   };
 

@@ -35,9 +35,10 @@ struct ContextGuard {
   return current;
 }
 
-struct YieldAwaiter final : ISuspendingAwaiter {
-  void AwaitSuspend(FiberHandle &&h) noexcept override {
-    ::std::move(h).Schedule();
+struct YieldAwaiter final : IAwaiter {
+  FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
+    ::std::move(self).Schedule();
+    return FiberHandle::Invalid();
   }
 };
 
@@ -46,14 +47,10 @@ struct SwitchAwaiter final : IAwaiter {
 
   explicit SwitchAwaiter(FiberHandle &target) noexcept : target_(target) {}
 
-  void AwaitSuspend(FiberHandle &&) noexcept override {
-    // pass
-  }
-
-  FiberHandle AwaitSymmetricSuspend(FiberHandle &&from) override {
+  FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
     // Prevents race condition
-    ::utils::defer cleanup([&from]() noexcept {
-        ::std::move(from).Schedule(); 
+    ::utils::defer cleanup([&self]() noexcept {
+        ::std::move(self).Schedule(); 
     });
     return ::std::move(target_);
   }

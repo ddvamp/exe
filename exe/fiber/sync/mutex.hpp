@@ -35,12 +35,8 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
 
     explicit LockAwaiter(Mutex *m) noexcept : m_(m) {}
 
-    void AwaitSuspend(FiberHandle &&) noexcept override {
-      // pass
-    }
-
-    FiberHandle AwaitSymmetricSuspend(FiberHandle &&current) noexcept override {
-      handle_ = ::std::move(current);
+    FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
+      handle_ = ::std::move(self);
       return m_->LockImpl(this);
     }
   };

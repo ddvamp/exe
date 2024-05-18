@@ -22,16 +22,16 @@ namespace exe::fiber {
 // and sharing data through it
 class Event {
  private:
-  struct Waiter final : ISuspendingAwaiter,
-                        ::concurrency::IntrusiveForwardListNode<> {
+  struct Waiter final : IAwaiter, ::concurrency::IntrusiveForwardListNode<> {
     Event *event_;
     FiberHandle handle_;
 
     explicit Waiter(Event *event) noexcept : event_(event) {}
 
-    void AwaitSuspend(FiberHandle &&current) noexcept override {
-      handle_ = ::std::move(current);
+    FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
+      handle_ = ::std::move(self);
       event_->WaitImpl(this);
+      return FiberHandle::Invalid();
     }
   };
 

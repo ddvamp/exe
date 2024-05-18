@@ -30,12 +30,8 @@ class Barrier {
 
     explicit Waiter(Barrier *barrier) noexcept : barrier_(barrier) {}
 
-    void AwaitSuspend(FiberHandle &&) noexcept override {
-      // pass
-    }
-
-    FiberHandle AwaitSymmetricSuspend(FiberHandle &&current) noexcept override {
-      handle_ = ::std::move(current);
+    FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
+      handle_ = ::std::move(self);
       return barrier_->ArriveImpl(this);
     }
   };
