@@ -3,8 +3,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_UTILS_DEBUG_UNREACHABLE_H_INCLUDED_
-#define DDVAMP_UTILS_DEBUG_UNREACHABLE_H_INCLUDED_ 1
+#ifndef DDVAMP_UTILS_DEBUG_UNREACHABLE_HPP_INCLUDED_
+#define DDVAMP_UTILS_DEBUG_UNREACHABLE_HPP_INCLUDED_ 1
 
 // To disable, set macro UTILS_DISABLE_DEBUG
 
@@ -32,4 +32,4 @@ namespace utils::detail {
 #	error "UTILS_UNREACHABLE macro is already defined somewhere else"
 #endif
 
-#endif  /* DDVAMP_UTILS_DEBUG_UNREACHABLE_H_INCLUDED_ */
+#endif  /* DDVAMP_UTILS_DEBUG_UNREACHABLE_HPP_INCLUDED_ */
