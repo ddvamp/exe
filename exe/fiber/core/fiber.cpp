@@ -17,6 +17,18 @@ namespace {
 
 thread_local Fiber *current = nullptr;
 
+struct ContextGuard {
+  Fiber *from;
+
+  explicit ContextGuard(Fiber *to, Fiber *from) noexcept : from(from) {
+    current = to;
+  }
+
+  ~ContextGuard() {
+    current = from;
+  }
+};
+
 [[nodiscard]] bool AmIFiber() noexcept {
   return current;
 }
@@ -84,10 +96,8 @@ void Fiber::ReleaseResources() noexcept {
 }
 
 void Fiber::Step() noexcept {
-  auto const pred = current;
-  current = this;
+  ContextGuard guard(this, nullptr);
   coroutine_.Resume();
-  current = pred;
 }
 
 Fiber *Fiber::DoRun() noexcept {
@@ -106,8 +116,9 @@ Fiber *Fiber::DoRun() noexcept {
 }
 
 /* virtual */ void Fiber::Run() noexcept {
-  auto next = this;
-  while ((next = next->DoRun()));
+  ContextGuard guard(nullptr, current);
+  auto fiber = this;
+  while ((fiber = fiber->DoRun()));
 }
 
 void Fiber::DestroySelf() noexcept {
