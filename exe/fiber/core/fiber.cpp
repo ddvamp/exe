@@ -11,6 +11,8 @@
 #include <utils/debug.hpp>
 #include <utils/defer.hpp>
 
+#include <exe/fiber/api.hpp>
+
 namespace exe::fiber {
 
 namespace {
@@ -63,15 +65,14 @@ struct SwitchAwaiter final : IAwaiter {
 ////////////////////////////////////////////////////////////////////////////////
 
 
+/* static */ Fiber *Fiber::Create(Body &&body, IScheduler *scheduler) {
+  return ::new Fiber(::std::move(body), AllocateStack(), scheduler);
+}
+
 /* static */ Fiber &Fiber::Self() noexcept {
   UTILS_ASSERT(AmIFiber(), "Not in the fiber context");
   return *current;
 }
-
-Fiber::Fiber(Body &&body, Stack &&stack, IScheduler *scheduler) noexcept
-    : stack_(::std::move(stack))
-    , coroutine_(::std::move(body), stack_.View())
-    , scheduler_(scheduler) {}
 
 void Fiber::Schedule() noexcept {
   scheduler_->Submit(this);
@@ -91,13 +92,15 @@ void Fiber::TeleportTo(IScheduler *scheduler) noexcept {
   self::Yield();
 }
 
-void Fiber::ReleaseResources() noexcept {
-  DeallocateStack(::std::move(stack_));
-}
+Fiber::Fiber(Body &&body, Stack &&stack, IScheduler *scheduler) noexcept
+    : stack_(::std::move(stack))
+    , coroutine_(::std::move(body), stack_.View())
+    , scheduler_(scheduler) {}
 
-void Fiber::Step() noexcept {
-  ContextGuard guard(this, nullptr);
-  coroutine_.Resume();
+/* virtual */ void Fiber::Run() noexcept {
+  ContextGuard guard(nullptr, current);
+  auto fiber = this;
+  while ((fiber = fiber->DoRun()));
 }
 
 Fiber *Fiber::DoRun() noexcept {
@@ -109,16 +112,18 @@ Fiber *Fiber::DoRun() noexcept {
     return nullptr;
   }
 
-  auto const awaiter = ::std::exchange(awaiter_, nullptr);
-  UTILS_ASSUME(awaiter, "nullptr instead of awaiter");
-  auto next = awaiter->AwaitSymmetricSuspend(FiberHandle(this));
-  return next.Release();
+  UTILS_ASSUME(awaiter_, "nullptr instead of awaiter");
+  return awaiter_->AwaitSymmetricSuspend(FiberHandle(this)).Release();
 }
 
-/* virtual */ void Fiber::Run() noexcept {
-  ContextGuard guard(nullptr, current);
-  auto fiber = this;
-  while ((fiber = fiber->DoRun()));
+void Fiber::Step() noexcept {
+  ContextGuard guard(this, nullptr);
+  awaiter_ = nullptr;
+  coroutine_.Resume();
+}
+
+void Fiber::Stop() noexcept {
+  coroutine_.Suspend();
 }
 
 void Fiber::DestroySelf() noexcept {
@@ -126,17 +131,12 @@ void Fiber::DestroySelf() noexcept {
   delete this;
 }
 
-void Fiber::Stop() noexcept {
-  coroutine_.Suspend();
+void Fiber::ReleaseResources() noexcept {
+  DeallocateStack(::std::move(stack_));
 }
 
 /* static */ FiberId Fiber::GetNextId() noexcept {
-  static ::std::atomic<FiberId> next_id = kInvalidFiberId + 1;
-  return next_id.fetch_add(1, ::std::memory_order_relaxed);
-}
-
-Fiber *CreateFiber(Body &&body, IScheduler *scheduler) {
-  return ::new Fiber(::std::move(body), AllocateStack(), scheduler);
+  return next_id_.fetch_add(1, ::std::memory_order_relaxed);
 }
 
 
@@ -177,8 +177,7 @@ void TeleportTo(IScheduler &scheduler) noexcept {
 
 void Go(IScheduler &scheduler, Body &&body) {
   UTILS_ASSERT(body, "Empty body for fiber");
-  auto fiber = CreateFiber(::std::move(body), &scheduler);
-  fiber->Schedule();
+  Fiber::Create(::std::move(body), &scheduler)->Schedule();
 }
 
 void Go(Body &&body) {

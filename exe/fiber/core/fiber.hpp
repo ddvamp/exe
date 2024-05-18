@@ -11,7 +11,6 @@
 #include "awaiter.hpp"
 #include "coroutine.hpp"
 #include <exe/sched/task/task.hpp>
-#include <exe/fiber/api.hpp>
 #include "id.hpp"
 #include "scheduler.hpp"
 #include "stack.hpp"
@@ -19,7 +18,7 @@
 namespace exe::fiber {
 
 // Fiber = stackful coroutine + scheduler
-class [[nodiscard]] Fiber : public sched::task::TaskBase {
+class [[nodiscard]] Fiber final : private sched::task::TaskBase {
  private:
   Stack stack_;
   Coroutine coroutine_;
@@ -27,11 +26,17 @@ class [[nodiscard]] Fiber : public sched::task::TaskBase {
   IAwaiter *awaiter_ = nullptr;
   FiberId const id_ = GetNextId();
 
- public:
-  // Reference to currently active fiber
-  [[nodiscard]] static Fiber &Self() noexcept;
+  inline static ::std::atomic<FiberId> next_id_ = kInvalidFiberId + 1;
 
-  Fiber(Body &&, Stack &&, IScheduler *) noexcept;
+  // To guarantee the expected implementation
+  static_assert(::std::atomic<FiberId>::is_always_lock_free);
+
+ public:
+  // Create an self-ownership fiber
+  static [[nodiscard]] Fiber *Create(Body &&, IScheduler *);
+
+  // Reference to currently active fiber
+  static [[nodiscard]] Fiber &Self() noexcept;
 
   [[nodiscard]] FiberId GetId() const noexcept {
     return id_;
@@ -52,10 +57,11 @@ class [[nodiscard]] Fiber : public sched::task::TaskBase {
   // Reschedule current fiber on scheduler
   void TeleportTo(IScheduler *) noexcept;
 
+ private:
+  Fiber(Body &&, Stack &&, IScheduler *) noexcept;
+
   // ITask
   void Run() noexcept override;
-
- private:
   [[nodiscard]] Fiber *DoRun() noexcept;
 
   void Step() noexcept;
@@ -63,11 +69,8 @@ class [[nodiscard]] Fiber : public sched::task::TaskBase {
   void DestroySelf() noexcept;
   void ReleaseResources() noexcept;
 
-  [[nodiscard]] static FiberId GetNextId() noexcept;
+  static [[nodiscard]] FiberId GetNextId() noexcept;
 };
-
-// Create an self-ownership fiber
-[[nodiscard]] Fiber *CreateFiber(Body &&, IScheduler *);
 
 }  // namespace exe::fiber
 

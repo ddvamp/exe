@@ -9,6 +9,7 @@
 #include <string_view>
 #include <utility>
 
+#include <utils/abort.hpp>
 #include <utils/debug/assert.hpp>
 
 namespace exe::fiber {
@@ -21,6 +22,7 @@ namespace {
   case Coroutine::Status::active:    return "active";
   case Coroutine::Status::inactive:  return "inactive";
   case Coroutine::Status::completed: return "completed";
+  default: UTILS_ABORT("Unexpected Coroutine::Status");
   };
 }
 
