@@ -32,24 +32,20 @@ template <typename T>
 concept ref_counted = is_ref_counted_v<T>;
 
 
-namespace detail {
-
-template <typename T>
-struct ref_validator {
-  constexpr ~ref_validator() {
-    static_assert(ref_counted<T>, "The class does not inherit ref_count or "
-                                  "has not defined the function destroy_self");
-  }
-};
-
-}  // namespace detail
+#ifndef UTILS_REF_VALIDATE_TYPE
+# define UTILS_REF_VALIDATE_TYPE(T)                                         \
+      static_assert(ref_counted<T>,                                         \
+                    "Class " #T " does not inherit ref_count<" #T "> or "   \
+                    "has not defined the function destroy_self()")
+#else
+# error "UTILS_REF_VALIDATE_TYPE macro is already defined somewhere else"
+#endif
 
 
 template <typename T>
 class [[nodiscard]] ref {
  private:
   T *ptr_ = nullptr;
-  UTILS_NO_UNIQUE_ADDRESS detail::ref_validator<T> v_;
 
  public:
   constexpr ~ref() {
@@ -77,7 +73,7 @@ class [[nodiscard]] ref {
   constexpr explicit ref(T *ptr) noexcept : ptr_(ptr) {}
 
   [[nodiscard]] ::std::size_t use_count() const noexcept {
-    return ptr_ ? ptr_->use_count() : 0;
+    return ptr_ ? get_checked()->use_count() : 0;
   }
 
   void swap(ref &that) noexcept {
@@ -97,11 +93,11 @@ class [[nodiscard]] ref {
   }
 
   [[nodiscard]] T &operator* () const noexcept {
-    return *get();
+    return *ptr_;
   }
 
   [[nodiscard]] T *operator-> () const noexcept {
-    return get();
+    return get_checked();
   }
 
   explicit operator bool() const noexcept {
@@ -109,15 +105,20 @@ class [[nodiscard]] ref {
   }
 
  private:
+  [[nodiscard]] T *get_checked() const noexcept {
+    UTILS_REF_VALIDATE_TYPE(T);
+    return ptr_;
+  }
+
   void inc_ref() const noexcept {
     if (ptr_) {
-      ptr_->inc_ref();
+      get_checked()->inc_ref();
     }
   }
 
   void dec_ref() const noexcept {
     if (ptr_) {
-      ptr_->dec_ref();
+      get_checked()->dec_ref();
     }
   }
 };

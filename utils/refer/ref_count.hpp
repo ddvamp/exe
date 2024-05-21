@@ -20,13 +20,14 @@ template <typename Derived>
 class ref_count {
  private:
   mutable ::std::atomic<::std::size_t> cnt_;
-  UTILS_NO_UNIQUE_ADDRESS detail::ref_validator<Derived> v_;
 
   // To guarantee the expected implementation
   static_assert(::std::atomic<::std::size_t>::is_always_lock_free);
 
  public:
-  constexpr explicit ref_count(::std::size_t init = 1) noexcept : cnt_(init) {}
+  constexpr explicit ref_count(::std::size_t init = 1) noexcept : cnt_(init) {
+    UTILS_REF_VALIDATE_TYPE(Derived);
+  }
 
   [[nodiscard]] ::std::size_t use_count() const noexcept {
     return cnt_.load(::std::memory_order_relaxed);
@@ -37,6 +38,8 @@ class ref_count {
   }
 
   void dec_ref() const noexcept {
+    UTILS_REF_VALIDATE_TYPE(Derived);
+
     auto const before = cnt_.fetch_sub(1, ::std::memory_order_acq_rel);
     if (before > 1) {
       return;
