@@ -22,6 +22,9 @@ class ref_count {
   mutable ::std::atomic<::std::size_t> cnt_;
   UTILS_NO_UNIQUE_ADDRESS detail::ref_validator<Derived> v_;
 
+  // To guarantee the expected implementation
+  static_assert(::std::atomic<::std::size_t>::is_always_lock_free);
+
  public:
   constexpr explicit ref_count(::std::size_t init = 1) noexcept : cnt_(init) {}
 
