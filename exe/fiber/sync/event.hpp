@@ -90,14 +90,14 @@ class Event {
   }
 
   [[nodiscard]] Node *GetWaiters() noexcept {
-    return dummy_.next_.exchange(&dummy_, ::std::memory_order_acq_rel);  // ?release
+    return dummy_.next_.exchange(&dummy_, ::std::memory_order_release);
   }
 
   void WaitImpl(Waiter *self) noexcept {
     Node *expected = nullptr;
     auto node = tail_.exchange(self, ::std::memory_order_acq_rel);
     if (node->next_.compare_exchange_strong(expected, self,
-            ::std::memory_order_release,  // ?relaxed
+            ::std::memory_order_relaxed,
             ::std::memory_order_acquire)) [[likely]] {
       return;
     }
@@ -119,9 +119,12 @@ class Event {
   void ScheduleWaiters(Node *waiter) const noexcept {
     do {
       auto next = waiter->next_.load(::std::memory_order_relaxed);
-      if (!next && !(next = waiter->next_.exchange(waiter, 
-                         ::std::memory_order_release))) {
-        return;
+      if (!next) [[unlikely]] {
+        if (waiter->next_.compare_exchange_strong(next, waiter,
+                ::std::memory_order_release,
+                ::std::memory_order_relaxed)) [[likely]] {
+          return;
+        }
       }
 
       ::std::move(static_cast<Waiter *>(waiter)->handle_).Schedule();
