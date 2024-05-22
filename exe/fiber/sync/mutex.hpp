@@ -7,7 +7,7 @@
 #define DDVAMP_EXE_FIBER_SYNC_MUTEX_HPP_INCLUDED_ 1
 
 #include <atomic>
-#include <mutex>
+#include <mutex>  // std::lock_guard, std::unique_lock
 #include <new>
 
 #include <concurrency/intrusive/forward_list.hpp>
@@ -44,8 +44,8 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
   using Node = FiberInfo::Node;
 
   Node dummy_{.next_ = &dummy_};
-  Node *head_ = &dummy_;  // known next owner or dummy
-  ::std::atomic<Node *> tail_ = &dummy_;  // last added or dummy
+  Node *head_ = &dummy_;
+  ::std::atomic<Node *> tail_ = &dummy_;
   ::std::atomic<FiberId> owner_ = kInvalidFiberId;
   
   // To guarantee the expected implementation
@@ -64,36 +64,27 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
   void operator= (Mutex &&) = delete;
 
  public:
-  Mutex() = default;
+  constexpr Mutex() = default;
 
   [[nodiscard]] bool TryLock() noexcept {
     UTILS_DEBUG_RUN(CheckRecursive);
-
-    if (IsLocked()) [[unlikely]] {
-      return false;
-    }
-
-    return dummy_.next_.compare_exchange_weak(::utils::temporary(&dummy_),
-                                              nullptr,
-                                              ::std::memory_order_acquire,
-                                              ::std::memory_order_relaxed);
+    auto const success = TryLockImpl();
+    UTILS_DEBUG_RUN(CheckLock, success);
+    return success;
   }
 
   void Lock() noexcept {
-    if (!TryLock()) [[unlikely]] {
-      LockCold();
+    UTILS_DEBUG_RUN(CheckRecursive);
+    if (!TryLockImpl()) [[unlikely]] {
+      LockAwaiter awaiter(this);
+      self::Suspend(awaiter);
     }
-
-    UTILS_DEBUG_RUN(CheckLock);
+    UTILS_DEBUG_RUN(CheckLock, true);
   }
 
   void Unlock() noexcept {
     UTILS_DEBUG_RUN(CheckUnlock);
-
-    auto next = UnlockImpl();
-    if (next.IsValid()) {
-      ::std::move(next).Schedule();
-    }
+    UnlockImpl();
   }
 
   // Cpp17Lockable
@@ -116,114 +107,113 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
     return dummy_.next_.load(::std::memory_order_relaxed) != &dummy_;
   }
 
-  void LockCold() noexcept {
-    LockAwaiter awaiter(this);
-    self::Suspend(awaiter);
+  [[nodiscard]] bool TryLockImpl() noexcept {
+    if (IsLocked()) [[unlikely]] {
+      return false;
+    }
+
+    return dummy_.next_.compare_exchange_weak(::utils::temporary(&dummy_),
+                                              nullptr,
+                                              ::std::memory_order_acquire,
+                                              ::std::memory_order_relaxed);
   }
 
   FiberHandle LockImpl(FiberInfo *self) noexcept {
     auto const owner = tail_.exchange(self, ::std::memory_order_acq_rel)->
-                       next_.exchange(self, ::std::memory_order_acq_rel);
+                       next_.exchange(self, ::std::memory_order_relaxed);
     if (!owner) [[likely]] {
       return FiberHandle::Invalid();
     }
 
-    if (IsActualFiber(owner)) [[unlikely]] {
-      head_ = self;
-      GetHandle(owner).Schedule();
-      return FiberHandle::Invalid();
-    }
-
-    dummy_.Link(nullptr);
-    return TakeLastFiber(self);
+    UTILS_IGNORE(owner->next_.load(::std::memory_order_acquire));  // sync
+    return Acquire(owner, self, true);
   }
 
-  FiberHandle UnlockImpl() noexcept {
-    auto succ = head_;
-    if (IsActualFiber(succ)) [[unlikely]] {
-      return TakeFiber(succ);
+  void UnlockImpl() noexcept {
+    auto const owner = head_;
+    auto const next = TryTakeNext(owner);
+    if (!next) [[likely]] {
+      return;
     }
 
-    if ((succ = TryTakeNext(succ))) [[unlikely]] {
-      dummy_.Link(nullptr);
-      return TakeFiber(succ);
-    }
-
-    return FiberHandle::Invalid();
+    UTILS_IGNORE(Acquire(owner, next, false));
   }
 
-  FiberHandle TakeFiber(Node *owner) noexcept {
-    auto const succ = owner->next_.load(::std::memory_order_acquire);
-    if (succ) {
-      head_ = succ;
-      return GetHandle(owner);
-    }
-
-    return TakeLastFiber(owner);
-  }
-
-  FiberHandle TakeLastFiber(Node *owner) noexcept {
-    auto succ = &dummy_;
-    if (tail_.compare_exchange_strong(::utils::temporary(+owner), &dummy_,
-                                      ::std::memory_order_release,
-                                      ::std::memory_order_relaxed) ||
-        (succ = TryTakeNext(owner))) {
-      head_ = succ;
-      return GetHandle(owner);
-    }
-
-    return FiberHandle::Invalid();
-  }
-
-  [[nodiscard]] bool IsActualFiber(Node *node) const noexcept {
-    return node != &dummy_;
-  }
-
-  static FiberHandle &&GetHandle(Node *node) noexcept {
+  static [[nodiscard]] FiberHandle &&GetHandle(Node *node) noexcept {
     [[assume(node)]];
     return ::std::move(*static_cast<FiberInfo *>(node)).handle_;
   }
 
-  [[nodiscard]] Node *TryTakeNext(Node *node) noexcept {
-    auto next = node->next_.load(::std::memory_order_acquire);
+  static [[nodiscard]] Node *TryTakeNext(Node *node) noexcept {
+    auto next = node->next_.load(::std::memory_order_relaxed);
     if (next) {
       return next;
     }
 
-    node->next_.compare_exchange_strong(next, head_ = node,
-                                        ::std::memory_order_release,
-                                        ::std::memory_order_acquire);
+    node->next_.compare_exchange_strong(next, node, ::std::memory_order_release,
+                                        ::std::memory_order_relaxed);
     return next;
   }
 
+  FiberHandle Acquire(Node *owner, Node *next, bool resume) noexcept {
+    if (owner == &dummy_) {
+      dummy_.Link(nullptr);
+      tail_.exchange(&dummy_, ::std::memory_order_acq_rel)->Link(&dummy_);
+
+      owner = next;
+      next = TryTakeNext(owner);
+      if (!next) [[unlikely]] {
+        return FiberHandle::Invalid();
+      }
+
+      if (resume) [[unlikely]] {
+        head_ = next;
+        return GetHandle(owner);
+      }
+    }
+
+    head_ = next;
+    GetHandle(owner).Schedule();
+    return FiberHandle::Invalid();
+  }
+
  private:
-  [[maybe_unused]] FiberId GetOwner() const noexcept {
-    return owner_.load(::std::memory_order_relaxed);
+  [[nodiscard, maybe_unused]] auto Owner() noexcept {
+    struct _ {
+      Mutex *m_;
+
+      operator FiberId () noexcept {
+        return m_->owner_.load(::std::memory_order_relaxed);
+      }
+
+      void operator= (FiberId id) noexcept {
+        m_->owner_.store(id, ::std::memory_order_relaxed);
+      }
+    };
+
+    return _{this};
   }
 
-  [[maybe_unused]] void SetOwner(FiberId const id) noexcept {
-    owner_.store(id, ::std::memory_order_relaxed);
+  [[maybe_unused]] void CheckOwner() noexcept {
+    UTILS_CHECK(Owner() == self::GetId(), "Fiber does not own this mutex");
   }
 
-  [[maybe_unused]] void CheckOwner() const noexcept {
-    UTILS_CHECK(GetOwner() == self::GetId(), "The mutex is not locked");
+  [[maybe_unused]] void CheckRecursive() noexcept {
+    UTILS_CHECK(Owner() != self::GetId(), "Fiber already owns this mutex");
   }
 
-  [[maybe_unused]] void CheckRecursive() const noexcept {
-    UTILS_CHECK(GetOwner() != self::GetId(),
-                "Attempt to recursively lock a mutex");
-  }
-
-  [[maybe_unused]] void CheckLock() noexcept {
-    UTILS_CHECK(GetOwner() == kInvalidFiberId,
-                "Attempt to lock a already locked mutex");
-    SetOwner(self::GetId());
+  [[maybe_unused]] void CheckLock(bool success) noexcept {
+    if (success) [[likely]] {
+      UTILS_CHECK(Owner() == kInvalidFiberId,
+                  "Fiber has locked an already locked mutex");
+      Owner() = self::GetId();
+    }
   }
 
   [[maybe_unused]] void CheckUnlock() noexcept {
-    UTILS_CHECK(GetOwner() == self::GetId(),
-                "Attempt to unlock a mutex without ownership");
-    SetOwner(kInvalidFiberId);
+    UTILS_CHECK(Owner() == self::GetId(),
+                "Fiber unlocks a mutex that it does not own");
+    Owner() = kInvalidFiberId;
   }
 };
 
