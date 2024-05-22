@@ -20,10 +20,10 @@
 
 namespace exe::fiber {
 
-class CondVar;
+class Condvar;
 
 class alignas (::std::hardware_destructive_interference_size) Mutex {
-  friend class CondVar;
+  friend class Condvar;
 
  private:
   struct FiberInfo : ::concurrency::IntrusiveForwardListNode<> {
@@ -195,7 +195,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
   }
 
   [[maybe_unused]] void CheckOwner() noexcept {
-    UTILS_CHECK(Owner() == self::GetId(), "Fiber does not own this mutex");
+    UTILS_CHECK(Owner() == self::GetId(), "Fiber does not own condvar mutex");
   }
 
   [[maybe_unused]] void CheckRecursive() noexcept {

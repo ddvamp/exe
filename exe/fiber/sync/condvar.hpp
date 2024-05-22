@@ -6,7 +6,6 @@
 #ifndef DDVAMP_EXE_FIBER_SYNC_CONDVAR_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_SYNC_CONDVAR_HPP_INCLUDED_ 1
 
-#include <cstdint>
 #include <utility>
 
 #include <exe/fiber/api.hpp>
@@ -15,12 +14,12 @@
 
 namespace exe::fiber {
 
-class CondVar {
+class Condvar {
  private:
   struct Waiter final : IAwaiter, Mutex::FiberInfo {
-    CondVar *cv_;
+    Condvar *cv_;
 
-    explicit Waiter(CondVar *cv) noexcept : cv_(cv) {}
+    explicit Waiter(Condvar *cv) noexcept : cv_(cv) {}
 
     FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
       handle_ = ::std::move(self);
@@ -36,44 +35,50 @@ class CondVar {
   Node *tail_;
 
  public:
-  ~CondVar() = default;
+  ~Condvar() = default;
 
-  CondVar(CondVar const &) = delete;
-  void operator= (CondVar const &) = delete;
+  Condvar(Condvar const &) = delete;
+  void operator= (Condvar const &) = delete;
 
-  CondVar(CondVar &&) = delete;
-  void operator= (CondVar &&) = delete;
+  Condvar(Condvar &&) = delete;
+  void operator= (Condvar &&) = delete;
 
  public:
-  explicit CondVar(Mutex &m) noexcept : m_(m) {}
+  constexpr explicit Condvar(Mutex &m) noexcept : m_(m) {}
 
   /* ATTENTION: All methods below require a locked m_! */
 
   void Wait() noexcept {
-    UTILS_DEBUG_RUN(m_.CheckOwner);
-
+    UTILS_DEBUG_RUN(m_.CheckUnlock);
     Waiter awaiter(this);
     self::Suspend(awaiter);
+    UTILS_DEBUG_RUN(m_.CheckLock, true);
   }
 
   template <typename Predicate>
   void Wait(Predicate &&stop_waiting) noexcept {
     UTILS_DEBUG_RUN(m_.CheckOwner);
-
     while (!stop_waiting()) {
       Wait();
     }
   }
 
   void NotifyOne() noexcept {
+    UTILS_DEBUG_RUN(m_.CheckOwner);
     NotifyImpl(false);
   }
 
   void NotifyAll() noexcept {
+    UTILS_DEBUG_RUN(m_.CheckOwner);
     NotifyImpl(true);
   }
 
  private:
+  void Enqueue(Node *head, Node *tail) const noexcept {
+    tail->Link(m_.head_);
+    m_.head_ = head;
+  }
+
   void WaitImpl(Mutex::FiberInfo *self) noexcept {
     if (head_) {
       tail_->next_.store(self, ::std::memory_order_relaxed);
@@ -82,13 +87,11 @@ class CondVar {
       tail_ = head_ = self;
     }
 
-    m_.Unlock();
+    m_.UnlockImpl();
   }
 
   void NotifyImpl(bool const all) noexcept {
-    UTILS_DEBUG_RUN(m_.CheckOwner);
-
-    if (!head_) {
+    if (!head_) [[unlikely]] {
       return;
     }
 
@@ -96,11 +99,6 @@ class CondVar {
     auto const tail = all ? tail_ : head_;
     head_ = tail->next_.load(::std::memory_order_relaxed);
     Enqueue(head, tail);
-  }
-
-  void Enqueue(Node *head, Node *tail) const noexcept {
-    tail->Link(m_.head_);
-    m_.head_ = head;
   }
 };
 
