@@ -8,6 +8,8 @@
 
 #include "core/awaiter.hpp"
 #include "core/body.hpp"
+#include "core/fwd.hpp"
+#include "core/handle.hpp"
 #include "core/id.hpp"
 #include "core/scheduler.hpp"
 
@@ -22,6 +24,7 @@ void Go(IScheduler &where, Body &&body);
 //
 // Precondition: body == true && in fiber context
 void Go(Body &&body);
+
 
 // Precondition: in fiber context
 namespace self {
@@ -44,6 +47,23 @@ void SwitchTo(FiberHandle &&next) noexcept;
 void TeleportTo(IScheduler &scheduler) noexcept;
 
 }  // namespace self
+
+
+// Prevents context switching until the end of the scope
+class NoSwitchContextGuard {
+ private:
+	Fiber *self;
+
+ public:
+	NoSwitchContextGuard() noexcept;
+	~NoSwitchContextGuard();
+
+	NoSwitchContextGuard(NoSwitchContextGuard const &) = delete;
+	void operator= (NoSwitchContextGuard const &) = delete;
+
+	NoSwitchContextGuard(NoSwitchContextGuard &&) = delete;
+	void operator= (NoSwitchContextGuard &&) = delete;
+};
 
 }  // namespace exe::fiber
 

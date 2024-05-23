@@ -181,4 +181,13 @@ void Go(Body &&body) {
   Go(self::GetScheduler(), ::std::move(body));
 }
 
+
+NoSwitchContextGuard::NoSwitchContextGuard() noexcept : self(current) {
+  current = nullptr;
+}
+
+NoSwitchContextGuard::~NoSwitchContextGuard() {
+  current = self;
+}
+
 }  // namespace exe::fiber
