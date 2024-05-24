@@ -46,7 +46,7 @@ class Task final : public TaskBase {
 }  // namespace detail
 
 // TODO: What to do with the loss of fn on exception?
-template <concepts::Scheduler S, typename Fn>
+template <concepts::UnsafeScheduler S, typename Fn>
 void Submit(S &scheduler, Fn &&fn) {
   using Task = detail::Task<::std::remove_cvref_t<Fn>>;
   auto task = ::std::make_unique<Task>(::std::forward<Fn>(fn));
@@ -54,7 +54,7 @@ void Submit(S &scheduler, Fn &&fn) {
   task.release();
 }
 
-template <concepts::NothrowScheduler S, typename Fn>
+template <concepts::SafeScheduler S, typename Fn>
 void Submit(S &scheduler, Fn &&fn) {
   auto const task = ::new detail::Task(::std::forward<Fn>(fn));
   scheduler.Submit(task);

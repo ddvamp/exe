@@ -117,7 +117,7 @@ Strand::Strand(IScheduler &underlying) : impl_(Impl::Create(underlying)) {}
   impl_->Submit(task);
 }
 
-task::INothrowScheduler &Strand::GetUnderlying() const noexcept {
+task::ISafeScheduler &Strand::GetUnderlying() const noexcept {
   return impl_->GetUnderlying();
 }
 

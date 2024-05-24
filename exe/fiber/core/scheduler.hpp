@@ -10,7 +10,7 @@
 
 namespace exe::fiber {
 
-using IScheduler = sched::task::INothrowScheduler;
+using IScheduler = sched::task::ISafeScheduler;
 
 }  // namespace exe::fiber
 

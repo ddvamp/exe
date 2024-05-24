@@ -12,7 +12,7 @@
 
 namespace exe::sched {
 
-class RunLoop final : public task::INothrowScheduler {
+class RunLoop final : public task::ISafeScheduler {
  private:
    // TODO: Intrusive queue
    task::TaskBase *head_ = nullptr;

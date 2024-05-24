@@ -11,7 +11,7 @@
 namespace exe::sched {
 
 // Executes task immediately at place
-class [[nodiscard]] Inline : public task::INothrowScheduler {
+class [[nodiscard]] Inline : public task::ISafeScheduler {
  public:
   void Submit(task::TaskBase *) noexcept override;
 };

@@ -18,7 +18,8 @@ struct IScheduler {
   virtual void Submit(TaskBase *) = 0;
 };
 
-struct INothrowScheduler : IScheduler {
+// Safe means nothrow task scheduling
+struct ISafeScheduler : IScheduler {
   void Submit(TaskBase *) noexcept override = 0;
 };
 
@@ -29,8 +30,10 @@ template <typename S>
 concept Scheduler = ::std::derived_from<S, IScheduler>;
 
 template <typename S>
-concept NothrowScheduler = Scheduler<S> &&
-                           ::std::derived_from<S, INothrowScheduler>;
+concept SafeScheduler = Scheduler<S> && ::std::derived_from<S, ISafeScheduler>;
+
+template <typename S>
+concept UnsafeScheduler = Scheduler<S> && !SafeScheduler<S>;
 
 }  // namespace concepts
 

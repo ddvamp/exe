@@ -17,9 +17,9 @@ namespace exe::sched {
 // it moves critical sections, thereby allowing the data to be in cache
 // all the time. Sending critical sections is wait-free except for launching
 // new critical sections of the strand itself
-class Strand final : public task::INothrowScheduler {
+class Strand final : public task::ISafeScheduler {
  private:
-  using IScheduler = INothrowScheduler;
+  using IScheduler = ISafeScheduler;
 
   class Impl;
   ::utils::ref<Impl> impl_;
