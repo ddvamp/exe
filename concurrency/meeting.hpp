@@ -29,7 +29,7 @@ class Meeting {
     Reset(init);
   }
 
-  // In case of reusing instance
+  // In case of instance reuse
   void Reset(Count const init) noexcept {
     UTILS_ASSERT(init > 1, "At least two participants are required");
     seats_.store(init, ::std::memory_order_relaxed);
