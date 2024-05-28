@@ -16,4 +16,4 @@ inline static constexpr FiberId kInvalidFiberId = -1;
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_CORE_ID_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_CORE_ID_HPP_INCLUDED_ */

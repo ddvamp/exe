@@ -18,10 +18,10 @@ namespace util {
 
 }  // namespace util
 
-#ifndef UTIL_ABORT
-#	define UTIL_ABORT(...) ::util::abort(__VA_ARGS__) 
-#else
+#ifdef UTIL_ABORT
 # error "UTIL_ABORT macro is already defined somewhere else"
+#else
+#	define UTIL_ABORT(...) ::util::abort(__VA_ARGS__) 
 #endif
 
 #endif  /* DDVAMP_UTIL_ABORT_HPP_INCLUDED_ */

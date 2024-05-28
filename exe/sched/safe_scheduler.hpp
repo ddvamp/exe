@@ -43,4 +43,4 @@ class SafeScheduler : public task::ISafeScheduler {
 
 }  // namespace exe::sched
 
-#endif /* DDVAMP_EXE_SCHED_SAFE_SCHEDULER_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_SCHED_SAFE_SCHEDULER_HPP_INCLUDED_ */

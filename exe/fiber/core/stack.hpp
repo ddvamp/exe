@@ -18,4 +18,4 @@ void DeallocateStack(Stack &&stack) noexcept;
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_CORE_STACK_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_CORE_STACK_HPP_INCLUDED_ */

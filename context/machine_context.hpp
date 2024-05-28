@@ -8,4 +8,4 @@
 
 #include "arch/x86_64/machine_context.hpp"
 
-#endif /* DDVAMP_CONTEXT_MACHINE_CONTEXT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONTEXT_MACHINE_CONTEXT_HPP_INCLUDED_ */

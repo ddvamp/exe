@@ -64,4 +64,4 @@ class ExecutionContext {
 
 }  // namespace context
 
-#endif /* DDVAMP_CONTEXT_CONTEXT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONTEXT_CONTEXT_HPP_INCLUDED_ */

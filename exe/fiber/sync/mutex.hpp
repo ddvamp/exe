@@ -219,4 +219,4 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_SYNC_MUTEX_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_SYNC_MUTEX_HPP_INCLUDED_ */

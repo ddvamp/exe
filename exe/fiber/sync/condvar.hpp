@@ -106,4 +106,4 @@ class Condvar {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_SYNC_CONDVAR_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_SYNC_CONDVAR_HPP_INCLUDED_ */

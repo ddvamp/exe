@@ -135,4 +135,4 @@ class Event {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_SYNC_EVENT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_SYNC_EVENT_HPP_INCLUDED_ */

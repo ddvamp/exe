@@ -14,4 +14,4 @@ using Body = ::std::move_only_function<void() noexcept>;
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_CORE_BODY_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_CORE_BODY_HPP_INCLUDED_ */

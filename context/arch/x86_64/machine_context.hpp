@@ -27,4 +27,4 @@ class MachineContext {
 
 }  // namespace context
 
-#endif /* DDVAMP_CONTEXT_ARCH_X86_64_MACHINE_CONTEXT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONTEXT_ARCH_X86_64_MACHINE_CONTEXT_HPP_INCLUDED_ */

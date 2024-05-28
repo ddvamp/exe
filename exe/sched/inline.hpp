@@ -20,4 +20,4 @@ class Inline &Inline() noexcept;
 
 }  // namespace exe::sched
 
-#endif /* DDVAMP_EXE_SCHED_INLINE_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_SCHED_INLINE_HPP_INCLUDED_ */

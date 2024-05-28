@@ -51,4 +51,4 @@ class Coroutine : public ::context::ITrampoline {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_CORE_COROUTINE_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_CORE_COROUTINE_HPP_INCLUDED_ */

@@ -26,4 +26,4 @@ class ITrampoline {
 
 }  // namespace context
 
-#endif /* DDVAMP_CONTEXT_TRAMPOLINE_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONTEXT_TRAMPOLINE_HPP_INCLUDED_ */

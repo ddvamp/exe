@@ -9,10 +9,9 @@
 #include <atomic>
 #include <cstddef>
 
+#include "ref.hpp"
 #include <util/debug/assert.hpp>
 #include <util/macro.hpp>
-
-#include "ref.hpp"
 
 namespace util {
 
@@ -53,4 +52,4 @@ class ref_count {
 
 }  // namespace util
 
-#endif /* DDVAMP_UTIL_REFER_REF_COUNT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTIL_REFER_REF_COUNT_HPP_INCLUDED_ */

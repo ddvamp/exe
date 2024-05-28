@@ -14,4 +14,4 @@ using IScheduler = sched::task::ISafeScheduler;
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_CORE_SCHEDULER_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_CORE_SCHEDULER_HPP_INCLUDED_ */

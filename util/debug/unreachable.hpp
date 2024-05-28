@@ -22,14 +22,12 @@ namespace util::detail {
 }  // namespace util::detail
 
 // Debug unreachable with passing an error message and location
-#ifndef UTIL_UNREACHABLE
-#	ifndef UTIL_DISABLE_DEBUG
-#		define UTIL_UNREACHABLE(...) ::util::detail::do_unreachable(__VA_ARGS__)
-#	else
-#		define UTIL_UNREACHABLE(...) ::std::unreachable()
-#	endif
-#else
+#ifdef UTIL_UNREACHABLE
 #	error "UTIL_UNREACHABLE macro is already defined somewhere else"
+#elif	defined UTIL_DISABLE_DEBUG
+# define UTIL_UNREACHABLE(...) ::std::unreachable()
+#else
+# define UTIL_UNREACHABLE(...) ::util::detail::do_unreachable(__VA_ARGS__)
 #endif
 
 #endif  /* DDVAMP_UTIL_DEBUG_UNREACHABLE_HPP_INCLUDED_ */

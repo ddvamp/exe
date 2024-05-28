@@ -52,4 +52,4 @@ class Meeting {
 
 }  // namespace concurrency
 
-#endif /* DDVAMP_CONCURRENCY_MEETING_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONCURRENCY_MEETING_HPP_INCLUDED_ */

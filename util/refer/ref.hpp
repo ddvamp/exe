@@ -32,13 +32,13 @@ template <typename T>
 concept ref_counted = is_ref_counted_v<T>;
 
 
-#ifndef UTIL_REF_VALIDATE_TYPE
+#ifdef UTIL_REF_VALIDATE_TYPE
+# error "UTIL_REF_VALIDATE_TYPE macro is already defined somewhere else"
+#else
 # define UTIL_REF_VALIDATE_TYPE(T)                                         \
       static_assert(ref_counted<T>,                                        \
                     "Class " #T " does not inherit ref_count<" #T "> or "  \
                     "has not defined the function destroy_self()")
-#else
-# error "UTIL_REF_VALIDATE_TYPE macro is already defined somewhere else"
 #endif
 
 
@@ -141,4 +141,4 @@ void swap(ref<T> &lhs, ref<T> &rhs) noexcept {
 
 }  // namespace util
 
-#endif /* DDVAMP_UTIL_REFER_REF_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTIL_REFER_REF_HPP_INCLUDED_ */

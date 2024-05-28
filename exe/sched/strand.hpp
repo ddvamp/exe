@@ -43,4 +43,4 @@ class Strand final : public task::ISafeScheduler {
 
 }  // namespace exe::sched
 
-#endif /* DDVAMP_EXE_SCHED_STRAND_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_SCHED_STRAND_HPP_INCLUDED_ */

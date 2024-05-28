@@ -87,4 +87,4 @@ class WaitGroup {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_SYNC_WAIT_GROUP_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_SYNC_WAIT_GROUP_HPP_INCLUDED_ */

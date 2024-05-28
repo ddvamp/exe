@@ -23,7 +23,9 @@ namespace util::detail {
 }  // namespace util::detail
 
 // Runtime check with passing an error message and location
-#ifndef UTIL_CHECK
+#ifdef UTIL_CHECK
+# error "UTIL_CHECK macro is already defined somewhere else"
+#else
 # define UTIL_CHECK(expr, ...)                          \
       do {                                              \
         if (expr) [[likely]] {                          \
@@ -31,30 +33,24 @@ namespace util::detail {
         }                                               \
         ::util::detail::do_assert(#expr, __VA_ARGS__);  \
       } while (false)
-#else
-# error "UTIL_CHECK macro is already defined somewhere else"
 #endif
 
 // Debug assert with passing an error message and location
-#ifndef UTIL_ASSERT
-# ifndef UTIL_DISABLE_DEBUG
-#	  define UTIL_ASSERT(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
-# else
-#	  define UTIL_ASSERT(expr, ...) UTIL_NOTHING
-# endif
-#else
+#ifdef UTIL_ASSERT
 # error "UTIL_ASSERT macro is already defined somewhere else"
+#elif defined UTIL_DISABLE_DEBUG
+#	define UTIL_ASSERT(expr, ...) UTIL_NOTHING
+#else
+#	define UTIL_ASSERT(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
 #endif
 
 // Similar to UTIL_ASSERT, but anyway calculates expr
-#ifndef UTIL_VERIFY
-# ifndef UTIL_DISABLE_DEBUG
-#	  define UTIL_VERIFY(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
-# else
-#	  define UTIL_VERIFY(expr, ...) UTIL_IGNORE(expr)
-# endif
-#else
+#ifdef UTIL_VERIFY
 # error "UTIL_VERIFY macro is already defined somewhere else"
+#elif defined UTIL_DISABLE_DEBUG
+#	define UTIL_VERIFY(expr, ...) UTIL_IGNORE(expr)
+#else
+#	define UTIL_VERIFY(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
 #endif
 
 #endif  /* DDVAMP_UTIL_DEBUG_ASSERT_HPP_INCLUDED_ */

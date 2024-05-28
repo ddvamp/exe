@@ -40,4 +40,4 @@ class Rendezvous {
 
 }  // namespace concurrency
 
-#endif /* DDVAMP_CONCURRENCY_RENDEZVOUS_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONCURRENCY_RENDEZVOUS_HPP_INCLUDED_ */

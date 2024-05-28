@@ -65,4 +65,4 @@ class [[nodiscard]] Stack {
 
 }  // namespace context
 
-#endif /* DDVAMP_CONTEXT_STACK_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONTEXT_STACK_HPP_INCLUDED_ */

@@ -200,4 +200,4 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_SYNC_STRAND_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_SYNC_STRAND_HPP_INCLUDED_ */

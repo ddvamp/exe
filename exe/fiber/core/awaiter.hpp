@@ -20,4 +20,4 @@ struct IAwaiter {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_CORE_AWAITER_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_CORE_AWAITER_HPP_INCLUDED_ */

@@ -74,4 +74,4 @@ class [[nodiscard]] Fiber final : private sched::task::TaskBase {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_CORE_FIBER_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_CORE_FIBER_HPP_INCLUDED_ */

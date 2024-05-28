@@ -21,20 +21,18 @@ namespace util::detail {
 }  // namespace util::detail
 
 // Debug assume with passing an error message and location
-#ifndef UTIL_ASSUME
-# ifndef UTIL_DISABLE_DEBUG
-#	  define UTIL_ASSUME(expr, ...)                         \
-        do {                                              \
-          if (expr) [[likely]] {                          \
-            break;                                        \
-          }                                               \
-          ::util::detail::do_assume(#expr, __VA_ARGS__);  \
-        } while (false)
-# else
-#	  define UTIL_ASSUME(expr, ...) [[assume(expr)]]
-# endif
-#else
+#ifdef UTIL_ASSUME
 # error "UTIL_ASSUME macro is already defined somewhere else"
+#elif defined UTIL_DISABLE_DEBUG
+#	define UTIL_ASSUME(expr, ...) [[assume(expr)]]
+#else
+#	define UTIL_ASSUME(expr, ...)                         \
+      do {                                              \
+        if (expr) [[likely]] {                          \
+          break;                                        \
+        }                                               \
+        ::util::detail::do_assume(#expr, __VA_ARGS__);  \
+      } while (false)
 #endif
 
 #endif  /* DDVAMP_UTIL_DEBUG_ASSUME_HPP_INCLUDED_ */

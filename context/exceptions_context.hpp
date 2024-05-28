@@ -24,4 +24,4 @@ class ExceptionsContext {
 
 }  // namespace context
 
-#endif /* DDVAMP_CONTEXT_EXCEPTIONS_CONTEXT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_CONTEXT_EXCEPTIONS_CONTEXT_HPP_INCLUDED_ */

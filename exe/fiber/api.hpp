@@ -67,4 +67,4 @@ class NoSwitchContextGuard {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_API_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_API_HPP_INCLUDED_ */

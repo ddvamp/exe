@@ -104,4 +104,4 @@ class Barrier {
 
 }  // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_SYNC_BARRIER_HPP_INCLUDED_ */
+#endif  /* DDVAMP_EXE_FIBER_SYNC_BARRIER_HPP_INCLUDED_ */

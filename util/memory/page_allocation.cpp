@@ -8,10 +8,10 @@
 #include <cstddef>
 #include <memory>
 
-#include "util/debug/assert.hpp"
+#include <util/debug/assert.hpp>
 
 #if __has_include(<unistd.h>)
-#	include "util/memory/os/posix/page_allocation.hpp"
+#	include <util/memory/os/posix/page_allocation.hpp>
 #else
 #	error "Not POSIX-compliant environment"
 #endif
