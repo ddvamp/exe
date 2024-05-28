@@ -9,8 +9,8 @@
 #include <memory>
 #include <utility>
 
-#include <utils/macro.hpp>
-#include <utils/type_traits.hpp>
+#include <util/macro.hpp>
+#include <util/type_traits.hpp>
 
 #include "scheduler.hpp"
 #include "task.hpp"
@@ -20,14 +20,14 @@ namespace exe::sched::task {
 namespace detail {
 
 template <typename Fn>
-requires (::utils::is_all_of_v<::std::is_class_v<Fn>,
-                               ::std::is_nothrow_destructible_v<Fn>,
-                               ::std::is_nothrow_move_constructible_v<Fn>,
-                               ::std::is_nothrow_invocable_v<Fn &&> &&
-                               ::std::is_void_v<::std::invoke_result_t<Fn &&>>>)
+requires (::util::is_all_of_v<::std::is_class_v<Fn>,
+                              ::std::is_nothrow_destructible_v<Fn>,
+                              ::std::is_nothrow_move_constructible_v<Fn>,
+                              ::std::is_nothrow_invocable_v<Fn &&> &&
+                              ::std::is_void_v<::std::invoke_result_t<Fn &&>>>)
 class Task final : public TaskBase {
  private:
-  UTILS_NO_UNIQUE_ADDRESS Fn fn_;
+  UTIL_NO_UNIQUE_ADDRESS Fn fn_;
 
  public:
   Task(Fn fn) noexcept : fn_(::std::move(fn)) {}

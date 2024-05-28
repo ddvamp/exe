@@ -11,8 +11,8 @@
 #include <new>
 
 #include <concurrency/intrusive/forward_list.hpp>
-#include <utils/debug.hpp>
-#include <utils/utility.hpp>
+#include <util/debug.hpp>
+#include <util/utility.hpp>
 
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
@@ -54,7 +54,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
 
  public:
   ~Mutex() {
-    UTILS_ASSERT(!IsLocked(), "Mutex is destroyed during use");
+    UTIL_ASSERT(!IsLocked(), "Mutex is destroyed during use");
   }
 
   Mutex(Mutex const &) = delete;
@@ -67,23 +67,23 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
   constexpr Mutex() = default;
 
   [[nodiscard]] bool TryLock() noexcept {
-    UTILS_DEBUG_RUN(CheckRecursive);
+    UTIL_DEBUG_RUN(CheckRecursive);
     auto const success = TryLockImpl();
-    UTILS_DEBUG_RUN(CheckLock, success);
+    UTIL_DEBUG_RUN(CheckLock, success);
     return success;
   }
 
   void Lock() noexcept {
-    UTILS_DEBUG_RUN(CheckRecursive);
+    UTIL_DEBUG_RUN(CheckRecursive);
     if (!TryLockImpl()) [[unlikely]] {
       LockAwaiter awaiter(this);
       self::Suspend(awaiter);
     }
-    UTILS_DEBUG_RUN(CheckLock, true);
+    UTIL_DEBUG_RUN(CheckLock, true);
   }
 
   void Unlock() noexcept {
-    UTILS_DEBUG_RUN(CheckUnlock);
+    UTIL_DEBUG_RUN(CheckUnlock);
     UnlockImpl();
   }
 
@@ -112,7 +112,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
       return false;
     }
 
-    return dummy_.next_.compare_exchange_weak(::utils::temporary(&dummy_),
+    return dummy_.next_.compare_exchange_weak(::util::temporary(&dummy_),
                                               nullptr,
                                               ::std::memory_order_acquire,
                                               ::std::memory_order_relaxed);
@@ -125,7 +125,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
       return FiberHandle::Invalid();
     }
 
-    UTILS_IGNORE(owner->next_.load(::std::memory_order_acquire));  // sync
+    UTIL_IGNORE(owner->next_.load(::std::memory_order_acquire));  // sync
     return Acquire(owner, self, true);
   }
 
@@ -136,7 +136,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
       return;
     }
 
-    UTILS_IGNORE(Acquire(owner, next, false));
+    UTIL_IGNORE(Acquire(owner, next, false));
   }
 
   static [[nodiscard]] FiberHandle &&GetHandle(Node *node) noexcept {
@@ -195,23 +195,23 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
   }
 
   [[maybe_unused]] void CheckOwner() noexcept {
-    UTILS_CHECK(Owner() == self::GetId(), "Fiber does not own condvar mutex");
+    UTIL_CHECK(Owner() == self::GetId(), "Fiber does not own condvar mutex");
   }
 
   [[maybe_unused]] void CheckRecursive() noexcept {
-    UTILS_CHECK(Owner() != self::GetId(), "Fiber already owns this mutex");
+    UTIL_CHECK(Owner() != self::GetId(), "Fiber already owns this mutex");
   }
 
   [[maybe_unused]] void CheckLock(bool success) noexcept {
     if (success) [[likely]] {
-      UTILS_CHECK(Owner() == kInvalidFiberId,
+      UTIL_CHECK(Owner() == kInvalidFiberId,
                   "Fiber has locked an already locked mutex");
       Owner() = self::GetId();
     }
   }
 
   [[maybe_unused]] void CheckUnlock() noexcept {
-    UTILS_CHECK(Owner() == self::GetId(),
+    UTIL_CHECK(Owner() == self::GetId(),
                 "Fiber unlocks a mutex that it does not own");
     Owner() = kInvalidFiberId;
   }

@@ -9,7 +9,7 @@
 #include <format>
 #include <iostream>
 
-namespace utils::detail {
+namespace util::detail {
 
 void do_assert(::std::string_view const expr, ::std::string_view const msg, 
                ::std::source_location const loc) noexcept {
@@ -21,4 +21,4 @@ void do_assert(::std::string_view const expr, ::std::string_view const msg,
   ::std::abort();
 }
 
-}  // namespace utils::detail
+}  // namespace util::detail

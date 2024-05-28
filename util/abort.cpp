@@ -9,7 +9,7 @@
 #include <format>
 #include <iostream>
 
-namespace utils {
+namespace util {
 
 void abort(::std::string_view const msg, ::std::source_location const loc)
     noexcept {
@@ -20,4 +20,4 @@ void abort(::std::string_view const msg, ::std::source_location const loc)
   ::std::abort();
 }
 
-}  // namespace utils
+}  // namespace util

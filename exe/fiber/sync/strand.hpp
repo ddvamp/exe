@@ -13,8 +13,8 @@
 #include <utility>
 
 #include <concurrency/intrusive/forward_list.hpp>
-#include <utils/debug/assert.hpp>
-#include <utils/macro.hpp>
+#include <util/debug/assert.hpp>
+#include <util/macro.hpp>
 
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
@@ -101,7 +101,7 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
 
  public:
   ~Strand() {
-    UTILS_ASSERT(dummy_.next_.load(::std::memory_order_relaxed) == &dummy_,
+    UTIL_ASSERT(dummy_.next_.load(::std::memory_order_relaxed) == &dummy_,
                  "Strand is destroyed during use");
   }
 
@@ -156,7 +156,7 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
   }
 
   FiberHandle CombineImplCold(Node *head, Node *tail, Node *self) noexcept {
-    UTILS_IGNORE(tail->next_.load(::std::memory_order_acquire));  // sync
+    UTIL_IGNORE(tail->next_.load(::std::memory_order_acquire));  // sync
 
     if (tail != &dummy_) [[likely]] {
       auto const next = TryTakeNext(self, head);

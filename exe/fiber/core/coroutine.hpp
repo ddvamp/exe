@@ -7,7 +7,7 @@
 #define DDVAMP_EXE_FIBER_CORE_COROUTINE_HPP_INCLUDED_ 1
 
 #include <context/context.hpp>
-#include <utils/memory/view.hpp>
+#include <util/memory/view.hpp>
 
 #include "body.hpp"
 
@@ -28,7 +28,7 @@ class Coroutine : public ::context::ITrampoline {
   Status status_ = Status::inactive;
 
  public:
-  Coroutine(Body &&body, ::utils::memory_view stack) noexcept;
+  Coroutine(Body &&body, ::util::memory_view stack) noexcept;
 
   [[nodiscard]] bool IsCompleted() const noexcept;
 

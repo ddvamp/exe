@@ -8,14 +8,14 @@
 #include <atomic>
 #include <new>
 
-#include <utils/debug/assert.hpp>
-#include <utils/macro.hpp>
-#include <utils/refer/ref_count.hpp>
+#include <util/debug/assert.hpp>
+#include <util/macro.hpp>
+#include <util/refer/ref_count.hpp>
 
 namespace exe::sched {
 
 class Strand::Impl final : private task::TaskBase,
-                           public ::utils::ref_count<Impl> {
+                           public ::util::ref_count<Impl> {
  private:
   struct DummyTask : TaskBase {
     Impl &impl_;
@@ -53,8 +53,8 @@ class Strand::Impl final : private task::TaskBase,
   }
 
   void destroy_self() const noexcept {
-    UTILS_ASSERT(dummy_.next_.load(::std::memory_order_relaxed) == &dummy_,
-                 "Strand`s Run() cycle is destroyed during use");
+    UTIL_ASSERT(dummy_.next_.load(::std::memory_order_relaxed) == &dummy_,
+                "Strand`s Run() cycle is destroyed during use");
     delete this;
   }
 
@@ -63,7 +63,7 @@ class Strand::Impl final : private task::TaskBase,
   }
 
   void Submit(TaskBase *task) noexcept {
-    UTILS_ASSERT(task, "nullptr instead of task");
+    UTIL_ASSERT(task, "nullptr instead of task");
     task->Link(nullptr);
     auto const node = tail_.exchange(task, ::std::memory_order_acq_rel)->
                       next_.exchange(task, ::std::memory_order_relaxed);
@@ -72,7 +72,7 @@ class Strand::Impl final : private task::TaskBase,
     }
 
     inc_ref();
-    UTILS_IGNORE(node->next_.load(::std::memory_order_acquire));  // sync
+    UTIL_IGNORE(node->next_.load(::std::memory_order_acquire));  // sync
     underlying_.Submit(this);
   }
 

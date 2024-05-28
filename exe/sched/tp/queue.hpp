@@ -10,8 +10,8 @@
 #include <cstdint>  // std::uint32_t
 #include <mutex>
 
-#include <utils/debug/assert.hpp>
-#include <utils/defer.hpp>
+#include <util/debug/assert.hpp>
+#include <util/defer.hpp>
 
 #include <exe/sched/task/task.hpp>
 
@@ -28,7 +28,7 @@ class Queue {
 
  public:
   ~Queue() {
-    UTILS_ASSERT(is_closed_, "Queue is destroyed before it is closed");
+    UTIL_ASSERT(is_closed_, "Queue is destroyed before it is closed");
   }
 
   Queue(Queue const &) = delete;
@@ -41,7 +41,7 @@ class Queue {
   Queue() = default;
 
   bool Push(task::TaskBase *task) {
-    UTILS_ASSERT(task, "nullptr instead of the task");
+    UTIL_ASSERT(task, "nullptr instead of the task");
 
     ::std::lock_guard lock(m_);
 
@@ -68,7 +68,7 @@ class Queue {
     ::std::unique_lock lock(m_);
 
     ++waiters_count_;
-    ::utils::defer stop_waiting([=]() noexcept { --waiters_count_; });
+    ::util::defer stop_waiting([=]() noexcept { --waiters_count_; });
 
     while (true) {
       if (!IsEmpty()) {
@@ -89,7 +89,7 @@ class Queue {
     {
       ::std::lock_guard lock(m_);
 
-      UTILS_ASSERT(!is_closed_, "Queue is already closed");
+      UTIL_ASSERT(!is_closed_, "Queue is already closed");
       is_closed_ = true;
 
       if (waiters_count_ == 0) {

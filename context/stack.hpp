@@ -9,14 +9,14 @@
 #include <cstddef>
 #include <utility>
 
-#include <utils/debug/assert.hpp>
-#include <utils/memory/page_allocation.hpp>
+#include <util/debug/assert.hpp>
+#include <util/memory/page_allocation.hpp>
 
 namespace context {
 
 class [[nodiscard]] Stack {
  private:
-  ::utils::page_allocation allocation_;
+  ::util::page_allocation allocation_;
 
  public:
   ~Stack() = default;
@@ -31,35 +31,35 @@ class [[nodiscard]] Stack {
   Stack() = default;
 
   static Stack AllocatePages(::std::size_t const count) {
-    UTILS_ASSERT(count != 0, "An empty Stack was requested");
+    UTIL_ASSERT(count != 0, "An empty Stack was requested");
 
-    Stack res(::utils::page_allocation::allocate_pages(count + 1));
+    Stack res(::util::page_allocation::allocate_pages(count + 1));
     res.allocation_.protect_pages(0, 1);
     return res;
   }
 
   static Stack AllocateBytes(::std::size_t const at_least) {
-    return AllocatePages(::utils::page_allocation::bytes_to_pages(at_least));
+    return AllocatePages(::util::page_allocation::bytes_to_pages(at_least));
   }
 
   [[nodiscard]] ::std::size_t AllocationSize() const noexcept {
     return allocation_.size();
   }
 
-  [[nodiscard]] ::utils::memory_view View() noexcept {
+  [[nodiscard]] ::util::memory_view View() noexcept {
     return allocation_.view();
   }
 
-  static Stack Acquire(::utils::memory_view view) noexcept {
-    return ::utils::page_allocation::acquire(view);
+  static Stack Acquire(::util::memory_view view) noexcept {
+    return ::util::page_allocation::acquire(view);
   }
 
-  [[nodiscard]] ::utils::memory_view Release() && noexcept {
+  [[nodiscard]] ::util::memory_view Release() && noexcept {
     return ::std::move(allocation_).release();
   }
 
  private:
-  Stack(::utils::page_allocation &&allocation) noexcept
+  Stack(::util::page_allocation &&allocation) noexcept
       : allocation_(::std::move(allocation)) {}
 };
 

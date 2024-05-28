@@ -9,7 +9,7 @@
 #include <atomic>
 #include <new>  // std::hardware_destructive_interference_size
 
-#include <utils/debug/assert.hpp>
+#include <util/debug/assert.hpp>
 
 #include "pause.hpp"
 
@@ -21,7 +21,7 @@ class alignas (::std::hardware_destructive_interference_size) Spinlock {
 
  public:
   ~Spinlock() {
-    UTILS_ASSERT(!IsLocked(), "Spinlock is destroyed during use");
+    UTIL_ASSERT(!IsLocked(), "Spinlock is destroyed during use");
   }
 
   Spinlock(Spinlock const &) = delete;

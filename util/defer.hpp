@@ -3,15 +3,15 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_UTILS_DEFER_HPP_INCLUDED_
-#define DDVAMP_UTILS_DEFER_HPP_INCLUDED_ 1
+#ifndef DDVAMP_UTIL_DEFER_HPP_INCLUDED_
+#define DDVAMP_UTIL_DEFER_HPP_INCLUDED_ 1
 
 #include <utility>
 
 #include "macro.hpp"
 #include "type_traits.hpp"
 
-namespace utils {
+namespace util {
 
 template <typename T>
 inline constexpr bool is_suitable_for_deferred_action_v = is_all_of_v<
@@ -26,7 +26,7 @@ template <typename T>
 requires (is_suitable_for_deferred_action_v<T>)
 class [[nodiscard]] defer final {
  private:
-  UTILS_NO_UNIQUE_ADDRESS T action_;
+  UTIL_NO_UNIQUE_ADDRESS T action_;
 
  public:
   constexpr ~defer() noexcept (::std::is_nothrow_invocable_v<T &&>) {
@@ -43,6 +43,6 @@ class [[nodiscard]] defer final {
   constexpr explicit defer(T act) noexcept : action_(::std::move(act)) {}
 };
 
-}  // namespace utils
+}  // namespace util
 
-#endif  /* DDVAMP_UTILS_DEFER_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTIL_DEFER_HPP_INCLUDED_ */

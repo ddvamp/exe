@@ -3,14 +3,14 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_UTILS_SLOT_HPP_INCLUDED_
-#define DDVAMP_UTILS_SLOT_HPP_INCLUDED_ 1
+#ifndef DDVAMP_UTIL_SLOT_HPP_INCLUDED_
+#define DDVAMP_UTIL_SLOT_HPP_INCLUDED_ 1
 
 #include <memory>
 #include <type_traits>
 #include <utility>
 
-namespace utils {
+namespace util {
 
 // Storage for an object
 template <typename T>
@@ -85,6 +85,6 @@ class slot : public place<T> {
   using place<T>::operator=;
 };
 
-}  // namespace utils
+}  // namespace util
 
-#endif  /* DDVAMP_UTILS_SLOT_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTIL_SLOT_HPP_INCLUDED_ */

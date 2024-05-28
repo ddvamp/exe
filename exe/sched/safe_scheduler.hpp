@@ -8,7 +8,7 @@
 
 #include <type_traits>
 
-#include <utils/abort.hpp>
+#include <util/abort.hpp>
 
 #include "task/scheduler.hpp"
 
@@ -32,7 +32,7 @@ class SafeScheduler : public task::ISafeScheduler {
         underlying_.S::Submit(task);
       }
     } catch (...) {
-      UTILS_ABORT("An exception was thrown when scheduling the task");
+      UTIL_ABORT("An exception was thrown when scheduling the task");
     }
   }
 

@@ -12,8 +12,8 @@
 #include <mutex>
 #include <new>  // std::hardware_destructive_interference_size
 
-#include <utils/debug/assert.hpp>
-#include <utils/utility.hpp>
+#include <util/debug/assert.hpp>
+#include <util/utility.hpp>
 
 namespace concurrency {
 
@@ -95,14 +95,14 @@ class WaitPoint {
   // Error conditions:
   //  -  resource_unavailable_try_again (condvar)
   explicit WaitPoint(State const init = 0) : state_(SetHelpingBit(init)) {
-    UTILS_ASSERT(init < Mask::helping_bit,
-                 "Initializer does not fit into the counter");
+    UTIL_ASSERT(init < Mask::helping_bit,
+                "Initializer does not fit into the counter");
   }
 
   // Increases the counter by delta
   Token Add(State const delta = 1) noexcept {
     auto const state = state_.fetch_add(delta, ::std::memory_order_relaxed);
-    UTILS_ASSERT(
+    UTIL_ASSERT(
         IsAddCorrect(state, delta),
         "Increment must be non-zero and not overflow the 31-bit counter");
     return Token(state + delta);
@@ -115,7 +115,7 @@ class WaitPoint {
   Token Done(State const delta = 1, ::std::memory_order const order =
              ::std::memory_order_seq_cst) {
     auto const state = state_.fetch_sub(delta, order);
-    UTILS_ASSERT(
+    UTIL_ASSERT(
         IsDoneCorrect(state, delta),
         "Decrement must be non-zero and not underflow the 31-bit counter");
     if (EnsureNotify(state - delta)) {
@@ -184,7 +184,7 @@ private:
   bool WaitImpl(State const first_state, State const state,
                 ::std::memory_order const order) {
     if (EnsureWait(first_state, state, order)) {
-      count_is_zero_.wait(::utils::temporary(::std::unique_lock(m_)),
+      count_is_zero_.wait(::util::temporary(::std::unique_lock(m_)),
                           [=, version = state & 0xFFFF'FFFF'0000'0000ull]()
           noexcept {
         // We need to keep waiting if for state_
@@ -225,7 +225,7 @@ private:
 
     auto const success = state_.compare_exchange_strong(
         state, SetHelpingBit(state), ::std::memory_order_relaxed);
-    return ::utils::any_of(success, GetVersion(state) != version);
+    return ::util::any_of(success, GetVersion(state) != version);
   }
 
   // Checks if the counter is not overflowing after increasing by delta, and

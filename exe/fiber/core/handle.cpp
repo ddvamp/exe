@@ -7,14 +7,14 @@
 
 #include <utility>
 
-#include <utils/debug/assert.hpp>
+#include <util/debug/assert.hpp>
 
 #include "fiber.hpp"
 
 namespace exe::fiber {
 
 FiberHandle::~FiberHandle() {
-  UTILS_ASSERT(!IsValid(), "fiber is lost");
+  UTIL_ASSERT(!IsValid(), "fiber is lost");
 }
 
 FiberHandle &FiberHandle::operator= (FiberHandle that) noexcept {
@@ -35,7 +35,7 @@ Fiber *FiberHandle::Release() noexcept {
 }
 
 Fiber *FiberHandle::ReleaseChecked() noexcept {
-  UTILS_ASSERT(IsValid(), "fiber is missing");
+  UTIL_ASSERT(IsValid(), "fiber is missing");
   return Release();
 }
 

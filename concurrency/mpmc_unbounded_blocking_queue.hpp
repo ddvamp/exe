@@ -14,8 +14,8 @@
 #include <type_traits>
 #include <utility>
 
-#include <utils/debug/assert.hpp>
-#include <utils/defer.hpp>
+#include <util/debug/assert.hpp>
+#include <util/defer.hpp>
 
 namespace concurrency {
 
@@ -32,7 +32,7 @@ class MPMCUnboundedBlockingQueue {
 
  public:
   ~MPMCUnboundedBlockingQueue() {
-    UTILS_ASSERT(is_closed_, "Queue is destroyed before it is closed");
+    UTIL_ASSERT(is_closed_, "Queue is destroyed before it is closed");
   }
 
   MPMCUnboundedBlockingQueue(MPMCUnboundedBlockingQueue const &) = delete;
@@ -65,11 +65,11 @@ class MPMCUnboundedBlockingQueue {
     ::std::unique_lock lock(m_);
 
     ++waiters_count_;
-    ::utils::defer stop_waiting([=]() noexcept { --waiters_count_; });
+    ::util::defer stop_waiting([=]() noexcept { --waiters_count_; });
 
     while (true) {
       if (!buffer_.empty()) {
-        ::utils::defer cleanup([=]() noexcept { buffer_.pop_front(); });
+        ::util::defer cleanup([=]() noexcept { buffer_.pop_front(); });
         return ::std::move(buffer_.front());
       }
 
@@ -85,7 +85,7 @@ class MPMCUnboundedBlockingQueue {
     {
       ::std::lock_guard lock(m_);
 
-      UTILS_ASSERT(!is_closed_, "Queue is already closed");
+      UTIL_ASSERT(!is_closed_, "Queue is already closed");
       is_closed_ = true;
 
       if (waiters_count_ == 0) {

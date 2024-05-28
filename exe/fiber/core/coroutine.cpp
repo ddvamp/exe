@@ -9,8 +9,8 @@
 #include <string_view>
 #include <utility>
 
-#include <utils/abort.hpp>
-#include <utils/debug/assert.hpp>
+#include <util/abort.hpp>
+#include <util/debug/assert.hpp>
 
 namespace exe::fiber {
 
@@ -22,13 +22,13 @@ namespace {
   case Coroutine::Status::active:    return "active";
   case Coroutine::Status::inactive:  return "inactive";
   case Coroutine::Status::completed: return "completed";
-  default: UTILS_ABORT("Unexpected Coroutine::Status");
+  default: UTIL_ABORT("Unexpected Coroutine::Status");
   };
 }
 
 }  // namespace
 
-Coroutine::Coroutine(Body &&body, ::utils::memory_view stack) noexcept
+Coroutine::Coroutine(Body &&body, ::util::memory_view stack) noexcept
     : body_(::std::move(body))
     , context_(stack, this) {}
 
@@ -57,9 +57,10 @@ void Coroutine::Cancel() noexcept {
 }
 
 void Coroutine::ChangeStatus(Status const from, Status const to) noexcept {
-  UTILS_ASSERT(status_ == from,
-      ::std::format("Coroutine is in wrong status: expected = {}, actual = {}",
-                    ToStringView(from), ToStringView(status_)));
+  UTIL_ASSERT(status_ == from, ::std::format("Coroutine is in wrong status: "
+                                             "expected = {}, actual = {}",
+                                             ToStringView(from),
+                                             ToStringView(status_)));
   status_ = to;
 }
 

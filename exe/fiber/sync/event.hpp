@@ -10,7 +10,7 @@
 #include <utility>
 
 #include <concurrency/intrusive/forward_list.hpp>
-#include <utils/debug/assert.hpp>
+#include <util/debug/assert.hpp>
 
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
@@ -46,7 +46,7 @@ class Event {
 
  public:
   ~Event() {
-    UTILS_ASSERT(tail_.load(::std::memory_order_relaxed) == &dummy_,
+    UTIL_ASSERT(tail_.load(::std::memory_order_relaxed) == &dummy_,
                  "Event is destroyed during use");
   }
 

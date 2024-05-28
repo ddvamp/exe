@@ -6,7 +6,7 @@
 #ifndef DDVAMP_CONTEXT_TRAMPOLINE_HPP_INCLUDED_
 #define DDVAMP_CONTEXT_TRAMPOLINE_HPP_INCLUDED_ 1
 
-#include <utils/debug/unreachable.hpp>
+#include <util/debug/unreachable.hpp>
 
 namespace context {
 
@@ -17,7 +17,7 @@ class ITrampoline {
 
   [[noreturn]] void Run() noexcept {
     DoRun();
-    UTILS_UNREACHABLE("ITrampoline::Run out of bounds");
+    UTIL_UNREACHABLE("ITrampoline::Run out of bounds");
   }
 
  private:

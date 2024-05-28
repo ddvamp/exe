@@ -11,8 +11,8 @@
 #include <cstdint>  // std::uint64_t
 #include <mutex>
 
-#include <utils/debug/assert.hpp>
-#include <utils/utility.hpp>
+#include <util/debug/assert.hpp>
+#include <util/utility.hpp>
 
 namespace concurrency {
 
@@ -40,8 +40,8 @@ class WaitGroup {
 
  public:
   ~WaitGroup() {
-    UTILS_ASSERT(GetCount(state_.load(::std::memory_order_relaxed)) == 0,
-                 "WaitGroup is destroyed during waiting session");
+    UTIL_ASSERT(GetCount(state_.load(::std::memory_order_relaxed)) == 0,
+                "WaitGroup is destroyed during waiting session");
   }
 
   WaitGroup(WaitGroup const &) = delete;
@@ -62,8 +62,8 @@ class WaitGroup {
   // This call must happen after any previous session calls and
   // happen before any current session calls
   void Reset(State const init = 0) noexcept {
-    UTILS_ASSERT(init <= kMaxCount,
-                 "The init value does not fit into the 32-bit counter");
+    UTIL_ASSERT(init <= kMaxCount,
+                "The init value does not fit into the 32-bit counter");
     state_.store(init, ::std::memory_order_relaxed);
   }
 
@@ -76,7 +76,7 @@ class WaitGroup {
   void Add(State const delta = 1) noexcept {
     [[maybe_unused]] auto const state = state_.fetch_add(
         delta, ::std::memory_order_relaxed);
-    UTILS_ASSERT(
+    UTIL_ASSERT(
         IsAddCorrect(state, delta),
         "The delta must be non-zero and not overflow the 32-bit counter");
   }
@@ -91,7 +91,7 @@ class WaitGroup {
   //   - resource_deadlock_would_occur (mutex)
   void Done(State const delta = 1) {
     auto const state = state_.fetch_sub(delta, ::std::memory_order_release);
-    UTILS_ASSERT(
+    UTIL_ASSERT(
         IsDoneCorrect(state, delta),
         "The delta must be non-zero and not underflow the 32-bit counter");
     if (IsNotifyNeeded(state - delta)) [[unlikely]] {
@@ -145,7 +145,7 @@ class WaitGroup {
   }
 
   [[nodiscard]] inline static bool IsNotifyNeeded(State const state) noexcept {
-    return ::utils::all_of(GetCount(state) == 0, GetWaitersCount(state) != 0);
+    return ::util::all_of(GetCount(state) == 0, GetWaitersCount(state) != 0);
   }
 
   [[nodiscard]] inline static ::std::uint32_t GetCount(State const state)

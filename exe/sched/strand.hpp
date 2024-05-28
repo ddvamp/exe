@@ -6,7 +6,7 @@
 #ifndef DDVAMP_EXE_SCHED_STRAND_HPP_INCLUDED_
 #define DDVAMP_EXE_SCHED_STRAND_HPP_INCLUDED_ 1
 
-#include <utils/refer/ref.hpp>
+#include <util/refer/ref.hpp>
 
 #include "task/scheduler.hpp"
 
@@ -22,7 +22,7 @@ class Strand final : public task::ISafeScheduler {
   using IScheduler = ISafeScheduler;
 
   class Impl;
-  ::utils::ref<Impl> impl_;
+  ::util::ref<Impl> impl_;
 
  public:
   ~Strand();

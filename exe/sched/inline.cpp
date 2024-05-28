@@ -5,12 +5,12 @@
 
 #include "inline.hpp"
 
-#include <utils/debug/assert.hpp>
+#include <util/debug/assert.hpp>
 
 namespace exe::sched {
 
 /* virtual */ void Inline::Submit(task::TaskBase *task) noexcept {
-  UTILS_ASSERT(task, "nullptr instead of the task");
+  UTIL_ASSERT(task, "nullptr instead of the task");
   task->Run();
 }
 

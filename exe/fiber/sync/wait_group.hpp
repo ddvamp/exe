@@ -9,8 +9,8 @@
 #include <atomic>
 #include <cstdint>
 
-#include <utils/debug/assert.hpp>
-#include <utils/macro.hpp>
+#include <util/debug/assert.hpp>
+#include <util/macro.hpp>
 
 #include "event.hpp"
 
@@ -35,7 +35,7 @@ class WaitGroup {
 
  public:
   ~WaitGroup() {
-    UTILS_ASSERT(count_.load(::std::memory_order_relaxed) == 0,
+    UTIL_ASSERT(count_.load(::std::memory_order_relaxed) == 0,
                  "WaitGroup is destroyed during waiting session");
   }
 
@@ -58,7 +58,7 @@ class WaitGroup {
   void Add(Count const delta = 1) noexcept {
     [[maybe_unused]] auto const count =
         count_.fetch_add(delta, ::std::memory_order_relaxed);
-    UTILS_ASSERT(count < count + delta,
+    UTIL_ASSERT(count < count + delta,
                  "Increment must be non-zero and not overflow the counter");
   }
 
@@ -66,7 +66,7 @@ class WaitGroup {
   // if the counter drops to zero, unblocks all fibers currently waiting for
   void Done(Count const delta = 1) noexcept {
     auto const count = count_.fetch_sub(delta, ::std::memory_order_release);
-    UTILS_ASSERT(count - delta < count,
+    UTIL_ASSERT(count - delta < count,
                  "Decrement must be non-zero and not underflow the counter");
     if (count != delta) [[likely]] {
       // Fast path
@@ -74,7 +74,7 @@ class WaitGroup {
     }
 
     // Synchronization
-    UTILS_IGNORE(count_.load(::std::memory_order_acquire));
+    UTIL_IGNORE(count_.load(::std::memory_order_acquire));
     count_is_zero_.Fire();
   }
 

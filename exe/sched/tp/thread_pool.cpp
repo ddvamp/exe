@@ -5,8 +5,8 @@
 
 #include "thread_pool.hpp"
 
-#include <utils/abort.hpp>
-#include <utils/debug/assert.hpp>
+#include <util/abort.hpp>
+#include <util/debug/assert.hpp>
 
 namespace exe::sched::tp {
 
@@ -26,8 +26,8 @@ thread_local ThreadPool *current_pool = nullptr;
 }
 
 ThreadPool::~ThreadPool() {
-  UTILS_ASSERT(state_ == State::stopped,
-               "Thread pool was not stopped before the destruction");
+  UTIL_ASSERT(state_ == State::stopped,
+              "Thread pool was not stopped before the destruction");
 }
 
 void ThreadPool::WorkLoop() noexcept try {
@@ -38,12 +38,11 @@ void ThreadPool::WorkLoop() noexcept try {
     task->Run();
   }
 } catch (...) {
-  UTILS_ABORT("Exception inside ThreadPool's worker thread");
+  UTIL_ABORT("Exception inside ThreadPool's worker thread");
 }
 
 void ThreadPool::Start() {
-  UTILS_ASSERT(state_ == State::created,
-               "Thread pool has already been started");
+  UTIL_ASSERT(state_ == State::created, "Thread pool has already been started");
   state_ = State::started;
 
   auto cnt = worker_count_;
@@ -61,7 +60,7 @@ void ThreadPool::JoinWorkerThreads() {
 
 ThreadPool::ThreadPool(::std::size_t const workers)
     : worker_count_(NormalizeWorkerCount(workers)) {
-  UTILS_ASSERT(workers != 0, "Zero-size thread pool was requested");
+  UTIL_ASSERT(workers != 0, "Zero-size thread pool was requested");
 }
 
 ThreadPool::ThreadPool(::std::size_t const workers, launch_t)
@@ -70,13 +69,13 @@ ThreadPool::ThreadPool(::std::size_t const workers, launch_t)
 }
 
 /* virtual */ void ThreadPool::Submit(task::TaskBase *task) {
-  UTILS_ASSERT(state_ == State::started, "Using thread pool before start");
-  UTILS_VERIFY(tasks_.Push(task), "Using thread pool after stop");
+  UTIL_ASSERT(state_ == State::started, "Using thread pool before start");
+  UTIL_VERIFY(tasks_.Push(task), "Using thread pool after stop");
 }
 
 void ThreadPool::Stop() {
-  UTILS_ASSERT(state_ == State::started,
-               "Attempt to stop non-working thread pool");
+  UTIL_ASSERT(state_ == State::started,
+              "Attempt to stop non-working thread pool");
   state_ = State::stopped;
 
   tasks_.Close();

@@ -8,7 +8,7 @@
 #include <utility>
 
 #include <concurrency/qspinlock.hpp>
-#include <utils/debug/assert.hpp>
+#include <util/debug/assert.hpp>
 
 namespace exe::fiber {
 
@@ -16,7 +16,7 @@ namespace {
 
 struct Node {
   Node *next_;
-  ::utils::memory_view self_;
+  ::util::memory_view self_;
 };
 
 class StackAllocator {
@@ -41,7 +41,7 @@ class StackAllocator {
   }
 
   void Deallocate(Stack &stack) noexcept {
-    UTILS_ASSERT(stack.AllocationSize() != 0, "Stack in moved-from state");
+    UTIL_ASSERT(stack.AllocationSize() != 0, "Stack in moved-from state");
 
     auto mem = ::std::move(stack).Release();
     auto node = ::new (mem.data()) Node{.self_ = mem};

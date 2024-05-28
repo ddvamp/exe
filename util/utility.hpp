@@ -3,14 +3,14 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_UTILS_UTILITY_HPP_INCLUDED_
-#define DDVAMP_UTILS_UTILITY_HPP_INCLUDED_ 1
+#ifndef DDVAMP_UTIL_UTILITY_HPP_INCLUDED_
+#define DDVAMP_UTIL_UTILITY_HPP_INCLUDED_ 1
 
 #include <utility>
 
 #include "type_traits.hpp"
 
-namespace utils {
+namespace util {
 
 /**
  *	@brief		Convert an rvalue to an lvalue.
@@ -52,6 +52,6 @@ template <typename ...Ts>
               static_cast<bool>(::std::forward<Ts>(ts)))) == 0;
 }
 
-}  // namespace utils
+}  // namespace util
 
-#endif  /* DDVAMP_UTILS_UTILITY_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTIL_UTILITY_HPP_INCLUDED_ */

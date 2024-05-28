@@ -1,16 +1,16 @@
 #include "run_loop.hpp"
 
-#include <utils/debug/assert.hpp>
-#include <utils/utility.hpp>
+#include <util/debug/assert.hpp>
+#include <util/utility.hpp>
 
 namespace exe::sched {
 
 RunLoop::~RunLoop() {
-  UTILS_ASSERT(IsEmpty(), "RunLoop contains tasks when destroyed");
+  UTIL_ASSERT(IsEmpty(), "RunLoop contains tasks when destroyed");
 }
 
 /* virtual */ void RunLoop::Submit(task::TaskBase *task) noexcept {
-  UTILS_ASSERT(task, "nullptr instead of the task");
+  UTIL_ASSERT(task, "nullptr instead of the task");
   task->Link(nullptr);
   if (IsEmpty()) {
     head_ = tail_ = task;
@@ -22,7 +22,7 @@ RunLoop::~RunLoop() {
 
 ::std::size_t RunLoop::RunAtMost(::std::size_t const limit) noexcept {
   auto remains = limit;
-  while (::utils::all_of(!IsEmpty(), remains != 0)) {
+  while (::util::all_of(!IsEmpty(), remains != 0)) {
     Pop()->Run();
     --remains;
   }

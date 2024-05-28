@@ -13,11 +13,11 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include <utils/debug/assert.hpp>
+#include <util/debug/assert.hpp>
 
 // TODO: Add errno passing into assert and exception (stderror())
 
-namespace utils {
+namespace util {
 
 namespace {
 
@@ -41,8 +41,8 @@ void *allocate_memory(::std::size_t const size) {
   //   - size is 0
   //   - size is too large
   //   - size is not aligned on a page boundary
-  UTILS_ASSERT(errno == ENOMEM || errno == EINVAL,
-               "Unknown mmap() memory allocation error");
+  UTIL_ASSERT(errno == ENOMEM || errno == EINVAL,
+              "Unknown mmap() memory allocation error");
   throw ::std::bad_alloc();
 }
 
@@ -57,15 +57,15 @@ void protect_memory(void * const address, ::std::size_t const size) noexcept {
   //   - changing the protection of a memory region would result in
   //     the total number of mappings with distinct attributes exceeding
   //     the allowed maximum
-  UTILS_ASSERT(errno == ENOMEM, "Unknown mprotect() memory protect error");
+  UTIL_ASSERT(errno == ENOMEM, "Unknown mprotect() memory protect error");
   throw ::std::bad_alloc();
 }
 
 void release_memory(void * const address, ::std::size_t const size) noexcept {
   [[maybe_unused]] auto const ret = ::munmap(address, size);
-  UTILS_ASSERT(ret == 0, "Unknown munmap() memory release error");
+  UTIL_ASSERT(ret == 0, "Unknown munmap() memory release error");
 }
 
 }  // namespace
 
-}  // namespace utils
+}  // namespace util

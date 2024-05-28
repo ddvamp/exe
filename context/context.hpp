@@ -6,8 +6,8 @@
 #ifndef DDVAMP_CONTEXT_CONTEXT_HPP_INCLUDED_
 #define DDVAMP_CONTEXT_CONTEXT_HPP_INCLUDED_ 1
 
-#include <utils/debug/unreachable.hpp>
-#include <utils/memory/view.hpp>
+#include <util/debug/unreachable.hpp>
+#include <util/memory/view.hpp>
 
 #include "exceptions_context.hpp"
 #include "machine_context.hpp"
@@ -34,7 +34,7 @@ class ExecutionContext {
   ExecutionContext() = default;
 
   // Initializes new context with stack using trampoline
-  ExecutionContext(::utils::memory_view stack, ITrampoline *trampoline)
+  ExecutionContext(::util::memory_view stack, ITrampoline *trampoline)
       noexcept {
     machine_ctx_.Setup(stack, trampoline);
   }
@@ -54,7 +54,7 @@ class ExecutionContext {
   // Last context switch
   [[noreturn]] void ExitTo(ExecutionContext &target) noexcept {
     SwitchTo(target);
-    UTILS_UNREACHABLE("Resuming a completed ExecutionContext");
+    UTIL_UNREACHABLE("Resuming a completed ExecutionContext");
   }
 
   [[noreturn]] void ExitToSaved() noexcept {

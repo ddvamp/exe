@@ -8,6 +8,8 @@
 
 #include <utility>
 
+#include <util/debug/run.hpp>
+
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
 #include "mutex.hpp"
@@ -49,27 +51,27 @@ class Condvar {
   /* ATTENTION: All methods below require a locked m_! */
 
   void Wait() noexcept {
-    UTILS_DEBUG_RUN(m_.CheckUnlock);
+    UTIL_DEBUG_RUN(m_.CheckUnlock);
     Waiter awaiter(this);
     self::Suspend(awaiter);
-    UTILS_DEBUG_RUN(m_.CheckLock, true);
+    UTIL_DEBUG_RUN(m_.CheckLock, true);
   }
 
   template <typename Predicate>
   void Wait(Predicate &&stop_waiting) noexcept {
-    UTILS_DEBUG_RUN(m_.CheckOwner);
+    UTIL_DEBUG_RUN(m_.CheckOwner);
     while (!stop_waiting()) {
       Wait();
     }
   }
 
   void NotifyOne() noexcept {
-    UTILS_DEBUG_RUN(m_.CheckOwner);
+    UTIL_DEBUG_RUN(m_.CheckOwner);
     NotifyImpl(false);
   }
 
   void NotifyAll() noexcept {
-    UTILS_DEBUG_RUN(m_.CheckOwner);
+    UTIL_DEBUG_RUN(m_.CheckOwner);
     NotifyImpl(true);
   }
 

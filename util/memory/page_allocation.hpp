@@ -3,14 +3,14 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_UTILS_MEMORY_PAGE_ALLOCATION_HPP_INCLUDED_
-#define DDVAMP_UTILS_MEMORY_PAGE_ALLOCATION_HPP_INCLUDED_ 1
+#ifndef DDVAMP_UTIL_MEMORY_PAGE_ALLOCATION_HPP_INCLUDED_
+#define DDVAMP_UTIL_MEMORY_PAGE_ALLOCATION_HPP_INCLUDED_ 1
 
 #include <cstddef>
 
 #include "view.hpp"
 
-namespace utils {
+namespace util {
 
 class [[nodiscard]] page_allocation {
  private:
@@ -96,6 +96,6 @@ class [[nodiscard]] page_allocation {
   void deallocate() const noexcept;
 };
 
-}  // namespace utils
+}  // namespace util
 
-#endif  /* DDVAMP_UTILS_MEMORY_PAGE_ALLOCATION_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTIL_MEMORY_PAGE_ALLOCATION_HPP_INCLUDED_ */

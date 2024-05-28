@@ -9,8 +9,8 @@
 #include <atomic>
 #include <new>  // std::hardware_destructive_interference_size
 
-#include <utils/debug/assert.hpp>
-#include <utils/utility.hpp>
+#include <util/debug/assert.hpp>
+#include <util/utility.hpp>
 
 #include "intrusive/forward_list.hpp"
 #include "pause.hpp"
@@ -32,7 +32,7 @@ class alignas (::std::hardware_destructive_interference_size) QSpinlock {
 
  public:
   ~QSpinlock() {
-    UTILS_ASSERT(!IsLocked(), "QSpinlock is destroyed during use");
+    UTIL_ASSERT(!IsLocked(), "QSpinlock is destroyed during use");
   }
 
   QSpinlock(QSpinlock const &) = delete;
@@ -129,7 +129,7 @@ class alignas (::std::hardware_destructive_interference_size) QSpinlock {
       return false;
     }
 
-    return dummy_.locked_.compare_exchange_weak(::utils::temporary(false), true,
+    return dummy_.locked_.compare_exchange_weak(::util::temporary(false), true,
                                                 ::std::memory_order_acquire,
                                                 ::std::memory_order_relaxed);
   }
@@ -171,7 +171,7 @@ class alignas (::std::hardware_destructive_interference_size) QSpinlock {
   }
 
   [[nodiscard]] Node *UnlockCold(Node &node) noexcept {
-    if (tail_.compare_exchange_strong(::utils::temporary(&node), &dummy_,
+    if (tail_.compare_exchange_strong(::util::temporary(&node), &dummy_,
                                       ::std::memory_order_relaxed,
                                       ::std::memory_order_acquire)) [[likely]] {
       return &dummy_;

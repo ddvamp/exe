@@ -11,8 +11,8 @@
 #include <memory>  // std::addressof
 #include <mutex>  // std::scoped_lock
 
-#include <utils/defer.hpp>
-#include <utils/type_traits.hpp>
+#include <util/defer.hpp>
+#include <util/type_traits.hpp>
 
 namespace concurrency {
 
@@ -56,7 +56,7 @@ void LockImpl(It const begin, It const end) {
 
   auto it = begin;
 
-  ::utils::defer unlock_on_exception([&]() noexcept {
+  ::util::defer unlock_on_exception([&]() noexcept {
     if (it == begin) [[likely]] {
       return;
     }
@@ -82,9 +82,9 @@ inline constexpr bool is_basic_lockable_v = requires (Lock &lock) {
 
 template <typename ...Locks>
 void Lock(Locks &...locks) requires (
-    ::utils::is_all_of_v<(sizeof...(Locks) > 1),
+    ::util::is_all_of_v<(sizeof...(Locks) > 1),
     detail::is_basic_lockable_v<Locks>...>) {
-  if constexpr (::utils::is_all_same_v<Locks...>) { 
+  if constexpr (::util::is_all_same_v<Locks...>) { 
     ::std::array arr{::std::addressof(locks)...};
     detail::LockImpl(arr.begin(), arr.end());
   } else {

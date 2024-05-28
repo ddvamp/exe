@@ -3,8 +3,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_UTILS_REFER_REF_HPP_INCLUDED_
-#define DDVAMP_UTILS_REFER_REF_HPP_INCLUDED_ 1
+#ifndef DDVAMP_UTIL_REFER_REF_HPP_INCLUDED_
+#define DDVAMP_UTIL_REFER_REF_HPP_INCLUDED_ 1
 
 #include <concepts>
 #include <cstddef>
@@ -12,9 +12,9 @@
 #include <type_traits>
 #include <utility>
 
-#include <utils/macro.hpp>
+#include <util/macro.hpp>
 
-namespace utils {
+namespace util {
 
 template <typename Derived>
 class ref_count;
@@ -32,13 +32,13 @@ template <typename T>
 concept ref_counted = is_ref_counted_v<T>;
 
 
-#ifndef UTILS_REF_VALIDATE_TYPE
-# define UTILS_REF_VALIDATE_TYPE(T)                                         \
-      static_assert(ref_counted<T>,                                         \
-                    "Class " #T " does not inherit ref_count<" #T "> or "   \
+#ifndef UTIL_REF_VALIDATE_TYPE
+# define UTIL_REF_VALIDATE_TYPE(T)                                         \
+      static_assert(ref_counted<T>,                                        \
+                    "Class " #T " does not inherit ref_count<" #T "> or "  \
                     "has not defined the function destroy_self()")
 #else
-# error "UTILS_REF_VALIDATE_TYPE macro is already defined somewhere else"
+# error "UTIL_REF_VALIDATE_TYPE macro is already defined somewhere else"
 #endif
 
 
@@ -106,7 +106,7 @@ class [[nodiscard]] ref {
 
  private:
   [[nodiscard]] T *get_checked() const noexcept {
-    UTILS_REF_VALIDATE_TYPE(T);
+    UTIL_REF_VALIDATE_TYPE(T);
     return ptr_;
   }
 
@@ -139,6 +139,6 @@ void swap(ref<T> &lhs, ref<T> &rhs) noexcept {
   lhs.swap(rhs);
 }
 
-}  // namespace utils
+}  // namespace util
 
-#endif /* DDVAMP_UTILS_REFER_REF_HPP_INCLUDED_ */
+#endif /* DDVAMP_UTIL_REFER_REF_HPP_INCLUDED_ */

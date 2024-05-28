@@ -7,9 +7,9 @@
 
 #include <utility>
 
-#include <utils/abort.hpp>
-#include <utils/debug.hpp>
-#include <utils/defer.hpp>
+#include <util/abort.hpp>
+#include <util/debug.hpp>
+#include <util/defer.hpp>
 
 #include <exe/fiber/api.hpp>
 
@@ -49,7 +49,7 @@ struct SwitchAwaiter final : IAwaiter {
 
   FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
     // Prevents race condition
-    ::utils::defer cleanup([&self]() noexcept {
+    ::util::defer cleanup([&self]() noexcept {
         ::std::move(self).Schedule(); 
     });
     return ::std::move(target_);
@@ -67,7 +67,7 @@ struct SwitchAwaiter final : IAwaiter {
 }
 
 /* static */ Fiber &Fiber::Self() noexcept {
-  UTILS_ASSERT(AmIFiber(), "Not in the fiber context");
+  UTIL_ASSERT(AmIFiber(), "Not in the fiber context");
   return *current;
 }
 
@@ -104,12 +104,12 @@ Fiber *Fiber::DoRun() noexcept {
   Step();
 
   if (coroutine_.IsCompleted()) [[unlikely]] {
-    UTILS_ASSERT(!awaiter_, "Awaiter instead of nullptr");
+    UTIL_ASSERT(!awaiter_, "Awaiter instead of nullptr");
     DestroySelf();
     return nullptr;
   }
 
-  UTILS_ASSUME(awaiter_, "nullptr instead of awaiter");
+  UTIL_ASSUME(awaiter_, "nullptr instead of awaiter");
   return awaiter_->AwaitSymmetricSuspend(FiberHandle(this)).Release();
 }
 
@@ -173,7 +173,7 @@ void TeleportTo(IScheduler &scheduler) noexcept {
 }  // namespace self
 
 void Go(IScheduler &scheduler, Body &&body) {
-  UTILS_ASSERT(body, "Empty body for fiber");
+  UTIL_ASSERT(body, "Empty body for fiber");
   Fiber::Create(::std::move(body), &scheduler)->Schedule();
 }
 

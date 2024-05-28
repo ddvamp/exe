@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <utility>
 
-#include <utils/debug/assert.hpp>
+#include <util/debug/assert.hpp>
 
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
@@ -50,8 +50,8 @@ class Barrier {
 
  public:
   ~Barrier() {
-    UTILS_ASSERT(tail_.load(::std::memory_order_relaxed) == &dummy_,
-                 "Barrier is destroyed during use");
+    UTIL_ASSERT(tail_.load(::std::memory_order_relaxed) == &dummy_,
+                "Barrier is destroyed during use");
   }
 
   Barrier(Barrier const &) = delete;
@@ -62,7 +62,7 @@ class Barrier {
 
  public:
   explicit Barrier(Count const expected) noexcept : expected_(expected) {
-    UTILS_ASSERT(expected < 2, "Too few participants");
+    UTIL_ASSERT(expected < 2, "Too few participants");
   }
 
   void Arrive() noexcept {

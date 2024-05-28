@@ -9,7 +9,7 @@
 #include <atomic>
 #include <cstdint>
 
-#include <utils/debug/assert.hpp>
+#include <util/debug/assert.hpp>
 
 namespace concurrency {
 
@@ -31,7 +31,7 @@ class Meeting {
 
   // In case of instance reuse
   void Reset(Count const init) noexcept {
-    UTILS_ASSERT(init > 1, "At least two participants are required");
+    UTIL_ASSERT(init > 1, "At least two participants are required");
     seats_.store(init, ::std::memory_order_relaxed);
   }
 
@@ -45,7 +45,7 @@ class Meeting {
   // otherwise, he announces his arrival
   [[nodiscard]] bool Arrive() noexcept {
     auto const left = seats_.fetch_sub(1, ::std::memory_order_acq_rel);
-    UTILS_ASSERT(left > 0, "The amount of participants exceeded expectation");
+    UTIL_ASSERT(left > 0, "The amount of participants exceeded expectation");
     return left == 1;
   }
 };

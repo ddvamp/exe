@@ -3,12 +3,12 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_UTILS_TYPE_TRAITS_HPP_INCLUDED_
-#define DDVAMP_UTILS_TYPE_TRAITS_HPP_INCLUDED_ 1
+#ifndef DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_
+#define DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_ 1
 
 #include <type_traits>
 
-namespace utils {
+namespace util {
 
 template <typename>
 struct type {};
@@ -81,6 +81,6 @@ inline constexpr bool is_all_unique_v = requires (detail::proxies_t<Ts...> *p,
 template <typename ...Ts>
 struct is_all_unique : ::std::bool_constant<is_all_unique_v<Ts...>> {};
 
-}  // namespace utils
+}  // namespace util
 
-#endif  /* DDVAMP_UTILS_TYPE_TRAITS_HPP_INCLUDED_ */
+#endif  /* DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_ */

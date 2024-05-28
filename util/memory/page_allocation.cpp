@@ -8,15 +8,15 @@
 #include <cstddef>
 #include <memory>
 
-#include "utils/debug/assert.hpp"
+#include "util/debug/assert.hpp"
 
 #if __has_include(<unistd.h>)
-#	include "utils/memory/os/posix/page_allocation.hpp"
+#	include "util/memory/os/posix/page_allocation.hpp"
 #else
 #	error "Not POSIX-compliant environment"
 #endif
 
-namespace utils {
+namespace util {
 
 // https://lxadm.com/why-are-page-sizes-always-powers-of-2/
 /* static */ ::std::size_t page_allocation::page_size() noexcept {
@@ -42,8 +42,8 @@ namespace utils {
 // Precondition: count != 0 && count <= max_pages()
 /* static */ page_allocation page_allocation::allocate_pages(
     ::std::size_t const count) {
-  UTILS_ASSERT(count != 0, "0 pages requested");
-  UTILS_ASSERT(count <= max_pages(), "Too many pages requested");
+  UTIL_ASSERT(count != 0, "0 pages requested");
+  UTIL_ASSERT(count <= max_pages(), "Too many pages requested");
 
   auto const size = pages_to_bytes(count);
   auto const memory = allocate_memory(size);
@@ -54,11 +54,11 @@ namespace utils {
 //							 protected memory in the range [begin_, begin_ + size_)
 void page_allocation::protect_pages(::std::size_t const page_offset,
                                     ::std::size_t const page_count) const {
-  UTILS_ASSERT(page_count != 0, "0 pages requested");
-  UTILS_ASSERT(page_count <= max_pages(), "Out of range");
-  UTILS_ASSERT(page_offset <= max_pages() - page_count , "Out of range");
-  UTILS_ASSERT(pages_to_bytes(page_offset + page_count) <= size_,
-               "Out of range");
+  UTIL_ASSERT(page_count != 0, "0 pages requested");
+  UTIL_ASSERT(page_count <= max_pages(), "Out of range");
+  UTIL_ASSERT(page_offset <= max_pages() - page_count , "Out of range");
+  UTIL_ASSERT(pages_to_bytes(page_offset + page_count) <= size_,
+              "Out of range");
 
   protect_memory(begin_ + pages_to_bytes(page_offset),
                  pages_to_bytes(page_count));
@@ -75,13 +75,13 @@ void page_allocation::deallocate() const noexcept {
   auto data = view.data();
   auto size = view.size();
 
-  UTILS_ASSERT(::std::align(page_allocation::page_size(), size, data, size),
-               "Memory view is not aligned by page size");
-  UTILS_ASSERT(size % page_allocation::page_size() == 0,
-               "Memory view contains an amount of memory that is "
-               "not a multiple of page size");
+  UTIL_ASSERT(::std::align(page_allocation::page_size(), size, data, size),
+              "Memory view is not aligned by page size");
+  UTIL_ASSERT(size % page_allocation::page_size() == 0,
+              "Memory view contains an amount of memory that is "
+              "not a multiple of page size");
 
   return {data, size};
 }
 
-}  // namespace utils
+}  // namespace util
