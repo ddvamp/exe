@@ -25,3 +25,6 @@ context
 
 fiber/sync/mutex.hpp
   - think about series
+
+future/fun/contract
+  - custom callback
