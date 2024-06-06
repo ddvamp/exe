@@ -44,6 +44,25 @@ template <bool ...Vs>
 struct is_any_of : ::std::bool_constant<is_any_of_v<Vs...>> {};
 
 
+template <typename ...Traits>
+inline constexpr bool conjunction_v = is_all_of_v<Traits::value...>;
+
+template <typename ...Traits>
+struct conjunction : ::std::bool_constant<conjunction_v<Traits...>> {};
+
+template <typename ...Traits>
+inline constexpr bool disjunction_v = is_any_of_v<Traits::value...>;
+
+template <typename ...Traits>
+struct disjunction : ::std::bool_constant<disjunction_v<Traits...>> {};
+
+template <typename Trait>
+inline constexpr bool negation_v = !static_cast<bool>(Trait::value);
+
+template <typename Trait>
+struct negation : ::std::bool_constant<negation_v<Trait>> {};
+
+
 template <typename ...>
 inline constexpr bool is_all_same_v = true;
 
