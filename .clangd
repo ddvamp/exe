@@ -1,0 +1,28 @@
+# Настройки, работающие для всех файлов от текущей директории ./**
+# Также можно использовать ~/.config/clangd/config.yaml
+
+CompileFlags:
+  CompilationDatabase: ./ # Указывает, где искать compile_commands.json или compile_flags.txt
+  Compiler: clang++-21
+
+Completion:
+  ArgumentLists: None # Автодополнение не вставляет список параметров
+  HeaderInsertion: Never # Автодополнение не вставляет дополнительно необходимый заголовочный файл
+
+Diagnostics:
+  MissingIncludes: Strict
+
+# clangd-22
+# Documentation:
+#   CommentFormat: PlainText # Формат комментариев в файлах. Также может быть markdown и doxygen
+
+Hover:
+  ShowAKA: Yes # Показывать настоящие типы using-ов во всплывающих подсказках
+
+Index:
+  Background: Build # Строить индекс всех файлов в фоне
+
+InlayHints:
+  BlockEnd: Yes # Показываются начиная с 10 строк блока
+  DefaultArguments: Yes # Показывать аргументы по умолчанию
+  Enabled: Yes
