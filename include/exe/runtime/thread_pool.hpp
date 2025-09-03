@@ -8,10 +8,10 @@
 
 #include "tp/thread_pool.hpp"
 
-namespace exe::sched {
+namespace exe::runtime {
 
 using ThreadPool = tp::ThreadPool;
 
-} // namespace exe::sched
+} // namespace exe::runtime
 
 #endif /* DDVAMP_EXE_SCHED_THREAD_POOL_HPP_INCLUDED_ */

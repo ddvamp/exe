@@ -10,7 +10,7 @@
 
 #include <cstddef>
 
-namespace exe::sched {
+namespace exe::runtime {
 
 class RunLoop final : public task::ISafeScheduler {
  private:
@@ -50,6 +50,6 @@ class RunLoop final : public task::ISafeScheduler {
    [[nodiscard]] task::TaskBase *Pop() noexcept;
 };
 
-} // namespace exe::sched
+} // namespace exe::runtime
 
 #endif /* DDVAMP_EXE_SCHED_RUN_LOOP_HPP_INCLUDED_ */

@@ -1,15 +1,27 @@
+//
+// fiber.cpp
+// ~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
 #include <exe/fiber/api.hpp>
-#include "exe/fiber/core/fiber.hpp"
+#include <exe/fiber/core/awaiter.hpp>
+#include <exe/fiber/core/body.hpp>
+#include <exe/fiber/core/id.hpp>
+#include <exe/fiber/core/fiber.hpp>
+#include <exe/fiber/core/handle.hpp>
+#include <exe/fiber/core/scheduler.hpp>
+#include <exe/fiber/core/stack.hpp>
 
 #include <util/abort.hpp>
 #include <util/debug.hpp>
 #include <util/defer.hpp>
 
+#include <atomic>
 #include <utility>
 
 namespace exe::fiber {
@@ -102,14 +114,16 @@ Fiber::Fiber(Body &&body, Stack &&stack, IScheduler *scheduler) noexcept
 Fiber *Fiber::DoRun() noexcept {
   Step();
 
-  if (coroutine_.IsCompleted()) [[unlikely]] {
-    UTIL_ASSERT(!awaiter_, "Awaiter instead of nullptr");
-    DestroySelf();
-    return nullptr;
+  UTIL_ASSERT(coroutine_.IsCompleted() != static_cast<bool>(awaiter_),
+              "Internal error! Awaiter is either lost or "
+              "provided for a completed fiber");
+
+  if (awaiter_) [[likely]] {
+    return awaiter_->AwaitSymmetricSuspend(FiberHandle(this)).Release();
   }
 
-  UTIL_ASSUME(awaiter_, "nullptr instead of awaiter");
-  return awaiter_->AwaitSymmetricSuspend(FiberHandle(this)).Release();
+  DestroySelf();
+  return nullptr;
 }
 
 void Fiber::Step() noexcept {

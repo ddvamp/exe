@@ -1,13 +1,20 @@
+//
+// stack.cpp
+// ~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
-#include "exe/fiber/core/stack.hpp"
+#include <exe/fiber/core/stack.hpp>
 
 #include <concurrency/qspinlock.hpp>
 #include <util/debug/assert.hpp>
+#include <util/memory/view.hpp>
 
+#include <cstddef>
 #include <utility>
 
 namespace exe::fiber {

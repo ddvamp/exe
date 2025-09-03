@@ -1,14 +1,23 @@
+//
+// run_loop.cpp
+// ~~~~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
-#include "exe/sched/run_loop.hpp"
+#include <exe/runtime/run_loop.hpp>
+#include <exe/runtime/task/task.hpp>
 
 #include <util/utility.hpp>
 #include <util/debug/assert.hpp>
 
-namespace exe::sched {
+#include <atomic>
+#include <cstddef>
+
+namespace exe::runtime {
 
 RunLoop::~RunLoop() {
   UTIL_ASSERT(IsEmpty(), "RunLoop contains tasks when destroyed");
@@ -38,4 +47,4 @@ task::TaskBase *RunLoop::Pop() noexcept {
   return ::std::exchange(head_, head_->next_.load(::std::memory_order_relaxed));
 }
 
-} // namespace exe::sched
+} // namespace exe::runtime

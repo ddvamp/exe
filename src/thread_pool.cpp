@@ -1,14 +1,25 @@
+//
+// thread_pool.cpp
+// ~~~~~~~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
-#include "exe/sched/tp/thread_pool.hpp"
+// [TODO]: What to do with catch(...)?
+
+#include <exe/runtime/tp/thread_pool.hpp>
+#include <exe/runtime/task/task.hpp>
 
 #include <util/abort.hpp>
 #include <util/debug/assert.hpp>
 
-namespace exe::sched::tp {
+#include <cstddef>
+#include <thread>
+
+namespace exe::runtime::tp {
 
 namespace {
 
@@ -26,30 +37,31 @@ thread_local ThreadPool *current_pool = nullptr;
 }
 
 ThreadPool::~ThreadPool() {
-  UTIL_ASSERT(state_ == State::stopped,
+  UTIL_ASSERT(state_ == kStopped,
               "Thread pool was not stopped before the destruction");
 }
 
 void ThreadPool::WorkLoop() noexcept try {
   current_pool = this;
 
-  // TODO: Exception handling (mutex.lock())
   while (auto task = tasks_.Pop()) {
     task->Run();
   }
 } catch (...) {
-  UTIL_ABORT("Exception inside ThreadPool's worker thread");
+  UTIL_ABORT("Unexpected exception inside ThreadPool's worker thread");
 }
 
-void ThreadPool::Start() {
-  UTIL_ASSERT(state_ == State::created, "Thread pool has already been started");
-  state_ = State::started;
+void ThreadPool::Start() noexcept try {
+  UTIL_ASSERT(state_ == kCreated, "Thread pool has already been started");
+  state_ = kStarted;
 
   auto cnt = worker_count_;
   workers_.reserve(cnt);
   do {
     workers_.emplace_back(&ThreadPool::WorkLoop, this);
   } while (--cnt != 0);
+} catch (...) {
+  UTIL_ABORT("Unexpected exception when starting ThreadPool");
 }
 
 void ThreadPool::JoinWorkerThreads() {
@@ -63,23 +75,25 @@ ThreadPool::ThreadPool(::std::size_t const workers)
   UTIL_ASSERT(workers != 0, "Zero-size thread pool was requested");
 }
 
-ThreadPool::ThreadPool(::std::size_t const workers, launch_t)
+ThreadPool::ThreadPool(::std::size_t const workers, Launch)
     : ThreadPool(workers) {
   Start();
 }
 
 /* virtual */ void ThreadPool::Submit(task::TaskBase *task) {
-  UTIL_ASSERT(state_ == State::started, "Using thread pool before start");
+  UTIL_ASSERT(state_ == kStarted, "Using thread pool before start");
   UTIL_VERIFY(tasks_.Push(task), "Using thread pool after stop");
 }
 
-void ThreadPool::Stop() {
-  UTIL_ASSERT(state_ == State::started,
+void ThreadPool::Stop() noexcept try {
+  UTIL_ASSERT(state_ == kStarted,
               "Attempt to stop non-working thread pool");
-  state_ = State::stopped;
+  state_ = kStopped;
 
   tasks_.Close();
   JoinWorkerThreads();
+} catch (...) {
+  UTIL_ABORT("Unexpected exception when stopping ThreadPool");
 }
 
-} // namespace exe::sched::tp
+} // namespace exe::runtime::tp

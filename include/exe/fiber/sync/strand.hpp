@@ -1,7 +1,12 @@
+//
+// strand.hpp
+// ~~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
 #ifndef DDVAMP_EXE_FIBER_SYNC_STRAND_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_SYNC_STRAND_HPP_INCLUDED_ 1
@@ -101,8 +106,7 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
 
  public:
   ~Strand() {
-    UTIL_ASSERT(dummy_.next_.load(::std::memory_order_relaxed) == &dummy_,
-                 "Strand is destroyed during use");
+    UTIL_ASSERT(dummy_.Next() == &dummy_, "Strand is destroyed during use");
   }
 
   Strand(Strand const &) = delete;
@@ -139,7 +143,7 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
   void CombineCold(Node *node) noexcept {
     NoSwitchContextGuard guard;
 
-    auto next = node->next_.load(::std::memory_order_relaxed);
+    auto next = node->Next();
     do {
       static_cast<CombineAwaiter &>(*node)();
       node = next;
@@ -156,7 +160,7 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
   }
 
   FiberHandle CombineImplCold(Node *head, Node *tail, Node *self) noexcept {
-    UTIL_IGNORE(tail->next_.load(::std::memory_order_acquire));  // sync
+    UTIL_IGNORE(tail->next_.load(::std::memory_order_acquire)); // sync
 
     if (tail != &dummy_) [[likely]] {
       auto const next = TryTakeNext(self, head);
@@ -182,12 +186,12 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
     return TryTakeNext(node, node);
   }
 
-  static [[nodiscard]] FiberHandle &&GetHandle(Node *node) noexcept {
+  [[nodiscard]] static FiberHandle &&GetHandle(Node *node) noexcept {
     return static_cast<CombineAwaiter *>(node)->GetHandle();
   }
 
-  static [[nodiscard]] Node *TryTakeNext(Node *node, Node *head) noexcept {
-    auto next = node->next_.load(::std::memory_order_relaxed);
+  [[nodiscard]] static Node *TryTakeNext(Node *node, Node *head) noexcept {
+    auto next = node->Next();
     if (next) [[likely]] {
       return next;
     }

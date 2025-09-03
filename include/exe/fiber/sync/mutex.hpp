@@ -1,7 +1,12 @@
+//
+// mutex.hpp
+// ~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
 #ifndef DDVAMP_EXE_FIBER_SYNC_MUTEX_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_SYNC_MUTEX_HPP_INCLUDED_ 1
@@ -9,13 +14,15 @@
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
 #include <exe/fiber/core/handle.hpp>
+#include <exe/fiber/core/id.hpp>
 
 #include <concurrency/intrusive/forward_list.hpp>
 #include <util/debug.hpp>
+#include <util/macro.hpp>
 #include <util/utility.hpp>
 
 #include <atomic>
-#include <mutex>  // std::lock_guard, std::unique_lock
+#include <mutex> // IWYU pragma: export - std::lock_guard, std::unique_lock
 #include <new>
 
 namespace exe::fiber {
@@ -139,12 +146,12 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
     UTIL_IGNORE(Acquire(owner, next, false));
   }
 
-  static [[nodiscard]] FiberHandle &&GetHandle(Node *node) noexcept {
+  [[nodiscard]] static FiberHandle &&GetHandle(Node *node) noexcept {
     [[assume(node)]];
     return ::std::move(*static_cast<FiberInfo *>(node)).handle_;
   }
 
-  static [[nodiscard]] Node *TryTakeNext(Node *node) noexcept {
+  [[nodiscard]] static Node *TryTakeNext(Node *node) noexcept {
     auto next = node->next_.load(::std::memory_order_relaxed);
     if (next) {
       return next;

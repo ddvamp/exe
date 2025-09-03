@@ -1,24 +1,30 @@
+//
+// fiber.hpp
+// ~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
 #ifndef DDVAMP_EXE_FIBER_CORE_FIBER_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_CORE_FIBER_HPP_INCLUDED_ 1
 
-#include "awaiter.hpp"
-#include "coroutine.hpp"
-#include "id.hpp"
-#include "scheduler.hpp"
-#include "stack.hpp"
-#include <exe/sched/task/task.hpp>
+#include <exe/fiber/core/awaiter.hpp>
+#include <exe/fiber/core/body.hpp>
+#include <exe/fiber/core/coroutine.hpp>
+#include <exe/fiber/core/id.hpp>
+#include <exe/fiber/core/scheduler.hpp>
+#include <exe/fiber/core/stack.hpp>
+#include <exe/runtime/task/task.hpp>
 
 #include <atomic>
 
 namespace exe::fiber {
 
 // Fiber = stackful coroutine + scheduler
-class [[nodiscard]] Fiber final : private sched::task::TaskBase {
+class [[nodiscard]] Fiber final : private runtime::task::TaskBase {
  private:
   Stack stack_;
   Coroutine coroutine_;

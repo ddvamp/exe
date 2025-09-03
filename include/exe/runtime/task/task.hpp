@@ -1,17 +1,23 @@
+//
+// task.hpp
+// ~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
-#ifndef DDVAMP_EXE_SCHED_TASK_TASK_HPP_INCLUDED_
-#define DDVAMP_EXE_SCHED_TASK_TASK_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_RUNTIME_TASK_TASK_HPP_INCLUDED_
+#define DDVAMP_EXE_RUNTIME_TASK_TASK_HPP_INCLUDED_ 1
 
 #include <concurrency/intrusive/forward_list.hpp>
 
-namespace exe::sched::task {
+namespace exe::runtime::task {
 
 struct ITask {
  protected:
+  // Lifetime cannot be controlled via ITask *
   ~ITask() = default;
 
  public:
@@ -22,9 +28,10 @@ struct ITask {
 
 struct TaskBase : ITask, ::concurrency::IntrusiveForwardListNode<TaskBase> {
  protected:
+  // Lifetime cannot be controlled via TaskBase *
   ~TaskBase() = default;
 };
 
-} // namespace exe::sched::task
+} // namespace exe::runtime::task
 
-#endif /* DDVAMP_EXE_SCHED_TASK_TASK_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_RUNTIME_TASK_TASK_HPP_INCLUDED_ */

@@ -1,9 +1,14 @@
+//
+// coroutine.cpp
+// ~~~~~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
-#include "exe/fiber/core/coroutine.hpp"
+#include <exe/fiber/core/coroutine.hpp>
 
 #include <util/abort.hpp>
 #include <util/debug/assert.hpp>
@@ -57,10 +62,9 @@ void Coroutine::Cancel() noexcept {
 }
 
 void Coroutine::ChangeStatus(Status const from, Status const to) noexcept {
-  UTIL_ASSERT(status_ == from, ::std::format("Coroutine is in wrong status: "
-                                             "expected = {}, actual = {}",
-                                             ToStringView(from),
-                                             ToStringView(status_)));
+  UTIL_ASSERT(status_ == from, ::std::format(
+      "Coroutine is in wrong status: expected = {}, actual = {}",
+      ToStringView(from), ToStringView(status_)));
   status_ = to;
 }
 

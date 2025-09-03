@@ -1,17 +1,24 @@
+//
+// condvar.hpp
+// ~~~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
 #ifndef DDVAMP_EXE_FIBER_SYNC_CONDVAR_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_SYNC_CONDVAR_HPP_INCLUDED_ 1
 
-#include "mutex.hpp"
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
+#include <exe/fiber/core/handle.hpp>
+#include <exe/fiber/sync/mutex.hpp>
 
 #include <util/debug/run.hpp>
 
+#include <atomic>
 #include <utility>
 
 namespace exe::fiber {

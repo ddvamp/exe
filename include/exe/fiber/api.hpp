@@ -1,17 +1,22 @@
+//
+// api.hpp
+// ~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
 #ifndef DDVAMP_EXE_FIBER_API_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_API_HPP_INCLUDED_ 1
 
-#include "core/awaiter.hpp"
-#include "core/body.hpp"
-#include "core/fwd.hpp"
-#include "core/handle.hpp"
-#include "core/id.hpp"
-#include "core/scheduler.hpp"
+#include <exe/fiber/core/awaiter.hpp>
+#include <exe/fiber/core/body.hpp>
+#include <exe/fiber/core/fwd.hpp>
+#include <exe/fiber/core/handle.hpp>
+#include <exe/fiber/core/id.hpp>
+#include <exe/fiber/core/scheduler.hpp>
 
 namespace exe::fiber {
 

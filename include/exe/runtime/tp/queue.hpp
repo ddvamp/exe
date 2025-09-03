@@ -1,13 +1,20 @@
+//
+// queue.hpp
+// ~~~~~~~~~
+//
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
-#ifndef DDVAMP_EXE_SCHED_TP_QUEUE_HPP_INCLUDED_
-#define DDVAMP_EXE_SCHED_TP_QUEUE_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_RUNTIME_TP_QUEUE_HPP_INCLUDED_
+#define DDVAMP_EXE_RUNTIME_TP_QUEUE_HPP_INCLUDED_ 1
 
-#include <exe/sched/task/task.hpp>
+#include <exe/runtime/task/task.hpp>
 
+#include <concurrency/intrusive/forward_list.hpp>
+#include <util/abort.hpp>
 #include <util/defer.hpp>
 #include <util/debug/assert.hpp>
 
@@ -15,13 +22,12 @@
 #include <cstdint> // std::uint32_t
 #include <mutex>
 
-namespace exe::sched::tp {
+namespace exe::runtime::tp {
 
 class Queue {
  private:
-  task::TaskBase *head_ = nullptr;
-  task::TaskBase *tail_;
-  ::std::mutex m_; // Protects the queue
+  ::concurrency::IntrusiveQueue<task::TaskBase> queue_;
+  ::std::mutex m_;
   ::std::condition_variable has_elements_;
   ::std::uint32_t waiters_count_ = 0;
   bool is_closed_ = false;
@@ -49,13 +55,7 @@ class Queue {
       return false;
     }
 
-    task->Link(nullptr);
-    if (IsEmpty()) {
-      head_ = tail_ = task;
-    } else {
-      tail_->Link(task);
-      tail_ = task;
-    }
+    queue_.Push(task);
 
     if (waiters_count_ != 0) {
       has_elements_.notify_one();
@@ -67,14 +67,11 @@ class Queue {
   [[nodiscard]] task::TaskBase *Pop() {
     ::std::unique_lock lock(m_);
 
-    ++waiters_count_;
-    ::util::defer stop_waiting([=]() noexcept { --waiters_count_; });
+    ::util::defer stop_waiting([&cnt = ++waiters_count_] noexcept { --cnt; });
 
     while (true) {
-      if (!IsEmpty()) {
-        auto const task = head_;
-        head_ = task->next_;
-        return task;
+      if (!queue_.IsEmpty()) {
+        return queue_.Pop();
       }
 
       if (is_closed_) [[unlikely]] {
@@ -99,13 +96,8 @@ class Queue {
 
     has_elements_.notify_all();
   }
-
- private:
-  [[nodiscard]] bool IsEmpty() const noexcept {
-    return !head_;
-  }
 };
 
-} // namespace exe::sched::tp
+} // namespace exe::runtime::tp
 
-#endif /* DDVAMP_EXE_SCHED_TP_QUEUE_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_RUNTIME_TP_QUEUE_HPP_INCLUDED_ */
