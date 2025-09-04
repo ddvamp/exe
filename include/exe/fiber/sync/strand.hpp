@@ -17,82 +17,68 @@
 
 #include <concurrency/intrusive/forward_list.hpp>
 #include <util/macro.hpp>
+#include <util/utility.hpp>
 #include <util/debug/assert.hpp>
 
 #include <atomic>
-#include <memory> // std::addressof
 #include <new>
 #include <type_traits>
-#include <utility>
 
 namespace exe::fiber {
 
 class alignas (::std::hardware_destructive_interference_size) Strand {
  private:
   struct CombineTask {
-    using Fn = void (void *&, FiberHandle &) noexcept;
+    using Fn = void (void *) noexcept;
 
     void *cs_;
-    Fn *fn_;
-    Fn *master_;
+    Fn *ramp_;
 
     CombineTask(CombineTask &) = default;
 
     template <typename CS>
-    CombineTask(CS &&cs) noexcept
-        : cs_(const_cast<void *>(static_cast<void const volatile *>(
-                                     ::std::addressof(cs)))),
-          fn_(Slave<CS>),
-          master_(Master<CS>) {}
+    CombineTask(CS &&cs) noexcept : cs_(::util::voidify(cs)), ramp_(Task<CS>) {}
 
-    [[nodiscard]] bool IsUsed() const noexcept {
-      return cs_;
-    }
-
-    void Switch() noexcept {
-      fn_ = master_;
-    }
-
-    void Run(FiberHandle &h) noexcept {
-      fn_(cs_, h);
+    void RunCS() noexcept {
+      ramp_(cs_);
     }
 
     template <typename CS>
-    static void Master(void *&cs, FiberHandle &) noexcept {
+    static void Task(void *cs) noexcept {
       ::std::forward<CS>(*static_cast<::std::remove_reference_t<CS> *>(cs))();
-    }
-
-    template <typename CS>
-    static void Slave(void *&cs, FiberHandle &h) noexcept {
-      Master<CS>(cs, h);
-      cs = nullptr;
-      ::std::move(h).Schedule();
     }
   };
 
   struct CombineAwaiter : IAwaiter, CombineTask,
-                          concurrency::IntrusiveForwardListNode<> {
-    Strand *s_;
+                          ::concurrency::IntrusiveForwardListNode<> {
+    Strand *strand_;
     FiberHandle handle_;
+    bool leader_ = false;
 
-    CombineAwaiter(CombineTask task) noexcept : CombineTask(task) {}
+    CombineAwaiter(Strand *strand, CombineTask task) noexcept
+        : CombineTask(task)
+        , strand_(strand) {}
+
+    ~CombineAwaiter() {
+      if (leader_) [[unlikely]] {
+        strand_->RunCombine(this);
+      }
+    }
 
     FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
       handle_ = ::std::move(self);
-      return s_->CombineImpl(this);
+      strand_->AddTask(this);
+      return FiberHandle::Invalid();
     }
 
-    [[nodiscard]] bool AmICombiner() const noexcept {
-      return IsUsed();
-    }
-
-    [[nodiscard]] FiberHandle &&GetHandle() noexcept {
-      Switch();
-      return ::std::move(handle_);
+    void Schedule() noexcept {
+      leader_ = true;
+      ::std::move(handle_).Schedule();
     }
 
     void operator() () noexcept {
-      Run(handle_);
+      RunCS();
+      ::std::move(handle_).Schedule();
     }
   };
 
@@ -118,76 +104,61 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
  public:
   constexpr Strand() = default;
 
-  void Combine(CombineAwaiter awaiter) noexcept {
-    awaiter.s_ = this;
-    self::Suspend(awaiter);
-
-    if (!awaiter.AmICombiner()) [[likely]] {
-      return;
-    }
-
-    CombineCold(&awaiter);
+  template <typename Fn>
+  void Combine(Fn fn) noexcept {
+    Combine(::std::forward<Fn>(fn));
   }
 
  private:
-  FiberHandle CombineImpl(CombineAwaiter *self) noexcept {
-    auto const tail = tail_.exchange(self, ::std::memory_order_acq_rel);
-    auto const head = tail->next_.exchange(self, ::std::memory_order_relaxed);
+  void Combine(CombineTask task) noexcept {
+    CombineAwaiter awaiter(this, task);
+    self::Suspend(awaiter);
+  }
+
+  void AddTask(CombineAwaiter *node) noexcept {
+    auto const tail = tail_.exchange(node, ::std::memory_order_acq_rel);
+    auto const head = tail->next_.exchange(node, ::std::memory_order_relaxed);
     if (!head) [[likely]] {
-      return FiberHandle::Invalid();
+      return;
     }
 
-    return CombineImplCold(head, tail, self);
-  }
-
-  void CombineCold(Node *node) noexcept {
-    NoSwitchContextGuard guard;
-
-    auto next = node->Next();
-    do {
-      static_cast<CombineAwaiter &>(*node)();
-      node = next;
-
-      next = TryTakeNext(node, node);
-      if (!next) [[unlikely]] {
-        return;
-      }
-    } while (node != &dummy_);
-
-    if (Acquire(next)) [[likely]] {
-      GetHandle(next).Schedule();
-    }
-  }
-
-  FiberHandle CombineImplCold(Node *head, Node *tail, Node *self) noexcept {
     UTIL_IGNORE(tail->next_.load(::std::memory_order_acquire)); // sync
 
     if (tail != &dummy_) [[likely]] {
-      auto const next = TryTakeNext(self, head);
-      if (next) [[likely]] {
-        self->Link(head);
-        tail->Link(next);
-        return GetHandle(self);
+      TrySchedule(head, node);
+      return;
+    }
+
+    Acquire(node);
+  }
+
+  void RunCombine(CombineAwaiter *self) noexcept {
+    NoSwitchContextGuard guard;
+
+    self->RunCS();
+    auto node = self->Next();
+
+    while (auto next = TryTakeNext(node, node)) {
+      if (node == &dummy_) {
+        Acquire(next);
+        return;
       }
 
-      return FiberHandle::Invalid();
+      static_cast<CombineAwaiter &>(*node)();
+      node = next;
     }
-
-    if (Acquire(self)) [[likely]] {
-      return GetHandle(self);
-    }
-
-    return FiberHandle::Invalid();
   }
 
-  [[nodiscard]] bool Acquire(Node *node) noexcept {
+  void Acquire(Node *node) noexcept {
     dummy_.Link(nullptr);
     tail_.exchange(&dummy_, ::std::memory_order_acq_rel)->Link(&dummy_);
-    return TryTakeNext(node, node);
+    TrySchedule(node, node);
   }
 
-  [[nodiscard]] static FiberHandle &&GetHandle(Node *node) noexcept {
-    return static_cast<CombineAwaiter *>(node)->GetHandle();
+  void TrySchedule(Node *head, Node *tail) noexcept {
+    if (TryTakeNext(tail, head)) [[likely]] {
+      static_cast<CombineAwaiter *>(head)->Schedule();
+    }
   }
 
   [[nodiscard]] static Node *TryTakeNext(Node *node, Node *head) noexcept {
