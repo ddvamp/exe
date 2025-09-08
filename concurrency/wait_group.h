@@ -8,7 +8,7 @@
 #include <atomic>
 #include <cstdint>
 
-#include "concurrency/one_time_notification.h"
+#include "concurrency/one_shot_event.h"
 
 #include "utils/debug.h"
 #include "utils/macro.h"
@@ -18,10 +18,10 @@ namespace concurrency {
 // Synchronization primitive for waiting for the completion of tasks,
 // which are expressed as a 64-bit counter
 // Formally, the wait ends when the counter drops to zero
-// 
+//
 // The add call should happens before the corresponding done call, otherwise
 // the behavior is undefined
-// 
+//
 // The add calls should happens before the wait calls
 //
 // WaitGroup can be reused. In this case, all current wait calls should
@@ -31,7 +31,7 @@ private:
 	using counter_t = ::std::uint64_t;
 
 	::std::atomic<counter_t> count_ = 0;
-	OneTimeNotification counter_is_zero_;
+	OneShotEvent counter_is_zero_;
 
 public:
 	~WaitGroup() = default;
@@ -88,7 +88,7 @@ public:
 	// in case of instance reuse
 	void clear() noexcept
 	{
-		counter_is_zero_.clear();
+		counter_is_zero_.reset();
 	}
 };
 

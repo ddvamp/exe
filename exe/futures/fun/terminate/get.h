@@ -8,7 +8,7 @@
 #include <optional>
 #include <utility>
 
-#include "concurrency/one_time_notification.h"
+#include "concurrency/one_shot_event.h"
 
 #include "exe/futures/fun/combine/seq/inline.h"
 #include "exe/futures/fun/mutator/mutator.h"
@@ -40,7 +40,7 @@ private:
 
 		::std::optional<::utils::result<T>> result;
 
-		::concurrency::OneTimeNotification result_is_ready;
+		::concurrency::OneShotEvent result_is_ready;
 
 		setCallback(
 			makeHolder(f) | futures::inLineIfNeeded(),
