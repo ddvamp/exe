@@ -82,7 +82,7 @@ concept suitable_for_result =
 
 
 // result contains value or error
-// 
+//
 // T must be a type other than
 // error, result_place_t or invoke_place_t that meets
 // the Cpp17Destructible requirements, or be cv void
@@ -510,14 +510,14 @@ public:
 	[[nodiscard]] T const &value() const &
 	{
 		throw_if_error();
-		
+
 		return value_;
 	}
 
 	[[nodiscard]] T &value() &
 	{
 		throw_if_error();
-		
+
 		return value_;
 	}
 
@@ -869,7 +869,7 @@ result(invoke_place_t, F &&, Args &&...) -> result<detail::result_<F, Args...>>;
 ////////////////////////////////////////////////////////////////////////////////
 
 
-template <typename T>
+template <suitable_for_result T>
 requires (::std::is_void_v<T>)
 class [[nodiscard]] result<T> {
 private:
@@ -969,7 +969,7 @@ public:
 	explicit result(value_place_t) noexcept
 		: is_ok_(true)
 	{}
-	
+
 	template <typename F, typename ...Args>
 	result(invoke_place_t, F &&f, Args &&...args)
 		noexcept (::std::is_nothrow_invocable_v<F, Args...>)
