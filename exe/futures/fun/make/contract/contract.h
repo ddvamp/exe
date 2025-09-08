@@ -27,7 +27,7 @@ private:
 	using Base::release;
 
 public:
-	using Base::Result;
+	using typename Base::Result;
 
 public:
 	void setResult(Result result) && noexcept
