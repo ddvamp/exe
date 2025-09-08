@@ -72,9 +72,9 @@ protected:
 	using with_executor = Future<T>;
 
 public:
-	using Base::value_type;
+	using typename Base::value_type;
 
-	using Base::Callback;
+	using typename Base::Callback;
 };
 
 template <typename T>
