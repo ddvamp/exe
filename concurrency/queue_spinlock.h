@@ -8,7 +8,7 @@
 #include <atomic>
 #include <mutex>
 
-#include "utils/concurrency/relax.h"
+#include "relax.h"
 #include "utils/intrusive/forward_list.h"
 #include "utils/utility.h"
 

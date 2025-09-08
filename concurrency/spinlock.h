@@ -7,7 +7,7 @@
 
 #include <atomic>
 
-#include "utils/concurrency/relax.h"
+#include "relax.h"
 
 namespace concurrency {
 
