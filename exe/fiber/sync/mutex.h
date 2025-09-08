@@ -9,14 +9,14 @@
 #include <mutex>
 #include <utility>
 
-#include "exe/fibers/api.h"
-#include "exe/fibers/core/awaiter.h"
-#include "exe/fibers/core/handle.h"
+#include "exe/fiber/api.h"
+#include "exe/fiber/core/awaiter.h"
+#include "exe/fiber/core/handle.h"
 
 #include "util/debug.h"
 #include "util/intrusive/forward_list.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 class CondVar;
 
@@ -273,6 +273,6 @@ private:
 	}
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_SYNC_MUTEX_H_ */

@@ -34,7 +34,7 @@
 	- strand ([сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
 - ***[stackful coroutines](https://github.com/ddvamp/exe/tree/main/exe/coroutine)***
 - [ ] ***stackless coroutines***
-- ***[fibers](https://github.com/ddvamp/exe/tree/main/exe/fibers)***
+- ***[fiber](https://github.com/ddvamp/exe/tree/main/exe/fiber)***
     - API & implementation
 	- synchronization primitives
 		- mutex
@@ -43,7 +43,7 @@
 		- wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
 		- wait point (обобщенная wait group)
 	- [ ] futures support
-- ***[(go) channels for fibers](https://github.com/ddvamp/exe/blob/main/exe/fibers/sync/channel.h)*** (имплементация каналов из языка go)
+- ***[(go) channels for fiber](https://github.com/ddvamp/exe/blob/main/exe/fiber/sync/channel.h)*** (имплементация каналов из языка go)
 	- implementation
 	- [ ] select
 - ***[(functional) futures](https://github.com/ddvamp/exe/tree/main/exe/futures/fun)*** (фьючи в функциональном стиле)

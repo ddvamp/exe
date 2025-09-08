@@ -6,13 +6,13 @@
 #include <stack>
 #include <utility>
 
-#include "exe/fibers/core/stack.h"
+#include "exe/fiber/core/stack.h"
 
 #include "util/abort.h"
 #include "util/debug.h"
 #include "util/defer.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 namespace {
 
@@ -75,4 +75,4 @@ void deallocateStack(Stack &&stack) noexcept
 	allocator.deallocate(stack);
 }
 
-} // namespace exe::fibers
+} // namespace exe::fiber

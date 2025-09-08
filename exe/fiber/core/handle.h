@@ -5,9 +5,9 @@
 #ifndef DDV_EXE_FIBERS_CORE_HANDLE_H_
 #define DDV_EXE_FIBERS_CORE_HANDLE_H_ 1
 
-#include "exe/fibers/core/fwd.h"
+#include "exe/fiber/core/fwd.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 // Class for managing fiber in awaiters
 class [[nodiscard]] FiberHandle {
@@ -61,6 +61,6 @@ private:
 	Fiber *releaseChecked() noexcept;
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_CORE_HANDLE_H_ */

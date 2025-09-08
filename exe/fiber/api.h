@@ -6,11 +6,11 @@
 #define DDV_EXE_FIBERS_API_H_ 1
 
 #include "exe/executors/executor.h"
-#include "exe/fibers/core/awaiter.h"
-#include "exe/fibers/core/id.h"
-#include "exe/fibers/core/routine.h"
+#include "exe/fiber/core/awaiter.h"
+#include "exe/fiber/core/id.h"
+#include "exe/fiber/core/routine.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 using executors::INothrowExecutor;
 
@@ -47,6 +47,6 @@ void teleportTo(INothrowExecutor &executor);
 
 } // namespace self
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_API_H_ */

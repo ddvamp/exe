@@ -7,9 +7,9 @@
 
 #include <utility>
 
-#include "exe/fibers/core/handle.h"
+#include "exe/fiber/core/handle.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 class IAwaiter {
 public:
@@ -28,6 +28,6 @@ public:
 	}
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_CORE_AWAITER_H_ */

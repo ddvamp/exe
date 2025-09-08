@@ -4,12 +4,12 @@
 
 #include <utility>
 
-#include "exe/fibers/core/fiber.h"
-#include "exe/fibers/core/handle.h"
+#include "exe/fiber/core/fiber.h"
+#include "exe/fiber/core/handle.h"
 
 #include "util/debug.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 FiberHandle::~FiberHandle()
 {
@@ -47,4 +47,4 @@ Fiber *FiberHandle::releaseChecked() noexcept
 	return release();
 }
 
-} // namespace exe::fibers
+} // namespace exe::fiber

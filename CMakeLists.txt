@@ -20,9 +20,9 @@ set(
   ./exe/coroutine/coroutine.cc
   ./exe/executors/tp/thread_pool.cc
   ./exe/executors/strand.cc
-  ./exe/fibers/core/fiber.cc
-  ./exe/fibers/core/handle.cc
-  ./exe/fibers/core/stack.cc
+  ./exe/fiber/core/fiber.cc
+  ./exe/fiber/core/handle.cc
+  ./exe/fiber/core/stack.cc
   ./util/debug/assert.cc
   ./util/debug/assume.cc
   ./util/debug/unreachable.cc
