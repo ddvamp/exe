@@ -8,9 +8,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "utils/abort.h"
+#include "util/abort.h"
 
-namespace utils {
+namespace util {
 
 namespace detail {
 
@@ -18,7 +18,7 @@ namespace detail {
 template <typename R, typename ...Args>
 [[noreturn]] R function_not_callable(void *, Args &&...) noexcept
 {
-	abort("empty utils::function object was called");
+	abort("empty util::function object was called");
 }
 
 // precondition: ptr point to object of type T
@@ -109,7 +109,7 @@ protected:
 		return !empty();
 	}
 
-	template <typename Fn> 
+	template <typename Fn>
 	void construct_fn(Fn &&fn)
 	{
 		using T = ::std::remove_cvref_t<Fn>;
@@ -146,7 +146,7 @@ template <typename>
 struct get_function_impl {
 	static_assert(
 		false,
-		"utils::function expect function type as template argument"
+		"util::function expect function type as template argument"
 	);
 };
 
@@ -193,6 +193,6 @@ public:
 	using Base::operator();
 };
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_FUNCTION_H_ */

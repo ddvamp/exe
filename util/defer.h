@@ -10,9 +10,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "utils/macro.h"
+#include "util/macro.h"
 
-namespace utils {
+namespace util {
 
 namespace detail {
 
@@ -196,7 +196,7 @@ public:
 template <typename Policy>
 struct with_policy {
 	template <typename T>
-	using scope_guard = utils::scope_guard<T, Policy>;
+	using scope_guard = util::scope_guard<T, Policy>;
 };
 
 template <typename T>
@@ -210,8 +210,8 @@ using scope_failure = scope_guard<T, detail::failure_guard_policy>;
 template <typename Policy>
 struct with_policy {
 	template <typename T>
-	class [[nodiscard]] scope_guard : public utils::scope_guard<T, Policy> {
-		using utils::scope_guard<T, Policy>::scope_guard;
+	class [[nodiscard]] scope_guard : public util::scope_guard<T, Policy> {
+		using util::scope_guard<T, Policy>::scope_guard;
 	};
 
 	template <typename T>
@@ -243,7 +243,7 @@ scope_failure(T) -> scope_failure<T>;
 
 
 // changes val to new_val and creates an RAII-object
-// to undo this at the end of the scope 
+// to undo this at the end of the scope
 template <typename T, typename U = T>
 auto rollback_exchange(T &val, U &&new_val)
 	noexcept (
@@ -274,6 +274,6 @@ auto rollback_exchange(T &val, U &&new_val)
 	};
 }
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_DEFER_H_ */

@@ -6,9 +6,9 @@
 
 #include "exe/fibers/core/fiber.h"
 
-#include "utils/abort.h"
-#include "utils/debug.h"
-#include "utils/defer.h"
+#include "util/abort.h"
+#include "util/debug.h"
+#include "util/defer.h"
 
 namespace exe::fibers {
 
@@ -46,7 +46,7 @@ public:
 	[[nodiscard]] FiberHandle awaitSymmetricSuspend(FiberHandle &&from) override
 	{
 		// prevents race condition
-		auto cleanup = ::utils::defer{
+		auto cleanup = ::util::defer{
 			[&from]() noexcept {
 				::std::move(from).schedule();
 			}
@@ -107,7 +107,7 @@ void Fiber::releaseResources() noexcept
 
 void Fiber::step() noexcept
 {
-	auto rollback = ::utils::rollback_exchange(current, this);
+	auto rollback = ::util::rollback_exchange(current, this);
 
 	coroutine_.resume();
 }

@@ -15,7 +15,7 @@
 #include "exe/futures/fun/make/contract/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 
-#include "utils/type_traits.h"
+#include "util/type_traits.h"
 
 namespace exe::futures {
 
@@ -36,7 +36,7 @@ public:
 		promise_.emplace(::std::move(p));
 	}
 
-	void setResult(::utils::result<T> &&res) noexcept
+	void setResult(::util::result<T> &&res) noexcept
 	{
 		auto order = ::std::memory_order_acquire;
 
@@ -65,7 +65,7 @@ public:
 	}
 
 private:
-	void setResult(::utils::result<T> &res) noexcept
+	void setResult(::util::result<T> &res) noexcept
 	{
 		::std::move(*promise_).setResult(::std::move(res));
 	}
@@ -85,7 +85,7 @@ public:
 	template <typename ...Fs>
 	auto mutate(Fs &&...fs)
 	{
-		using T = ::utils::pack_element_t<0, Fs...>::value_type;
+		using T = ::util::pack_element_t<0, Fs...>::value_type;
 
 		auto contract = Contract<T>();
 
@@ -119,7 +119,7 @@ template <concepts::Future ...Fs>
 auto first(Fs &&...fs)
 	requires (
 		sizeof...(Fs) > 1 &&
-		::utils::are_all_same_v<typename Fs::value_type...>
+		::util::are_all_same_v<typename Fs::value_type...>
 	)
 {
 	return detail::First().mutate(::std::move(fs)...);

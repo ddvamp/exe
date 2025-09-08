@@ -8,8 +8,8 @@
 #include "context/exceptions_context.h"
 #include "context/machine_context.h"
 
-#include "utils/debug.h"
-#include "utils/memory/view.h"
+#include "util/debug.h"
+#include "util/memory/view.h"
 
 namespace context {
 
@@ -33,7 +33,7 @@ public:
 	ExecutionContext() = default;
 
 	// initializes new context with stack using trampoline
-	ExecutionContext(::utils::memory_view stack, ITrampoline *trampoline)
+	ExecutionContext(::util::memory_view stack, ITrampoline *trampoline)
 		noexcept
 	{
 		machine_ctx_.setup(stack, trampoline);

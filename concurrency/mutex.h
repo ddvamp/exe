@@ -12,10 +12,10 @@
 #include <mutex>
 #include <span>
 
-#include "utils/defer.h"
-#include "utils/type_traits.h"
+#include "util/defer.h"
+#include "util/type_traits.h"
 
-namespace utils {
+namespace util {
 
 namespace detail {
 
@@ -112,11 +112,11 @@ template <typename ...MutexTypes>
 	if constexpr (sizeof...(m) < 2) {
 		return ::std::scoped_lock(m...);
 	} else {
-		utils::lock(m...);
+		util::lock(m...);
 		return {::std::adopt_lock, m...};
 	}
 }
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_CONCURRENCY_MUTEX_H_ */

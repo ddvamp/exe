@@ -17,7 +17,7 @@
 
 #include "result/result.h"
 
-#include "utils/macro.h"
+#include "util/macro.h"
 
 namespace exe::futures {
 
@@ -39,13 +39,13 @@ public:
 
 	void run() noexcept override
 	{
-		::std::move(p_).setResult(::utils::map_safely(fn_));
+		::std::move(p_).setResult(::util::map_safely(fn_));
 		destroySelf();
 	}
 
 	void reset() noexcept
 	{
-		::std::move(p_).setResult(::utils::error(nullptr));
+		::std::move(p_).setResult(::util::error(nullptr));
 		destroySelf();
 	}
 
@@ -63,7 +63,7 @@ auto submit(E &where, Fn fn)
 	requires (
 		::std::is_nothrow_destructible_v<Fn> &&
 		::std::is_invocable_v<Fn &> &&
-		::utils::is_result_v<traits::map_result_t<Fn &>>
+		::util::is_result_v<traits::map_result_t<Fn &>>
 	)
 {
 	using T = traits::map_result_t<Fn &>::value_type;

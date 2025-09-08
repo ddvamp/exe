@@ -13,8 +13,8 @@
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/handle.h"
 
-#include "utils/debug.h"
-#include "utils/intrusive/forward_list.h"
+#include "util/debug.h"
+#include "util/intrusive/forward_list.h"
 
 namespace exe::fibers {
 
@@ -24,7 +24,7 @@ class Mutex {
 private:
 	friend class CondVar;
 
-	struct FiberInfo : ::utils::intrusive_concurrent_forward_list_node<> {
+	struct FiberInfo : ::util::intrusive_concurrent_forward_list_node<> {
 		FiberHandle handle_;
 	};
 
@@ -261,7 +261,7 @@ private:
 		setNext(node);
 
 		auto next = static_cast<Node *>(nullptr);
-			
+
 		node->next_.compare_exchange_strong(
 			next,
 			node,

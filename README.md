@@ -90,7 +90,7 @@
 - ***[concurrency](https://github.com/ddvamp/exe/tree/main/concurrency)*** - библиотека средств синхронизации потоков
 - ***[context](https://github.com/ddvamp/exe/tree/main/context)*** - контекст исполнения для stackful корутин/файберов
 - ***[result](https://github.com/ddvamp/exe/tree/main/result)*** - упрощенная реализация C++23 std::expected для представления значения или пойманного исключения (value or std::exception_ptr)
-- ***[utils](https://github.com/ddvamp/exe/tree/main/utils)*** - std-like библиотека общих утилит
+- ***[util](https://github.com/ddvamp/exe/tree/main/util)*** - std-like библиотека общих утилит
 
 ## License
 

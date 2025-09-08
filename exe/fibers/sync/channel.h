@@ -19,9 +19,9 @@
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/handle.h"
 
-#include "utils/debug.h"
-#include "utils/refer/ref_counted_ptr.h"
-#include "utils/utility.h"
+#include "util/debug.h"
+#include "util/refer/ref_counted_ptr.h"
+#include "util/utility.h"
 
 namespace exe::fibers {
 
@@ -197,7 +197,7 @@ private:
 
 public:
 	template <typename T>
-	ChannelAwaiter(T &object, ::concurrency::QueueSpinlock::LockToken &lock, 
+	ChannelAwaiter(T &object, ::concurrency::QueueSpinlock::LockToken &lock,
 		ChannelWaitQueue &queue) noexcept
 		: fiber_info_{::std::addressof(object)}
 		, lock_(lock)
@@ -445,7 +445,7 @@ private:
 			return is_closed;
 		}
 
-		if (::utils::any_of(is_closed, nonblocking)) [[unlikely]] {
+		if (::util::any_of(is_closed, nonblocking)) [[unlikely]] {
 			token.unlock();
 			return is_closed;
 		}
@@ -461,7 +461,7 @@ private:
 template <::std::destructible T>
 	requires (::std::is_nothrow_move_constructible_v<T>)
 class ChannelImpl final
-	: public ::utils::RefCounted<ChannelImpl<T>>
+	: public ::util::RefCounted<ChannelImpl<T>>
 	, public ChannelState<T> {
 private:
 	using Self = ChannelImpl;
@@ -523,7 +523,7 @@ private:
 	static Self *allocate(::std::size_t const count)
 	{
 		auto const size = calculateImplSize(count);
-		
+
 		constexpr auto align = alignof(Self);
 		if constexpr (align > __STDCPP_DEFAULT_NEW_ALIGNMENT__) {
 			return static_cast<Self *>(
@@ -562,13 +562,13 @@ class Channel {
 	using Impl = detail::ChannelImpl<element_type>;
 
 private:
-	::utils::RefCountedPtr<Impl> impl_;
+	::util::RefCountedPtr<Impl> impl_;
 
 public:
 	explicit Channel(::std::size_t const capacity)
 		: impl_(Impl::create(capacity))
 	{}
-	
+
 	// precondition: channel is not closed
 	void send(element_type value) noexcept
 	{
@@ -607,27 +607,27 @@ class Channel<T> {
 	template <typename ...>
 	friend class detail::Selector;
 
-	using Impl = detail::ChannelImpl<::utils::unit_t>;
+	using Impl = detail::ChannelImpl<::util::unit_t>;
 
 private:
-	::utils::RefCountedPtr<Impl> impl_;
+	::util::RefCountedPtr<Impl> impl_;
 
 public:
 	explicit Channel(::std::size_t const capacity)
 		: impl_(Impl::create(capacity))
 	{}
-	
+
 	// precondition: channel is not closed
 	void send() noexcept
 	{
-		impl_->send(::utils::unit_t{});
+		impl_->send(::util::unit_t{});
 	}
 
 	// precondition: channel is not closed
 	// returns true on failure (consistent with primary template)
 	[[nodiscard]] bool trySend() noexcept
 	{
-		return impl_->trySend(::utils::unit_t{});
+		return impl_->trySend(::util::unit_t{});
 	}
 
 	// returns true on success

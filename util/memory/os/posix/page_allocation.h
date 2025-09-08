@@ -11,9 +11,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "utils/debug.h"
+#include "util/debug.h"
 
-namespace utils {
+namespace util {
 
 namespace {
 
@@ -63,7 +63,7 @@ void protect_memory(void *address, ::std::size_t size) noexcept
 		// internal kernel structures could not be allocated,
 		// or changing the protection of a memory region would result in
 		// the total number of mappings with distinct attributes
-		case ENOMEM: 
+		case ENOMEM:
 			throw std::bad_alloc{};
 
 		default:
@@ -81,4 +81,4 @@ void release_memory(void *address, ::std::size_t size) noexcept
 
 } // namespace
 
-} // namespace utils
+} // namespace util

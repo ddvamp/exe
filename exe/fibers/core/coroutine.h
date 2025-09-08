@@ -11,7 +11,7 @@
 
 #include "exe/fibers/core/routine.h"
 
-#include "utils/memory/view.h"
+#include "util/memory/view.h"
 
 namespace exe::fibers {
 
@@ -23,7 +23,7 @@ private:
 	bool is_completed_ = false;
 
 public:
-	Coroutine(FiberRoutine &&routine, ::utils::memory_view stack) noexcept
+	Coroutine(FiberRoutine &&routine, ::util::memory_view stack) noexcept
 		: routine_(::std::move(routine))
 		, context_(stack, this)
 	{}

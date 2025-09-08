@@ -8,9 +8,9 @@
 
 #include "exe/fibers/core/stack.h"
 
-#include "utils/abort.h"
-#include "utils/debug.h"
-#include "utils/defer.h"
+#include "util/abort.h"
+#include "util/debug.h"
+#include "util/defer.h"
 
 namespace exe::fibers {
 
@@ -28,7 +28,7 @@ public:
 			::std::lock_guard lock{m_};
 
 			if (!pool_.empty()) [[likely]] {
-				auto cleanup = ::utils::defer{
+				auto cleanup = ::util::defer{
 					[&p = pool_]() noexcept {
 						p.pop();
 					}

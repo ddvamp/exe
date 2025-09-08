@@ -7,7 +7,7 @@
 
 #include "exe/executors/executor.h"
 
-#include "utils/debug.h"
+#include "util/debug.h"
 
 namespace exe::executors {
 

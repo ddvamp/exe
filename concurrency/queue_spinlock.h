@@ -9,14 +9,14 @@
 #include <mutex>
 
 #include "relax.h"
-#include "utils/intrusive/forward_list.h"
-#include "utils/utility.h"
+#include "util/intrusive/forward_list.h"
+#include "util/utility.h"
 
 namespace concurrency {
 
 class QueueSpinlock {
 private:
-	struct Node : ::utils::intrusive_concurrent_forward_list_node<Node> {
+	struct Node : ::util::intrusive_concurrent_forward_list_node<Node> {
 		::std::atomic_bool free_;
 	};
 
@@ -112,7 +112,7 @@ public:
 	{
 		return dummy_.free_.load(::std::memory_order_relaxed) &&
 			dummy_.free_.compare_exchange_weak(
-				::utils::temporary(true),
+				::util::temporary(true),
 				false,
 				::std::memory_order_acquire,
 				::std::memory_order_relaxed
@@ -141,13 +141,13 @@ private:
 
 		if (prev == &dummy_) [[unlikely]] {
 			while (!try_lock()) {
-				::utils::thread_relax();
+				::util::thread_relax();
 			}
 		} else {
 			prev->next_.store(&node, ::std::memory_order_release);
 
 			while (!node.free_.load(::std::memory_order_acquire)) {
-				::utils::thread_relax();
+				::util::thread_relax();
 			}
 		}
 	}
@@ -160,14 +160,14 @@ private:
 			!(next = node.next_.load(::std::memory_order_acquire)) &&
 
 			!tail_.compare_exchange_strong(
-				::utils::temporary(&node),
+				::util::temporary(&node),
 				next = &dummy_,
 				::std::memory_order_release,
 				::std::memory_order_relaxed
 			)
 		) [[unlikely]] {
 			while (!(next = node.next_.load(::std::memory_order_acquire))) {
-				::utils::thread_relax();
+				::util::thread_relax();
 			}
 		}
 

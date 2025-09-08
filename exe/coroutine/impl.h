@@ -12,8 +12,8 @@
 
 #include "exe/coroutine/routine.h"
 
-#include "utils/defer.h"
-#include "utils/memory/view.h"
+#include "util/defer.h"
+#include "util/memory/view.h"
 
 namespace exe::coroutine {
 
@@ -27,7 +27,7 @@ private:
 	bool is_completed_ = false;
 
 public:
-	CoroutineImpl(Routine &&routine, ::utils::memory_view stack) noexcept
+	CoroutineImpl(Routine &&routine, ::util::memory_view stack) noexcept
 		: routine_(::std::move(routine))
 		, context_(stack, this)
 	{}
@@ -46,7 +46,7 @@ public:
 
 	void resume()
 	{
-		auto cleanup = ::utils::rollback_exchange(is_active_, true);
+		auto cleanup = ::util::rollback_exchange(is_active_, true);
 
 		context_.switchToSaved();
 

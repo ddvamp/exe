@@ -16,7 +16,7 @@
 
 #include "result/result.h"
 
-#include "utils/abort.h"
+#include "util/abort.h"
 
 namespace exe::futures {
 
@@ -38,7 +38,7 @@ private:
 	{
 		using T = F::value_type;
 
-		::std::optional<::utils::result<T>> result;
+		::std::optional<::util::result<T>> result;
 
 		::concurrency::OneShotEvent result_is_ready;
 

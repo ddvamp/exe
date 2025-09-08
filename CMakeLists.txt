@@ -23,11 +23,11 @@ set(
   ./exe/fibers/core/fiber.cc
   ./exe/fibers/core/handle.cc
   ./exe/fibers/core/stack.cc
-  ./utils/debug/assert.cc
-  ./utils/debug/assume.cc
-  ./utils/debug/unreachable.cc
-  ./utils/memory/page_allocation.cc
-  ./utils/abort.cc
+  ./util/debug/assert.cc
+  ./util/debug/assume.cc
+  ./util/debug/unreachable.cc
+  ./util/memory/page_allocation.cc
+  ./util/abort.cc
 )
 
 add_library(exe STATIC)
