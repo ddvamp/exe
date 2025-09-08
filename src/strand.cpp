@@ -9,6 +9,7 @@
 //
 
 #include <exe/runtime/strand.hpp>
+#include <exe/runtime/task/scheduler.hpp>
 #include <exe/runtime/task/task.hpp>
 #include <internal/strand.hpp>
 
@@ -16,7 +17,7 @@ namespace exe::runtime {
 
 Strand::~Strand() = default;
 
-Strand::Strand(IScheduler &underlying) : impl_(Impl::Create(underlying)) {}
+Strand::Strand(ISafeScheduler &underlying) : impl_(Impl::Create(underlying)) {}
 
 /* virtual */ void Strand::Submit(task::TaskBase *task) noexcept {
   static_assert(noexcept(impl_->Submit(task)),
@@ -24,7 +25,7 @@ Strand::Strand(IScheduler &underlying) : impl_(Impl::Create(underlying)) {}
   impl_->Submit(task);
 }
 
-Strand::IScheduler &Strand::GetUnderlying() const noexcept {
+task::ISafeScheduler &Strand::GetUnderlying() const noexcept {
   return impl_->GetUnderlying();
 }
 

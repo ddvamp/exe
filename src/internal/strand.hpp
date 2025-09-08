@@ -12,6 +12,7 @@
 #define DDVAMP_EXE_INTERNAL_STRAND_HPP_INCLUDED_ 1
 
 #include <exe/runtime/strand.hpp>
+#include <exe/runtime/task/scheduler.hpp>
 #include <exe/runtime/task/task.hpp>
 
 #include <util/macro.hpp>
@@ -22,10 +23,6 @@
 #include <new>
 
 namespace exe::runtime {
-
-namespace detail {
-
-} // namespace detail
 
 class Strand::Impl final : private task::TaskBase,
                            public ::util::ref_count<Impl> {
@@ -42,7 +39,7 @@ class Strand::Impl final : private task::TaskBase,
     }
   };
 
-  IScheduler &underlying_;
+  task::ISafeScheduler &underlying_;
   DummyTask dummy_;
   TaskBase *head_ = &dummy_;
   alignas (::std::hardware_destructive_interference_size)
@@ -52,7 +49,7 @@ class Strand::Impl final : private task::TaskBase,
   static_assert(::std::atomic<TaskBase *>::is_always_lock_free);
 
  private:
-  explicit Impl(IScheduler &underlying) noexcept
+  explicit Impl(task::ISafeScheduler &underlying) noexcept
       : underlying_(underlying),
         dummy_(*this) {
     static_assert(
@@ -61,7 +58,7 @@ class Strand::Impl final : private task::TaskBase,
   }
 
  public:
-  [[nodiscard]] static Impl *Create(IScheduler &underlying) {
+  [[nodiscard]] static Impl *Create(task::ISafeScheduler &underlying) {
     return ::new Impl(underlying);
   }
 
@@ -71,7 +68,7 @@ class Strand::Impl final : private task::TaskBase,
     delete this;
   }
 
-  [[nodiscard]] IScheduler &GetUnderlying() const noexcept {
+  [[nodiscard]] task::ISafeScheduler &GetUnderlying() const noexcept {
     return underlying_;
   }
 

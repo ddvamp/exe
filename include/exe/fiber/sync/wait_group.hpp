@@ -61,19 +61,19 @@ class WaitGroup {
 
   // Increases the counter by delta
   void Add(Count const delta = 1) noexcept {
-    [[maybe_unused]] auto const count =
+    [[maybe_unused]] auto const old_count =
         count_.fetch_add(delta, ::std::memory_order_relaxed);
-    UTIL_ASSERT(count < count + delta,
-                 "Increment must be non-zero and not overflow the counter");
+    UTIL_ASSERT(old_count < old_count + delta,
+                "Increment must be non-zero and not overflow the counter");
   }
 
   // Reduces the counter by delta, performs synchronization, and
   // if the counter drops to zero, unblocks all fibers currently waiting for
   void Done(Count const delta = 1) noexcept {
-    auto const count = count_.fetch_sub(delta, ::std::memory_order_release);
-    UTIL_ASSERT(count - delta < count,
-                 "Decrement must be non-zero and not underflow the counter");
-    if (count != delta) [[likely]] {
+    auto const old_count = count_.fetch_sub(delta, ::std::memory_order_release);
+    UTIL_ASSERT(old_count - delta < old_count,
+                "Decrement must be non-zero and not underflow the counter");
+    if (old_count != delta) [[likely]] {
       // Fast path
       return;
     }

@@ -19,7 +19,6 @@
 
 #include <util/abort.hpp>
 #include <util/debug.hpp>
-#include <util/defer.hpp>
 
 #include <atomic>
 #include <utility>
@@ -60,10 +59,9 @@ struct SwitchAwaiter final : IAwaiter {
 
   FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
     // Prevents race condition
-    ::util::defer cleanup([&self]() noexcept {
-        ::std::move(self).Schedule();
-    });
-    return ::std::move(target_);
+    auto target = ::std::move(target_);
+    ::std::move(self).Schedule();
+    return ::std::move(target);
   }
 };
 

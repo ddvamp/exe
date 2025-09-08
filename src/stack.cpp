@@ -12,6 +12,7 @@
 
 #include <concurrency/qspinlock.hpp>
 #include <util/debug/assert.hpp>
+#include <util/memory/page_allocation.hpp>
 #include <util/memory/view.hpp>
 
 #include <cstddef>
@@ -21,43 +22,58 @@ namespace exe::fiber {
 
 namespace {
 
-struct Node {
-  Node *next_;
-  ::util::memory_view self_;
-};
-
 class StackAllocator {
  private:
+  struct Node {
+    Node *next;
+    Stack stack;
+  };
+
   Node *top_ = nullptr;
-  ::concurrency::QSpinlock lock_; // protects the top_
+  ::concurrency::QSpinlock lock_; // Protects the top_
 
  public:
-  Stack Allocate() {
-    auto token = lock_.GetToken();
-    token.Lock();
-    if (top_) [[likely]] {
-      auto node = top_;
-      top_ = node->next_;
+  ~StackAllocator() {
+    while (top_) {
+      ::std::exchange(top_, top_->next)->~Node();
+    }
+  }
 
-      token.Unlock();
-      return Stack::Acquire(node->self_);
+  StackAllocator(StackAllocator const &) = delete;
+  void operator= (StackAllocator const &) = delete;
+
+  StackAllocator(StackAllocator &&) = delete;
+  void operator= (StackAllocator &&) = delete;
+
+ public:
+  StackAllocator() = default;
+
+  Stack Allocate() {
+    if (auto node = TryPop()) [[likely]] {
+      return ::std::move(node->stack);
     }
 
-    token.Unlock();
     return AllocateNewStack();
   }
 
-  void Deallocate(Stack &stack) noexcept {
+  void Deallocate(Stack &&stack) noexcept {
     UTIL_ASSERT(stack.AllocationSize() != 0, "Stack in moved-from state");
 
-    auto mem = ::std::move(stack).Release();
-    auto node = ::new (mem.data()) Node{.self_ = mem};
-    auto guard = lock_.MakeGuard();
-    node->next_ = top_;
-    top_ = node;
+    auto node = ::new (stack.Memory()) Node{.stack = ::std::move(stack)};
+    Push(node);
   }
 
  private:
+  [[nodiscard]] Node *TryPop() noexcept {
+    auto guard = lock_.MakeGuard();
+    return top_ ? ::std::exchange(top_, top_->next) : nullptr;
+  }
+
+  void Push(Node *node) noexcept {
+    auto guard = lock_.MakeGuard();
+    node->next = ::std::exchange(top_, node);
+  }
+
   static Stack AllocateNewStack() {
     constexpr ::std::size_t kStackPages = 16;
     return Stack::AllocatePages(kStackPages);
@@ -73,7 +89,7 @@ Stack AllocateStack() {
 }
 
 void DeallocateStack(Stack &&stack) noexcept {
-  allocator.Deallocate(stack);
+  allocator.Deallocate(::std::move(stack));
 }
 
 } // namespace exe::fiber

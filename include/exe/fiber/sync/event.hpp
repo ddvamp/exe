@@ -27,20 +27,23 @@ namespace exe::fiber {
 // and sharing data through it
 class Event {
  private:
-  struct Waiter final : IAwaiter, ::concurrency::IntrusiveForwardListNode<> {
-    Event *event_;
-    FiberHandle handle_;
+  struct FiberNode : ::concurrency::IntrusiveForwardListNode<> {
+    FiberHandle handle;
+  };
 
-    explicit Waiter(Event *event) noexcept : event_(event) {}
+  struct Waiter final : IAwaiter, FiberNode {
+    Event &event;
+
+    explicit Waiter(Event &event) noexcept : event(event) {}
 
     FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
-      handle_ = ::std::move(self);
-      event_->WaitImpl(this);
+      handle = ::std::move(self);
+      event.WaitImpl(this);
       return FiberHandle::Invalid();
     }
   };
 
-  using Node = Waiter::Node;
+  using Node = FiberNode::Node;
 
  private:
   Node dummy_;
@@ -75,7 +78,7 @@ class Event {
       return;
     }
 
-    Waiter awaiter(this);
+    Waiter awaiter(*this);
     self::Suspend(awaiter);
   }
 
@@ -98,7 +101,7 @@ class Event {
     return dummy_.next_.exchange(&dummy_, ::std::memory_order_release);
   }
 
-  void WaitImpl(Waiter *self) noexcept {
+  void WaitImpl(FiberNode *self) noexcept {
     Node *expected = nullptr;
     auto node = tail_.exchange(self, ::std::memory_order_acq_rel);
     if (node->next_.compare_exchange_strong(expected, self,
@@ -107,23 +110,23 @@ class Event {
       return;
     }
 
-    if (node == &dummy_) [[unlikely]] {
+    if (node != &dummy_) [[likely]] {
+      node->Link(self);
+    } else {
       node = self;
       Seal();
-    } else {
-      node->Link(self);
     }
 
     ScheduleWaiters(node);
   }
 
   void Seal() noexcept {
-    tail_.exchange(&dummy_, ::std::memory_order_acq_rel)->Link(&dummy_); // ?acquire
+    tail_.exchange(&dummy_, ::std::memory_order_acquire)->Link(&dummy_);
   }
 
   void ScheduleWaiters(Node *waiter) const noexcept {
     do {
-      auto next = waiter->next_.load(::std::memory_order_relaxed);
+      auto next = waiter->Next();
       if (!next) [[unlikely]] {
         if (waiter->next_.compare_exchange_strong(next, waiter,
                 ::std::memory_order_release,
@@ -132,7 +135,7 @@ class Event {
         }
       }
 
-      ::std::move(static_cast<Waiter *>(waiter)->handle_).Schedule();
+      ::std::move(static_cast<Waiter *>(waiter)->handle).Schedule();
       waiter = next;
     } while (waiter != &dummy_);
   }

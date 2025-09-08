@@ -15,6 +15,7 @@
 #include <exe/fiber/core/awaiter.hpp>
 #include <exe/fiber/core/handle.hpp>
 
+#include <util/macro.hpp>
 #include <util/debug/assert.hpp>
 
 #include <atomic>
@@ -25,37 +26,36 @@ namespace exe::fiber {
 
 class Barrier {
  private:
-  struct Node {
-    Node *next_ = nullptr;
+  struct FiberNode {
+    FiberNode *next = nullptr;
+    FiberHandle handle;
   };
 
-  struct Waiter final : IAwaiter, Node {
-    Barrier *barrier_;
-    FiberHandle handle_;
+  struct Waiter final : IAwaiter, FiberNode {
+    Barrier &barrier;
 
-    explicit Waiter(Barrier *barrier) noexcept : barrier_(barrier) {}
+    explicit Waiter(Barrier &barrier) noexcept : barrier(barrier) {}
 
     FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
-      handle_ = ::std::move(self);
-      return barrier_->ArriveImpl(this);
+      handle = ::std::move(self);
+      return barrier.ArriveImpl(this);
     }
   };
 
   using Count = ::std::uint64_t;
 
  private:
-  Node dummy_;
-  ::std::atomic<Node *> tail_ = &dummy_;
-  Count const expected_;
-  ::std::atomic<Count> count_ = expected_;
+  ::std::atomic<FiberNode *> top_ = nullptr;
+  Count const participants_;
+  ::std::atomic<Count> remains_ = participants_;
 
   // To guarantee the expected implementation
-  static_assert(::std::atomic<Node *>::is_always_lock_free);
+  static_assert(::std::atomic<FiberNode *>::is_always_lock_free);
   static_assert(::std::atomic<Count>::is_always_lock_free);
 
  public:
   ~Barrier() {
-    UTIL_ASSERT(tail_.load(::std::memory_order_relaxed) == &dummy_,
+    UTIL_ASSERT(!top_.load(::std::memory_order_relaxed),
                 "Barrier is destroyed during use");
   }
 
@@ -66,43 +66,48 @@ class Barrier {
   void operator= (Barrier &&) = delete;
 
  public:
-  explicit Barrier(Count const expected) noexcept : expected_(expected) {
-    UTIL_ASSERT(expected < 2, "Too few participants");
+  explicit Barrier(Count const participants) noexcept
+      : participants_(participants) {
+    UTIL_ASSERT(participants >= 2, "Too few participants");
   }
 
   void Arrive() noexcept {
-    if (count_.load(::std::memory_order_acquire) == 1) [[unlikely]] {
+    if (remains_.load(::std::memory_order_relaxed) == 1) [[unlikely]] {
       // Fast path
       ScheduleWaiters();
       return;
     }
 
-    Waiter awaiter(this);
+    Waiter awaiter(*this);
     self::Suspend(awaiter);
   }
 
  private:
-  FiberHandle ArriveImpl(Waiter *self) noexcept {
-    auto const pred = tail_.exchange(self, ::std::memory_order_acq_rel);
-    pred->next_ = self;
-    if (count_.fetch_sub(1, ::std::memory_order_acq_rel) != 1) [[likely]] {
+  FiberHandle ArriveImpl(FiberNode *self) noexcept {
+    auto const next = top_.exchange(self, ::std::memory_order_relaxed);
+    self->next = next;
+
+    if (remains_.fetch_sub(1, ::std::memory_order_release) > 1) [[likely]] {
       return FiberHandle::Invalid();
     }
 
-    pred->next_ = self->next_;
-    ScheduleWaiters();
-    return ::std::move(self->handle_);
+    ScheduleWaiters(self);
+    return ::std::move(*self).handle;
   }
 
-  void ScheduleWaiters() noexcept {
-    tail_.store(&dummy_, ::std::memory_order_relaxed);
-    count_.store(expected_, ::std::memory_order_relaxed);
+  void ScheduleWaiters(FiberNode *self = nullptr) noexcept {
+    UTIL_IGNORE(remains_.load(::std::memory_order_acquire)); // Synchronization
+    remains_.store(participants_, ::std::memory_order_relaxed);
 
-    auto waiter = dummy_.next_;
+    auto waiter = top_.load(::std::memory_order_relaxed);
+    top_.store(nullptr, ::std::memory_order_relaxed);
+
+    // There is at least 1 other participant
     do {
-      auto const next = waiter->next_;
-      ::std::move(*static_cast<Waiter *>(waiter)).handle_.Schedule();
-      waiter = next;
+      auto node = ::std::exchange(waiter, waiter->next);
+      if (node != self) [[likely]] {
+        ::std::move(*node).handle.Schedule();
+      }
     } while (waiter);
   }
 };

@@ -18,7 +18,6 @@
 
 #include <util/debug/run.hpp>
 
-#include <atomic>
 #include <utility>
 
 namespace exe::fiber {
@@ -26,13 +25,13 @@ namespace exe::fiber {
 class Condvar {
  private:
   struct Waiter final : IAwaiter, Mutex::FiberInfo {
-    Condvar *cv_;
+    Condvar &cv;
 
-    explicit Waiter(Condvar *cv) noexcept : cv_(cv) {}
+    explicit Waiter(Condvar &cv) noexcept : cv(cv) {}
 
     FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
-      handle_ = ::std::move(self);
-      cv_->WaitImpl(this);
+      handle = ::std::move(self);
+      cv.WaitImpl(this);
       return FiberHandle::Invalid();
     }
   };
@@ -58,45 +57,35 @@ class Condvar {
   /* ATTENTION: All methods below require a locked m_! */
 
   void Wait() noexcept {
-    UTIL_DEBUG_RUN(m_.CheckUnlock);
-    Waiter awaiter(this);
+    Waiter awaiter(*this);
     self::Suspend(awaiter);
-    UTIL_DEBUG_RUN(m_.CheckLock, true);
   }
 
   template <typename Predicate>
   void Wait(Predicate &&stop_waiting) noexcept {
-    UTIL_DEBUG_RUN(m_.CheckOwner);
     while (!stop_waiting()) {
       Wait();
     }
   }
 
   void NotifyOne() noexcept {
-    UTIL_DEBUG_RUN(m_.CheckOwner);
     NotifyImpl(false);
   }
 
   void NotifyAll() noexcept {
-    UTIL_DEBUG_RUN(m_.CheckOwner);
     NotifyImpl(true);
   }
 
  private:
-  void Enqueue(Node *head, Node *tail) const noexcept {
-    tail->Link(m_.head_);
-    m_.head_ = head;
-  }
-
   void WaitImpl(Mutex::FiberInfo *self) noexcept {
     if (head_) {
-      tail_->next_.store(self, ::std::memory_order_relaxed);
+      tail_->Link(self);
       tail_ = self;
     } else {
       tail_ = head_ = self;
     }
 
-    m_.UnlockImpl();
+    m_.Unlock();
   }
 
   void NotifyImpl(bool const all) noexcept {
@@ -106,8 +95,10 @@ class Condvar {
 
     auto const head = head_;
     auto const tail = all ? tail_ : head_;
-    head_ = tail->next_.load(::std::memory_order_relaxed);
-    Enqueue(head, tail);
+    head_ = tail->Next();
+
+    tail->Link(m_.head_);
+    m_.head_ = head;
   }
 };
 

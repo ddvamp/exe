@@ -25,8 +25,6 @@ namespace exe::runtime {
 // new critical sections of the strand itself
 class Strand final : public task::ISafeScheduler {
  private:
-  using IScheduler = ISafeScheduler;
-
   class Impl;
   ::util::ref<Impl> impl_;
 
@@ -40,9 +38,9 @@ class Strand final : public task::ISafeScheduler {
   void operator= (Strand &&) = delete;
 
  public:
-  explicit Strand(IScheduler &underlying);
+  explicit Strand(ISafeScheduler &underlying);
 
-  [[nodiscard]] IScheduler &GetUnderlying() const noexcept;
+  [[nodiscard]] ISafeScheduler &GetUnderlying() const noexcept;
 
   void Submit(task::TaskBase *critical_section) noexcept override;
 };

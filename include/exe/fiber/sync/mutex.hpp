@@ -14,7 +14,6 @@
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
 #include <exe/fiber/core/handle.hpp>
-#include <exe/fiber/core/id.hpp>
 
 #include <concurrency/intrusive/forward_list.hpp>
 #include <util/debug.hpp>
@@ -34,17 +33,17 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
 
  private:
   struct FiberInfo : ::concurrency::IntrusiveForwardListNode<> {
-    FiberHandle handle_;
+    FiberHandle handle;
   };
 
   struct LockAwaiter final : IAwaiter, FiberInfo {
-    Mutex *m_;
+    Mutex &m;
 
-    explicit LockAwaiter(Mutex *m) noexcept : m_(m) {}
+    explicit LockAwaiter(Mutex &m) noexcept : m(m) {}
 
     FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
-      handle_ = ::std::move(self);
-      return m_->LockImpl(this);
+      handle = ::std::move(self);
+      return m.LockImpl(this);
     }
   };
 
@@ -53,11 +52,9 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
   Node dummy_{.next_ = &dummy_};
   Node *head_ = &dummy_;
   ::std::atomic<Node *> tail_ = &dummy_;
-  ::std::atomic<FiberId> owner_ = kInvalidFiberId;
 
   // To guarantee the expected implementation
   static_assert(::std::atomic<Node *>::is_always_lock_free);
-  static_assert(::std::atomic<FiberId>::is_always_lock_free);
 
  public:
   ~Mutex() {
@@ -74,24 +71,31 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
   constexpr Mutex() = default;
 
   [[nodiscard]] bool TryLock() noexcept {
-    UTIL_DEBUG_RUN(CheckRecursive);
-    auto const success = TryLockImpl();
-    UTIL_DEBUG_RUN(CheckLock, success);
-    return success;
+    if (IsLocked()) [[unlikely]] {
+      return false;
+    }
+
+    return dummy_.next_.compare_exchange_weak(::util::temporary(&dummy_),
+                                              nullptr,
+                                              ::std::memory_order_acquire,
+                                              ::std::memory_order_relaxed);
   }
 
   void Lock() noexcept {
-    UTIL_DEBUG_RUN(CheckRecursive);
-    if (!TryLockImpl()) [[unlikely]] {
-      LockAwaiter awaiter(this);
+    if (!TryLock()) [[unlikely]] {
+      LockAwaiter awaiter(*this);
       self::Suspend(awaiter);
     }
-    UTIL_DEBUG_RUN(CheckLock, true);
   }
 
   void Unlock() noexcept {
-    UTIL_DEBUG_RUN(CheckUnlock);
-    UnlockImpl();
+    auto const owner = head_;
+    auto const next = TryTakeNext(owner);
+    if (!next) [[likely]] {
+      return;
+    }
+
+    UTIL_IGNORE(Acquire(owner, next, false));
   }
 
   // Cpp17Lockable
@@ -111,18 +115,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
 
  private:
   [[nodiscard]] bool IsLocked() const noexcept {
-    return dummy_.next_.load(::std::memory_order_relaxed) != &dummy_;
-  }
-
-  [[nodiscard]] bool TryLockImpl() noexcept {
-    if (IsLocked()) [[unlikely]] {
-      return false;
-    }
-
-    return dummy_.next_.compare_exchange_weak(::util::temporary(&dummy_),
-                                              nullptr,
-                                              ::std::memory_order_acquire,
-                                              ::std::memory_order_relaxed);
+    return dummy_.Next() != &dummy_;
   }
 
   FiberHandle LockImpl(FiberInfo *self) noexcept {
@@ -132,27 +125,17 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
       return FiberHandle::Invalid();
     }
 
-    UTIL_IGNORE(owner->next_.load(::std::memory_order_acquire));  // sync
+    UTIL_IGNORE(owner->next_.load(::std::memory_order_acquire)); // sync
     return Acquire(owner, self, true);
-  }
-
-  void UnlockImpl() noexcept {
-    auto const owner = head_;
-    auto const next = TryTakeNext(owner);
-    if (!next) [[likely]] {
-      return;
-    }
-
-    UTIL_IGNORE(Acquire(owner, next, false));
   }
 
   [[nodiscard]] static FiberHandle &&GetHandle(Node *node) noexcept {
     [[assume(node)]];
-    return ::std::move(*static_cast<FiberInfo *>(node)).handle_;
+    return ::std::move(*static_cast<FiberInfo *>(node)).handle;
   }
 
   [[nodiscard]] static Node *TryTakeNext(Node *node) noexcept {
-    auto next = node->next_.load(::std::memory_order_relaxed);
+    auto next = node->Next();
     if (next) {
       return next;
     }
@@ -164,8 +147,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
 
   FiberHandle Acquire(Node *owner, Node *next, bool resume) noexcept {
     if (owner == &dummy_) {
-      dummy_.Link(nullptr);
-      tail_.exchange(&dummy_, ::std::memory_order_acq_rel)->Link(&dummy_);
+      Seal();
 
       owner = next;
       next = TryTakeNext(owner);
@@ -184,43 +166,9 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
     return FiberHandle::Invalid();
   }
 
- private:
-  [[nodiscard, maybe_unused]] auto Owner() noexcept {
-    struct _ {
-      Mutex *m_;
-
-      operator FiberId () noexcept {
-        return m_->owner_.load(::std::memory_order_relaxed);
-      }
-
-      void operator= (FiberId id) noexcept {
-        m_->owner_.store(id, ::std::memory_order_relaxed);
-      }
-    };
-
-    return _{this};
-  }
-
-  [[maybe_unused]] void CheckOwner() noexcept {
-    UTIL_CHECK(Owner() == self::GetId(), "Fiber does not own condvar mutex");
-  }
-
-  [[maybe_unused]] void CheckRecursive() noexcept {
-    UTIL_CHECK(Owner() != self::GetId(), "Fiber already owns this mutex");
-  }
-
-  [[maybe_unused]] void CheckLock(bool success) noexcept {
-    if (success) [[likely]] {
-      UTIL_CHECK(Owner() == kInvalidFiberId,
-                  "Fiber has locked an already locked mutex");
-      Owner() = self::GetId();
-    }
-  }
-
-  [[maybe_unused]] void CheckUnlock() noexcept {
-    UTIL_CHECK(Owner() == self::GetId(),
-                "Fiber unlocks a mutex that it does not own");
-    Owner() = kInvalidFiberId;
+  void Seal() noexcept {
+    dummy_.Link(nullptr);
+    tail_.exchange(&dummy_, ::std::memory_order_acq_rel)->Link(&dummy_);
   }
 };
 
