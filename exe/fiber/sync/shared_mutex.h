@@ -10,14 +10,14 @@
 #include <shared_mutex>
 #include <utility>
 
-#include "exe/fibers/api.h"
-#include "exe/fibers/core/awaiter.h"
-#include "exe/fibers/core/handle.h"
-#include "exe/fibers/sync/mutex.h"
+#include "exe/fiber/api.h"
+#include "exe/fiber/core/awaiter.h"
+#include "exe/fiber/core/handle.h"
+#include "exe/fiber/sync/mutex.h"
 
 #include "util/macro.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 class SharedMutex {
 	class LockAwaiter : public IAwaiter {
@@ -136,6 +136,6 @@ private:
 	}
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_SYNC_SHARED_MUTEX_H_ */

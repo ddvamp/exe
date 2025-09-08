@@ -15,15 +15,15 @@
 
 #include "concurrency/queue_spinlock.h"
 
-#include "exe/fibers/api.h"
-#include "exe/fibers/core/awaiter.h"
-#include "exe/fibers/core/handle.h"
+#include "exe/fiber/api.h"
+#include "exe/fiber/core/awaiter.h"
+#include "exe/fiber/core/handle.h"
 
 #include "util/debug.h"
 #include "util/refer/ref_counted_ptr.h"
 #include "util/utility.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -650,6 +650,6 @@ public:
 	}
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_SYNC_CHANNEL_H_ */

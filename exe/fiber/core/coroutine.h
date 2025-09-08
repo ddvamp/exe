@@ -9,13 +9,13 @@
 
 #include "context/context.h"
 
-#include "exe/fibers/core/routine.h"
+#include "exe/fiber/core/routine.h"
 
 #include "util/memory/view.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
-// Basis for suspended execution of fibers
+// Basis for suspended execution of fiber
 class Coroutine : public ::context::ITrampoline {
 private:
 	FiberRoutine routine_;
@@ -62,6 +62,6 @@ private:
 	}
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_CORE_COROUTINE_H_ */

@@ -4,13 +4,13 @@
 
 #include <utility>
 
-#include "exe/fibers/core/fiber.h"
+#include "exe/fiber/core/fiber.h"
 
 #include "util/abort.h"
 #include "util/debug.h"
 #include "util/defer.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 namespace {
 
@@ -209,4 +209,4 @@ void go(FiberRoutine &&routine)
 	go(self::getExecutor(), ::std::move(routine));
 }
 
-} // namespace exe::fibers
+} // namespace exe::fiber

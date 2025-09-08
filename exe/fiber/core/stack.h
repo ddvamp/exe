@@ -7,7 +7,7 @@
 
 #include "context/stack.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 using Stack = ::context::Stack;
 
@@ -15,6 +15,6 @@ using Stack = ::context::Stack;
 
 void deallocateStack(Stack &&stack) noexcept;
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_CORE_STACK_H_ */
