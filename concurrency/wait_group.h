@@ -10,8 +10,8 @@
 
 #include "concurrency/one_shot_event.h"
 
-#include "utils/debug.h"
-#include "utils/macro.h"
+#include "util/debug.h"
+#include "util/macro.h"
 
 namespace concurrency {
 

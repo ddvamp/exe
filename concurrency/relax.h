@@ -19,7 +19,7 @@
 
 #endif
 
-namespace utils {
+namespace util {
 
 inline void thread_relax() noexcept
 {
@@ -38,6 +38,6 @@ inline void thread_relax() noexcept
 #endif
 }
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_CONCURRENCY_RELAX_H_ */

@@ -15,7 +15,7 @@
 
 #include "result/result.h"
 
-#include "utils/utility.h"
+#include "util/utility.h"
 
 namespace exe::futures {
 
@@ -58,10 +58,10 @@ private:
 		setCallback(
 			::std::move(f),
 			futures::makeCallback<T>(
-				::utils::types_list<::utils::deduce_type_t, Fn, Callback<U>>,
+				::util::types_list<::util::deduce_type_t, Fn, Callback<U>>,
 
 				[](auto &res, auto &fn, auto &cb) noexcept {
-					auto map_res = ::utils::map_safely([&]() noexcept (
+					auto map_res = ::util::map_safely([&]() noexcept (
 						traits::is_nothrow_invocable_v<Fn &, T>
 					) {
 						return ::std::move(res).transform(fn);
@@ -76,7 +76,7 @@ private:
 
 				::std::forward<Fn>(fn_),
 
-				::utils::builder([&]() {
+				::util::builder([&]() {
 					return futures::makeCallback<U>(
 						[](auto &res, auto &p) noexcept {
 							::std::move(p).setResult(::std::move(res));

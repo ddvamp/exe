@@ -7,9 +7,9 @@
 
 #include <cstddef>
 
-#include "utils/memory/view.h"
+#include "util/memory/view.h"
 
-namespace utils {
+namespace util {
 
 class page_allocation {
 private:
@@ -92,6 +92,6 @@ private:
 	void release() const noexcept;
 };
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_MEMORY_PAGE_ALLOCATION_H_ */

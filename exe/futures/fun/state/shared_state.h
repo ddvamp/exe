@@ -18,20 +18,20 @@
 
 #include "result/result.h"
 
-#include "utils/debug.h"
+#include "util/debug.h"
 
 namespace exe::futures::detail {
 
 // Shared state for Future and Promise
-// 
+//
 // Allows you to pass result from Promise to Future
 // and callback in the opposite direction,
 // as well as to specify where callback will be called
-template <::utils::suitable_for_result T>
+template <::util::suitable_for_result T>
 	requires (traits::is_nothrow_move_constructible_v<T>)
 class SharedState : public executors::TaskBase {
 public:
-	using Result = ::utils::result<T>;
+	using Result = ::util::result<T>;
 	using Callback = futures::Callback<T>;
 
 private:

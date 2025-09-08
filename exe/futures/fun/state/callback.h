@@ -10,9 +10,9 @@
 
 #include "result/result.h"
 
-#include "utils/macro.h"
-#include "utils/type_traits.h"
-#include "utils/utility.h"
+#include "util/macro.h"
+#include "util/type_traits.h"
+#include "util/utility.h"
 
 namespace exe::futures {
 
@@ -22,7 +22,7 @@ namespace exe::futures {
 // and handling exceptions himself
 template <typename T>
 using Callback =
-	::std::move_only_function<void(::utils::result<T> &&) noexcept>;
+	::std::move_only_function<void(::util::result<T> &&) noexcept>;
 
 
 
@@ -30,8 +30,8 @@ namespace detail {
 
 template <typename T, typename Fn, typename ...Args>
 requires (
-	::std::is_nothrow_invocable_v<Fn &, ::utils::result<T> &, Args &...> &&
-	::utils::all_true_v<
+	::std::is_nothrow_invocable_v<Fn &, ::util::result<T> &, Args &...> &&
+	::util::all_true_v<
 		::std::is_nothrow_destructible_v<Fn>,
 		::std::is_nothrow_destructible_v<Args>...
 	>
@@ -39,13 +39,13 @@ requires (
 class Callback {
 private:
 	UTILS_NO_UNIQUE_ADDRESS Fn fn_;
-	UTILS_NO_UNIQUE_ADDRESS ::utils::tuple<Args...> args_;
+	UTILS_NO_UNIQUE_ADDRESS ::util::tuple<Args...> args_;
 
 public:
 	template <typename TFn, typename ...TArgs>
 	explicit Callback(TFn &&fn, TArgs &&...args)
 		requires (
-			::utils::all_true_v<
+			::util::all_true_v<
 				::std::is_constructible_v<Fn, TFn>,
 				::std::is_constructible_v<Args, TArgs>...
 			>
@@ -54,10 +54,10 @@ public:
 		, args_{::std::forward<TArgs>(args)...}
 	{}
 
-	void operator() (::utils::result<T> &&res) noexcept
+	void operator() (::util::result<T> &&res) noexcept
 	{
 		[&, this]<::std::size_t ...I>(::std::index_sequence<I...>) noexcept {
-			::std::invoke(fn_, res, ::utils::get<I>(args_)...);
+			::std::invoke(fn_, res, ::util::get<I>(args_)...);
 		}(::std::index_sequence_for<Args...>{});
 	}
 };
@@ -76,13 +76,13 @@ template <typename T, typename ...Ts>
 }
 
 template <typename T, typename ...Args, typename ...Ts>
-[[nodiscard]] auto makeCallback(::utils::types_list_t<Args...>, Ts &&...ts)
+[[nodiscard]] auto makeCallback(::util::types_list_t<Args...>, Ts &&...ts)
 	requires (sizeof...(Args) == sizeof...(Ts))
 {
 	return Callback<T>(
 		::std::in_place_type<detail::Callback<
 			T,
-			::utils::deduce_t<Args, ::std::remove_cvref_t<Ts>>...
+			::util::deduce_t<Args, ::std::remove_cvref_t<Ts>>...
 		>>,
 		::std::forward<Ts>(ts)...
 	);

@@ -5,7 +5,7 @@
 #ifndef DDV_CONTEXT_TRAMPOLINE_H_
 #define DDV_CONTEXT_TRAMPOLINE_H_ 1
 
-#include "utils/debug.h"
+#include "util/debug.h"
 
 namespace context {
 

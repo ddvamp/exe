@@ -25,7 +25,7 @@ public:
 	void lock() noexcept
 	{
 		while (!try_lock()) {
-			::utils::thread_relax();
+			::util::thread_relax();
 		}
 	}
 

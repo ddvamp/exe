@@ -5,17 +5,17 @@
 #include <exception>
 #include <limits>
 
-#include "utils/debug.h"
+#include "util/debug.h"
 
-#include "utils/memory/page_allocation.h"
+#include "util/memory/page_allocation.h"
 
 #if __has_include(<unistd.h>)
-#	include "utils/memory/os/posix/page_allocation.h"
+#	include "util/memory/os/posix/page_allocation.h"
 #else
 #	error "not POSIX-compliant environment"
 #endif
 
-namespace utils {
+namespace util {
 
 /* static */ ::std::size_t page_allocation::page_size() noexcept
 {
@@ -76,4 +76,4 @@ void page_allocation::release() const noexcept
 	}
 }
 
-} // namespace utils
+} // namespace util

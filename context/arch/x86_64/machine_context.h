@@ -7,7 +7,7 @@
 
 #include "context/trampoline.h"
 
-#include "utils/memory/view.h"
+#include "util/memory/view.h"
 
 namespace context {
 
@@ -17,7 +17,7 @@ private:
 
 public:
 	// set initial context
-	void setup(::utils::memory_view stack, ITrampoline *trampoline) noexcept;
+	void setup(::util::memory_view stack, ITrampoline *trampoline) noexcept;
 
 	// save current context in this and reset target context
 	// (this and target are allowed to be aliased)

@@ -8,13 +8,13 @@
 #include <cstddef>
 #include <utility>
 
-#include "utils/memory/page_allocation.h"
+#include "util/memory/page_allocation.h"
 
 namespace context {
 
 class Stack {
 private:
-	::utils::page_allocation allocation_;
+	::util::page_allocation allocation_;
 
 public:
 	~Stack() = default;
@@ -30,14 +30,14 @@ public:
 
 	static Stack allocatePages(::std::size_t count)
 	{
-		auto allocation = ::utils::page_allocation::allocate_pages(count + 1);
+		auto allocation = ::util::page_allocation::allocate_pages(count + 1);
 		allocation.protect_pages(0, 1);
 		return Stack{::std::move(allocation)};
 	}
 
 	static Stack allocateBytes(::std::size_t at_least)
 	{
-		auto const page_size = ::utils::page_allocation::page_size();
+		auto const page_size = ::util::page_allocation::page_size();
 
 		auto pages = at_least / page_size;
 		if (at_least % page_size != 0) {
@@ -52,13 +52,13 @@ public:
 		return allocation_.size();
 	}
 
-	::utils::memory_view view() const noexcept
+	::util::memory_view view() const noexcept
 	{
 		return allocation_.view();
 	}
 
 private:
-	Stack(::utils::page_allocation allocation) noexcept
+	Stack(::util::page_allocation allocation) noexcept
 		: allocation_(::std::move(allocation))
 	{}
 };

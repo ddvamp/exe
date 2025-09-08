@@ -10,12 +10,12 @@
 #include <initializer_list>
 #include <memory>
 
-#include "utils/debug.h"
-#include "utils/defer.h"
-#include "utils/type_traits.h"
-#include "utils/utility.h"
+#include "util/debug.h"
+#include "util/defer.h"
+#include "util/type_traits.h"
+#include "util/utility.h"
 
-namespace utils {
+namespace util {
 
 namespace detail {
 
@@ -34,7 +34,7 @@ class bad_result_access : public ::std::exception {
 public:
 	[[nodiscard]] char const *what() const noexcept override
 	{
-		return "utils::result does not contain a value, as well as an error";
+		return "util::result does not contain a value, as well as an error";
 	}
 };
 
@@ -107,7 +107,7 @@ struct is_result : ::std::bool_constant<is_result_v<T>> {};
 template <suitable_for_result T>
 class [[nodiscard]] result {
 private:
-	using E = utils::error;
+	using E = util::error;
 
 	union {
 		T value_;
@@ -873,7 +873,7 @@ template <suitable_for_result T>
 requires (::std::is_void_v<T>)
 class [[nodiscard]] result<T> {
 private:
-	using E = utils::error;
+	using E = util::error;
 
 	union {
 		E error_;
@@ -1285,7 +1285,7 @@ private:
 
 using status = result<void>;
 
-} // namespace utils
+} // namespace util
 
 #include "result/result.ipp"
 

@@ -7,7 +7,7 @@
 
 #include <atomic>
 
-namespace utils {
+namespace util {
 
 namespace detail {
 
@@ -38,6 +38,6 @@ struct intrusive_concurrent_forward_list_node {
 	}
 };
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_INTRUSIVE_FORWARD_LIST_H_ */

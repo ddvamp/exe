@@ -11,18 +11,18 @@
 #include <mutex>
 #include <new>
 
-#include "utils/debug.h"
-#include "utils/macro.h"
+#include "util/debug.h"
+#include "util/macro.h"
 
 namespace concurrency {
 
 // Synchronization primitive for waiting for the completion of tasks,
 // which are expressed as a 31-bit counter
 // Formally, the wait ends when the counter drops to zero
-// 
+//
 // The add call should happens before the corresponding done call, otherwise
 // the behavior is undefined
-// 
+//
 // The counter increment and wait operations are independent
 // (WaitPoint is not one-time),
 // so you can wait without even adding new tasks. However, if WaitPoint is
@@ -174,7 +174,7 @@ private:
 	// We need to keep waiting if for state_
 	// version corresponds, helping bit is set and counter is non-zero, or
 	// version is one more, helping bit isn't set, and counter is zero
-	// 
+	//
 	// It is checked in one comparison by bit magic/manipulation
 	bool isWaitNeeded(state_t const waiting_state,
 		::std::memory_order order) const noexcept

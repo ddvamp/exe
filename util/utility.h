@@ -8,10 +8,10 @@
 #include <cstddef>
 #include <utility>
 
-#include "utils/macro.h"
-#include "utils/type_traits.h"
+#include "util/macro.h"
+#include "util/type_traits.h"
 
-namespace utils {
+namespace util {
 
 // Type placeholder
 struct unit_t {};
@@ -182,6 +182,6 @@ template <typename ...Ts>
 	return (0 | ... | static_cast<int>(static_cast<bool>(::std::forward<Ts>(ts)))) == 0;
 }
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_UTILITY_H_ */

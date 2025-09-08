@@ -10,8 +10,8 @@
 #include "exe/fibers/sync/condvar.h"
 #include "exe/fibers/sync/mutex.h"
 
-#include "utils/debug.h"
-#include "utils/macro.h"
+#include "util/debug.h"
+#include "util/macro.h"
 
 namespace exe::fibers {
 

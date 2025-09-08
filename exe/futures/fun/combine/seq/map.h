@@ -56,7 +56,7 @@ private:
 			futures::makeCallback<T>(
 				[](auto &res, auto &fn, auto &p) noexcept {
 					::std::move(p).setResult(
-						::utils::map_safely([&]() noexcept (
+						::util::map_safely([&]() noexcept (
 							traits::is_nothrow_invocable_v<Fn &, T>
 						) {
 							return ::std::move(res).transform(fn);

@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace utils {
+namespace util {
 
 // true if and only if T is a cv qualified
 template <typename>
@@ -185,6 +185,6 @@ template <typename Expected, typename Checked, typename Alternative>
 using change_if_not_same_t =
 	change_if_not_same<Expected, Checked, Alternative>::type;
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_TYPE_TRAITS_H_ */

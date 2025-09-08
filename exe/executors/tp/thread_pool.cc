@@ -6,9 +6,9 @@
 
 #include "exe/executors/tp/thread_pool.h"
 
-#include "utils/abort.h"
-#include "utils/debug.h"
-#include "utils/utility.h"
+#include "util/abort.h"
+#include "util/debug.h"
+#include "util/utility.h"
 
 namespace exe::executors::tp {
 
@@ -99,7 +99,7 @@ ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 	);
 
 	UTILS_VERIFY(
-		tasks_.put(::utils::builder{
+		tasks_.put(::util::builder{
 			[this, task]() noexcept {
 				task_count_.add();
 				return task;

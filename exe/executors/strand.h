@@ -7,13 +7,13 @@
 
 #include "exe/executors/executor.h"
 
-#include "utils/refer/ref_counted_ptr.h"
+#include "util/refer/ref_counted_ptr.h"
 
 namespace exe::executors {
 
 // Adapter for an executors that allows to
 // serialize asynchronous critical sections without using explicit locks
-// 
+//
 // Instead of moving the "lock" between threads, it moves critical sections,
 // thereby allowing data to be in cache all the time
 //
@@ -23,7 +23,7 @@ class Strand final : public INothrowExecutor {
 private:
 	class Impl;
 
-	::utils::RefCountedPtr<Impl> impl_;
+	::util::RefCountedPtr<Impl> impl_;
 
 public:
 	~Strand() noexcept;

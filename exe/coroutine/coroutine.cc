@@ -6,8 +6,8 @@
 
 #include "exe/coroutine/coroutine.h"
 
-#include "utils/debug.h"
-#include "utils/defer.h"
+#include "util/debug.h"
+#include "util/defer.h"
 
 namespace exe::coroutine {
 
@@ -39,7 +39,7 @@ void Coroutine::resume()
 	UTILS_ASSERT(!isCompleted(), "resuming a completed coroutine");
 	UTILS_ASSERT(!isActive(), "coroutine is already active");
 
-	auto cleanup = ::utils::rollback_exchange(current, this);
+	auto cleanup = ::util::rollback_exchange(current, this);
 
 	impl_.resume();
 }
