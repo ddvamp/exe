@@ -21,7 +21,7 @@
 #include "exe/future/fun/make/contract/contract.hpp"
 #include "exe/future/fun/mutator/mutator.hpp"
 
-#include "util/type_traits.hpp"
+#include "exe/future/fun/type_traits.hpp"
 
 namespace exe::future {
 
@@ -91,7 +91,7 @@ public:
 	template <typename ...Fs>
 	auto mutate(Fs &&...fs)
 	{
-		using T = ::util::pack_element_t<0, Fs...>::value_type;
+		using T = pack_element_t<0, Fs...>::value_type;
 
 		auto contract = Contract<T>();
 
@@ -125,7 +125,7 @@ template <concepts::Future ...Fs>
 auto first(Fs &&...fs)
 	requires (
 		sizeof...(Fs) > 1 &&
-		::util::are_all_same_v<typename Fs::value_type...>
+		are_all_same_v<typename Fs::value_type...>
 	)
 {
 	return detail::First().mutate(::std::move(fs)...);

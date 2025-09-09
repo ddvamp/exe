@@ -18,8 +18,8 @@
 
 #include "util/debug.hpp"
 #include "util/defer.hpp"
-#include "util/type_traits.hpp"
-#include "util/utility.hpp"
+#include "exe/future/fun/type_traits.hpp"
+#include "exe/future/fun/utility.hpp"
 
 namespace util {
 
@@ -71,7 +71,7 @@ concept suitable_non_void_for_result =
 	!::std::is_array_v<T> &&
 	::std::is_nothrow_destructible_v<T> &&
 
-	!is_any_of_v<
+	!::exe::future::is_any_of_v<
 		::std::remove_cv_t<T>,
 		error,
 		value_place_t,
@@ -101,7 +101,7 @@ class [[nodiscard]] result;
 
 template <typename T>
 inline constexpr bool is_result_v =
-	is_specialization_v<::std::remove_cv_t<T>, result>;
+	::exe::future::is_specialization_v<::std::remove_cv_t<T>, result>;
 
 template <typename T>
 struct is_result : ::std::bool_constant<is_result_v<T>> {};
@@ -274,7 +274,7 @@ public:
 	explicit (!::std::is_convertible_v<U, T>) result(U &&value)
 		noexcept (::std::is_nothrow_constructible_v<T, U>)
 		requires (
-			!is_any_of_v<
+			!::exe::future::is_any_of_v<
 				::std::remove_cvref_t<U>,
 				result,
 				E,
@@ -319,8 +319,8 @@ public:
 
 	template <typename F, typename ...Args>
 	explicit result(invoke_place_t, F &&f, Args &&...args)
-		noexcept (is_nothrow_constructible_with_v<T, F, Args...>)
-		requires (is_constructible_with_v<T, F, Args...>)
+		noexcept (::exe::future::is_nothrow_constructible_with_v<T, F, Args...>)
+		requires (::exe::future::is_constructible_with_v<T, F, Args...>)
 		: value_(
 			::std::invoke(::std::forward<F>(f), ::std::forward<Args>(args)...)
 		)
@@ -334,7 +334,7 @@ public:
 			::std::is_nothrow_assignable_v<T &, U>
 		)
 		requires (
-			!is_any_of_v<
+			!::exe::future::is_any_of_v<
 				::std::remove_cvref_t<U>,
 				result,
 				error

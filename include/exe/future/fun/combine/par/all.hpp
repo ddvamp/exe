@@ -21,8 +21,8 @@
 #include "exe/future/fun/make/contract/contract.hpp"
 #include "exe/future/fun/mutator/mutator.hpp"
 
-#include "util/type_traits.hpp"
-#include "util/utility.hpp"
+#include "exe/future/fun/type_traits.hpp"
+#include "exe/future/fun/utility.hpp"
 
 namespace exe::future {
 
@@ -114,10 +114,10 @@ public:
 	auto mutate(Fs &&...fs)
 	{
 		using T = ::std::tuple<
-			::util::change_if_same_t<
+			change_if_same_t<
 				void,
 				typename Fs::value_type,
-				::util::unit_t
+				unit_t
 			>...
 		>;
 

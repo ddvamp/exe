@@ -21,7 +21,7 @@
 
 #include "exe/future/fun/result/result.hpp"
 
-#include "util/utility.hpp"
+#include "exe/future/fun/utility.hpp"
 
 namespace exe::future {
 
