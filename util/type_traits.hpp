@@ -1,6 +1,12 @@
-// Copyright (C) 2023 Artyom Kolpakov <ddvamp007@gmail.com>
+//
+//
+//
+//
+// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+//
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
 
 #ifndef DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_
 #define DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_ 1
