@@ -8,15 +8,15 @@
 #include <atomic>
 #include <mutex>
 
-#include "utils/concurrency/relax.h"
-#include "utils/intrusive/forward_list.h"
+#include "relax.h"
+#include "intrusive/forward_list.h"
 #include "utils/utility.h"
 
 namespace concurrency {
 
 class QueueSpinlock {
 private:
-	struct Node : ::utils::intrusive_concurrent_forward_list_node<Node> {
+	struct Node : intrusive_concurrent_forward_list_node<Node> {
 		::std::atomic_bool free_;
 	};
 
@@ -141,13 +141,13 @@ private:
 
 		if (prev == &dummy_) [[unlikely]] {
 			while (!try_lock()) {
-				::utils::thread_relax();
+				thread_relax();
 			}
 		} else {
 			prev->next_.store(&node, ::std::memory_order_release);
 
 			while (!node.free_.load(::std::memory_order_acquire)) {
-				::utils::thread_relax();
+				thread_relax();
 			}
 		}
 	}
@@ -167,7 +167,7 @@ private:
 			)
 		) [[unlikely]] {
 			while (!(next = node.next_.load(::std::memory_order_acquire))) {
-				::utils::thread_relax();
+				thread_relax();
 			}
 		}
 

@@ -5,7 +5,7 @@
 #ifndef DDV_EXE_EXECUTORS_TASK_H_
 #define DDV_EXE_EXECUTORS_TASK_H_ 1
 
-#include "utils/intrusive/forward_list.h"
+#include "concurrency/intrusive/forward_list.h"
 
 namespace exe::executors {
 
@@ -20,7 +20,7 @@ public:
 
 class TaskBase
 	: public ITask
-	, public ::utils::intrusive_concurrent_forward_list_node<TaskBase> {};
+	, public ::concurrency::intrusive_concurrent_forward_list_node<TaskBase> {};
 
 } // namespace exe::executors
 

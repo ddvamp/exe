@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_CONCURRENCY_MUTEX_H_
-#define DDV_UTILS_CONCURRENCY_MUTEX_H_ 1
+#ifndef DDV_CONCURRENCY_MUTEX_H_
+#define DDV_CONCURRENCY_MUTEX_H_ 1
 
 #include <algorithm>
 #include <array>
@@ -15,7 +15,7 @@
 #include "utils/defer.h"
 #include "utils/type_traits.h"
 
-namespace utils {
+namespace concurrency {
 
 namespace detail {
 
@@ -55,7 +55,7 @@ void lockImpl(::std::span<LockPtr> locks)
 
 	auto next = ::std::size_t(0);
 
-	auto unlock_on_exception = defer(
+	auto unlock_on_exception = ::utils::defer(
 		[&]() noexcept {
 			while (next-- != 0) {
 				locks[next]->unlock();
@@ -84,7 +84,7 @@ template <BasicLockable Lock1, BasicLockable Lock2, BasicLockable ...LockN>
 void lock(Lock1 &lock1, Lock2 &lock2, LockN &...lockn)
 {
 	auto list = []<typename ...Locks>(Locks &...locks) {
-		if constexpr (are_all_same_v<Locks...>) {
+		if constexpr (::utils::are_all_same_v<Locks...>) {
 			return ::std::array{::std::addressof(locks)...};
 		} else {
 			return ::std::array{
@@ -112,11 +112,11 @@ template <typename ...MutexTypes>
 	if constexpr (sizeof...(m) < 2) {
 		return ::std::scoped_lock(m...);
 	} else {
-		utils::lock(m...);
+		::utils::lock(m...);
 		return {::std::adopt_lock, m...};
 	}
 }
 
-} // namespace utils
+} // namespace concurrency
 
-#endif /* DDV_UTILS_CONCURRENCY_MUTEX_H_ */
+#endif /* DDV_CONCURRENCY_MUTEX_H_ */

@@ -7,7 +7,7 @@
 
 #include <atomic>
 
-#include "utils/concurrency/relax.h"
+#include "relax.h"
 
 namespace concurrency {
 
@@ -25,7 +25,7 @@ public:
 	void lock() noexcept
 	{
 		while (!try_lock()) {
-			::utils::thread_relax();
+			thread_relax();
 		}
 	}
 
