@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_FUN_MAKE_SUBMIT_H_
-#define DDV_EXE_FUTURES_FUN_MAKE_SUBMIT_H_ 1
+#ifndef DDV_EXE_FUTURE_FUN_MAKE_SUBMIT_H_
+#define DDV_EXE_FUTURE_FUN_MAKE_SUBMIT_H_ 1
 
 #include <exception>
 #include <memory>
@@ -28,7 +28,7 @@ class Task : public executors::TaskBase {
 private:
 	using T = traits::map_result_t<F &>::value_type;
 
-	UTILS_NO_UNIQUE_ADDRESS F fn_;
+	UTIL_NO_UNIQUE_ADDRESS F fn_;
 	Promise<T> p_;
 
 public:
@@ -92,4 +92,4 @@ auto submit(E &where, Fn fn)
 
 } // namespace exe::future
 
-#endif /* DDV_EXE_FUTURES_FUN_MAKE_SUBMIT_H_ */
+#endif /* DDV_EXE_FUTURE_FUN_MAKE_SUBMIT_H_ */

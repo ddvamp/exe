@@ -40,8 +40,8 @@ static ::std::size_t pages_to_bytes(::std::size_t count) noexcept
 /* static */ page_allocation
 	page_allocation::allocate_pages(::std::size_t count)
 {
-	UTILS_ASSERT(count != 0, "0 pages request");
-	UTILS_ASSERT(count <= max_pages(), "too many pages");
+	UTIL_ASSERT(count != 0, "0 pages request");
+	UTIL_ASSERT(count <= max_pages(), "too many pages");
 
 	auto size = pages_to_bytes(count);
 
@@ -55,10 +55,10 @@ static ::std::size_t pages_to_bytes(::std::size_t count) noexcept
 void page_allocation::protect_pages(::std::size_t page_offset,
 	::std::size_t page_count) const
 {
-	UTILS_ASSERT(page_count != 0, "0 pages request");
-	UTILS_ASSERT(page_count <= max_pages(), "out of range");
-	UTILS_ASSERT(page_offset <= max_pages() - page_count , "out of range");
-	UTILS_ASSERT(
+	UTIL_ASSERT(page_count != 0, "0 pages request");
+	UTIL_ASSERT(page_count <= max_pages(), "out of range");
+	UTIL_ASSERT(page_offset <= max_pages() - page_count , "out of range");
+	UTIL_ASSERT(
 		pages_to_bytes(page_offset + page_count) <= size_,
 		"out of range"
 	);

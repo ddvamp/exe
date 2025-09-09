@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_REFER_REF_COUNTED_PTR_H_
-#define DDV_UTILS_REFER_REF_COUNTED_PTR_H_ 1
+#ifndef DDV_UTIL_REFER_REF_COUNTED_PTR_H_
+#define DDV_UTIL_REFER_REF_COUNTED_PTR_H_ 1
 
 #include <cstddef>
 #include <functional>
@@ -19,7 +19,7 @@ class RefCountedPtr {
 private:
 	T *ptr_ = nullptr;
 
-	UTILS_NO_UNIQUE_ADDRESS detail::RefValidator<T> v_;
+	UTIL_NO_UNIQUE_ADDRESS detail::RefValidator<T> v_;
 
 public:
 	constexpr ~RefCountedPtr() noexcept
@@ -134,4 +134,4 @@ void swap(RefCountedPtr<T> &lhs, RefCountedPtr<T> &rhs) noexcept
 
 } // namespace util
 
-#endif /* DDV_UTILS_REFER_REF_COUNTED_PTR_H_ */
+#endif /* DDV_UTIL_REFER_REF_COUNTED_PTR_H_ */

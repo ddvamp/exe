@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_INTRUSIVE_FORWARD_LIST_H_
-#define DDV_UTILS_INTRUSIVE_FORWARD_LIST_H_ 1
+#ifndef DDV_UTIL_INTRUSIVE_FORWARD_LIST_H_
+#define DDV_UTIL_INTRUSIVE_FORWARD_LIST_H_ 1
 
 #include <atomic>
 
@@ -40,4 +40,4 @@ struct intrusive_concurrent_forward_list_node {
 
 } // namespace util
 
-#endif /* DDV_UTILS_INTRUSIVE_FORWARD_LIST_H_ */
+#endif /* DDV_UTIL_INTRUSIVE_FORWARD_LIST_H_ */

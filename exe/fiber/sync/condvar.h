@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FIBERS_SYNC_CONDVAR_H_
-#define DDV_EXE_FIBERS_SYNC_CONDVAR_H_ 1
+#ifndef DDV_EXE_FIBER_SYNC_CONDVAR_H_
+#define DDV_EXE_FIBER_SYNC_CONDVAR_H_ 1
 
 #include <cstdint>
 #include <utility>
@@ -73,7 +73,7 @@ public:
 
 	void wait() noexcept
 	{
-		UTILS_RUN(mutex_.checkOwner);
+		UTIL_RUN(mutex_.checkOwner);
 
 		WaitAwaiter awaiter{this};
 		self::suspend(awaiter);
@@ -82,7 +82,7 @@ public:
 	template <typename Predicate>
 	void wait(Predicate &&stop_waiting) noexcept
 	{
-		UTILS_RUN(mutex_.checkOwner);
+		UTIL_RUN(mutex_.checkOwner);
 
 		while (!stop_waiting()) {
 			wait();
@@ -149,7 +149,7 @@ private:
 
 	[[nodiscard]] ::std::uint64_t notifyImpl(::std::uint64_t count) noexcept
 	{
-		UTILS_RUN(mutex_.checkOwner);
+		UTIL_RUN(mutex_.checkOwner);
 
 		if (waiters_.count_ == 0) {
 			return 0;
@@ -168,4 +168,4 @@ private:
 
 } // namespace exe::fiber
 
-#endif /* DDV_EXE_FIBERS_SYNC_CONDVAR_H_ */
+#endif /* DDV_EXE_FIBER_SYNC_CONDVAR_H_ */

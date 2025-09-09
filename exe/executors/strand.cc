@@ -95,7 +95,7 @@ Strand::~Strand() noexcept = default;
 
 /* virtual */ void Strand::submit(TaskBase *task) noexcept
 {
-	UTILS_ASSERT(task, "nullptr instead of task");
+	UTIL_ASSERT(task, "nullptr instead of task");
 
 	impl_->submit(task);
 }

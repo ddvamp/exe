@@ -4,12 +4,12 @@
 
 // debug utilities
 
-#ifndef DDV_UTILS_DEBUG_H_
-#define DDV_UTILS_DEBUG_H_ 1
+#ifndef DDV_UTIL_DEBUG_H_
+#define DDV_UTIL_DEBUG_H_ 1
 
 #include "util/debug/assert.h"
 #include "util/debug/assume.h"
 #include "util/debug/run.h"
 #include "util/debug/unreachable.h"
 
-#endif /* DDV_UTILS_DEBUG_H_ */
+#endif /* DDV_UTIL_DEBUG_H_ */

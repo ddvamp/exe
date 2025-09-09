@@ -35,7 +35,7 @@ public:
 				underlying_.E::submit(task);
 			}
 		} catch (...) {
-			UTILS_ABORT("an exception was thrown when submitting the task");
+			UTIL_ABORT("an exception was thrown when submitting the task");
 		}
 	}
 

@@ -2,10 +2,10 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-// to disable, set a macro UTILS_DISABLE_DEBUG
+// to disable, set a macro UTIL_DISABLE_DEBUG
 
-#ifndef DDV_UTILS_DEBUG_ASSUME_H_
-#define DDV_UTILS_DEBUG_ASSUME_H_ 1
+#ifndef DDV_UTIL_DEBUG_ASSUME_H_
+#define DDV_UTIL_DEBUG_ASSUME_H_ 1
 
 #include <source_location>
 #include <string_view>
@@ -20,10 +20,10 @@ namespace util::detail {
 } // namespace util::detail
 
 // debug assume with passing an error message and location
-#ifdef UTILS_DISABLE_DEBUG
-#	define UTILS_ASSUME(expression, ...) [[assume(expression)]]
+#ifdef UTIL_DISABLE_DEBUG
+#	define UTIL_ASSUME(expression, ...) [[assume(expression)]]
 #else
-#	define UTILS_ASSUME(expression, ...)								\
+#	define UTIL_ASSUME(expression, ...)								\
 		do {															\
 			if (!(expression)) [[unlikely]] {							\
 				::util::detail::do_assume(#expression, __VA_ARGS__);	\
@@ -31,4 +31,4 @@ namespace util::detail {
 		} while (false)
 #endif
 
-#endif /* DDV_UTILS_DEBUG_ASSUME_H_ */
+#endif /* DDV_UTIL_DEBUG_ASSUME_H_ */

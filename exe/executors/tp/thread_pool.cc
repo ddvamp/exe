@@ -37,7 +37,7 @@ thread_local ThreadPool *current_pool = nullptr;
 
 ThreadPool::~ThreadPool()
 {
-	UTILS_ASSERT(state_ == State::STOPPED, "thread pool was not stopped");
+	UTIL_ASSERT(state_ == State::STOPPED, "thread pool was not stopped");
 }
 
 void ThreadPool::workLoop()
@@ -53,13 +53,13 @@ void ThreadPool::workLoop()
 			task_count_.done(1, ::std::memory_order_release);
 		}
 	} catch (...) {
-		UTILS_ABORT("exception inside thread pool");
+		UTIL_ABORT("exception inside thread pool");
 	}
 }
 
 void ThreadPool::start()
 {
-	UTILS_ASSERT(
+	UTIL_ASSERT(
 		::std::exchange(state_, State::STARTED) == State::CREATED,
 		"thread pool has already been started"
 	);
@@ -88,17 +88,17 @@ ThreadPool::ThreadPool(::std::size_t workers)
 ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 	: worker_count_(normalize_thread_count(workers))
 {
-	UTILS_ASSERT(workers != 0, "zero-size thread pool was requested");
+	UTIL_ASSERT(workers != 0, "zero-size thread pool was requested");
 }
 
 /* virtual */ void ThreadPool::submit(TaskBase *task)
 {
-	UTILS_ASSERT(
+	UTIL_ASSERT(
 		task,
 		"nullptr instead of the task"
 	);
 
-	UTILS_VERIFY(
+	UTIL_VERIFY(
 		tasks_.put(::util::builder{
 			[this, task]() noexcept {
 				task_count_.add();
@@ -116,7 +116,7 @@ void ThreadPool::waitIdle()
 
 void ThreadPool::stop()
 {
-	UTILS_ASSERT(
+	UTIL_ASSERT(
 		::std::exchange(state_, State::STOPPED) == State::STARTED,
 		"attempt to stop non-working thread pool"
 	);

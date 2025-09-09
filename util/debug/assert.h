@@ -2,10 +2,10 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-// to disable, set a macro UTILS_DISABLE_DEBUG
+// to disable, set a macro UTIL_DISABLE_DEBUG
 
-#ifndef DDV_UTILS_DEBUG_ASSERT_H_
-#define DDV_UTILS_DEBUG_ASSERT_H_ 1
+#ifndef DDV_UTIL_DEBUG_ASSERT_H_
+#define DDV_UTIL_DEBUG_ASSERT_H_ 1
 
 #include <source_location>
 #include <string_view>
@@ -22,7 +22,7 @@ namespace util::detail {
 } // namespace util::detail
 
 // runtime check with passing an error message and location
-#define UTILS_CHECK(expression, ...)								\
+#define UTIL_CHECK(expression, ...)								\
 	do {															\
 		if (!(expression)) [[unlikely]] {							\
 			::util::detail::do_assert(#expression, __VA_ARGS__);	\
@@ -30,17 +30,17 @@ namespace util::detail {
 	} while (false)
 
 // debug assert with passing an error message and location
-#ifdef UTILS_DISABLE_DEBUG
-#	define UTILS_ASSERT(expression, ...) UTILS_NOTHING
+#ifdef UTIL_DISABLE_DEBUG
+#	define UTIL_ASSERT(expression, ...) UTIL_NOTHING
 #else
-#	define UTILS_ASSERT(expression, ...) UTILS_CHECK(expression, __VA_ARGS__)
+#	define UTIL_ASSERT(expression, ...) UTIL_CHECK(expression, __VA_ARGS__)
 #endif
 
-// similar to UTILS_ASSERT, but anyway calculates the expression
-#ifdef UTILS_DISABLE_DEBUG
-#	define UTILS_VERIFY(expression, ...) UTILS_IGNORE(expression)
+// similar to UTIL_ASSERT, but anyway calculates the expression
+#ifdef UTIL_DISABLE_DEBUG
+#	define UTIL_VERIFY(expression, ...) UTIL_IGNORE(expression)
 #else
-#	define UTILS_VERIFY(expression, ...) UTILS_CHECK(expression, __VA_ARGS__)
+#	define UTIL_VERIFY(expression, ...) UTIL_CHECK(expression, __VA_ARGS__)
 #endif
 
-#endif /* DDV_UTILS_DEBUG_ASSERT_H_ */
+#endif /* DDV_UTIL_DEBUG_ASSERT_H_ */

@@ -44,13 +44,13 @@ public:
 	// TODO: harmful noexcept
 	void deallocate(Stack &stack) noexcept try
 	{
-		UTILS_ASSERT(stack.allocationSize() != 0, "stack in moved-from state");
+		UTIL_ASSERT(stack.allocationSize() != 0, "stack in moved-from state");
 
 		::std::lock_guard lock{m_};
 
 		pool_.push(::std::move(stack));
 	} catch (...) {
-		UTILS_ABORT("too bad");
+		UTIL_ABORT("too bad");
 	}
 
 private:

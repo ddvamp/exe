@@ -56,7 +56,7 @@ public:
 	[[noreturn]] void exitTo(ExecutionContext &target) noexcept
 	{
 		switchTo(target);
-		UTILS_UNREACHABLE("resuming a completed ExecutionContext");
+		UTIL_UNREACHABLE("resuming a completed ExecutionContext");
 	}
 
 	[[noreturn]] void exitToSaved() noexcept
