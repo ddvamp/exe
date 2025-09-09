@@ -2,7 +2,7 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-namespace utils {
+namespace util {
 
 template <typename T>
 struct unwrap_result {
@@ -50,7 +50,7 @@ struct invoke_traits {
 
 template <typename F, typename ...Args>
 requires requires {
-	typename result<result_<F, Args...>>;	
+	typename result<result_<F, Args...>>;
 }
 struct invoke_traits<F, Args...> {
 	using type = result<result_<F, Args...>>;
@@ -133,4 +133,4 @@ auto map_safely(F &&f, Args &&...args) noexcept
 	}
 }
 
-} // namespace utils
+} // namespace util

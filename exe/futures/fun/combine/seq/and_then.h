@@ -42,7 +42,7 @@ private:
 		requires (
 			has_executor_v<F> &&
 			traits::is_invocable_v<Fn &, typename F::value_type> &&
-			::utils::is_result_v<
+			::util::is_result_v<
 				traits::map_result_t<Fn &, typename F::value_type>
 			>
 		)
@@ -59,7 +59,7 @@ private:
 			futures::makeCallback<T>(
 				[](auto &res, auto &fn, auto &p) noexcept {
 					::std::move(p).setResult(
-						::utils::map_safely([&]() noexcept (
+						::util::map_safely([&]() noexcept (
 							traits::is_nothrow_invocable_v<Fn &, T>
 						) {
 							return ::std::move(res).and_then(fn);

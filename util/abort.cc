@@ -5,10 +5,10 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "utils/abort.h"
-#include "utils/string_builder.h"
+#include "util/abort.h"
+#include "util/string_builder.h"
 
-namespace utils {
+namespace util {
 
 void abort(::std::string_view msg, ::std::source_location loc) noexcept
 {
@@ -29,4 +29,4 @@ void abort(::std::string_view msg, ::std::source_location loc) noexcept
 	::std::abort();
 }
 
-} // namespace utils
+} // namespace util

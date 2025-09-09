@@ -5,12 +5,12 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "utils/debug/assert.h"
-#include "utils/string_builder.h"
+#include "util/debug/assert.h"
+#include "util/string_builder.h"
 
-namespace utils::detail {
+namespace util::detail {
 
-void do_assert(::std::string_view expr, ::std::string_view msg, 
+void do_assert(::std::string_view expr, ::std::string_view msg,
 	::std::source_location loc) noexcept
 {
 	string_builder os(1024);
@@ -32,4 +32,4 @@ void do_assert(::std::string_view expr, ::std::string_view msg,
 	::std::abort();
 }
 
-} // namespace utils::detail
+} // namespace util::detail

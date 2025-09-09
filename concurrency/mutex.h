@@ -12,8 +12,8 @@
 #include <mutex>
 #include <span>
 
-#include "utils/defer.h"
-#include "utils/type_traits.h"
+#include "util/defer.h"
+#include "util/type_traits.h"
 
 namespace concurrency {
 
@@ -55,7 +55,7 @@ void lockImpl(::std::span<LockPtr> locks)
 
 	auto next = ::std::size_t(0);
 
-	auto unlock_on_exception = ::utils::defer(
+	auto unlock_on_exception = ::util::defer(
 		[&]() noexcept {
 			while (next-- != 0) {
 				locks[next]->unlock();
@@ -84,7 +84,7 @@ template <BasicLockable Lock1, BasicLockable Lock2, BasicLockable ...LockN>
 void lock(Lock1 &lock1, Lock2 &lock2, LockN &...lockn)
 {
 	auto list = []<typename ...Locks>(Locks &...locks) {
-		if constexpr (::utils::are_all_same_v<Locks...>) {
+		if constexpr (::util::are_all_same_v<Locks...>) {
 			return ::std::array{::std::addressof(locks)...};
 		} else {
 			return ::std::array{
@@ -112,7 +112,7 @@ template <typename ...MutexTypes>
 	if constexpr (sizeof...(m) < 2) {
 		return ::std::scoped_lock(m...);
 	} else {
-		::utils::lock(m...);
+		::util::lock(m...);
 		return {::std::adopt_lock, m...};
 	}
 }

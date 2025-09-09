@@ -14,8 +14,8 @@
 #include <optional>
 #include <utility>
 
-#include "utils/debug.h"
-#include "utils/defer.h"
+#include "util/debug.h"
+#include "util/defer.h"
 
 namespace concurrency {
 
@@ -63,13 +63,13 @@ public:
 	{
 		auto lock = ::std::unique_lock(m_);
 
-		auto stop_waiting = ::utils::defer(
+		auto stop_waiting = ::util::defer(
 			[&w = ++waiters_on_take_]() noexcept { --w; }
 		);
 
 		while (true) {
 			if (!queue_.empty()) {
-				auto cleanup = ::utils::defer(
+				auto cleanup = ::util::defer(
 					[&q = queue_]() noexcept { q.pop_front(); }
 				);
 
@@ -79,7 +79,7 @@ public:
 			if (is_closed_) {
 				return ::std::nullopt;
 			}
-			
+
 			has_elements_.wait(lock);
 		}
 	}

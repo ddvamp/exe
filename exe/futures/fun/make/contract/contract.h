@@ -35,7 +35,7 @@ public:
 		release()->setResult(::std::move(result));
 	}
 
-	void setError(::utils::error error) && noexcept
+	void setError(::util::error error) && noexcept
 	{
 		release()->setResult(::std::move(error));
 	}

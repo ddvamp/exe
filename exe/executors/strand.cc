@@ -8,13 +8,13 @@
 
 #include "exe/executors/strand.h"
 
-#include "utils/debug/assert.h"
+#include "util/debug/assert.h"
 
 namespace exe::executors {
 
 class alignas(::std::hardware_destructive_interference_size) Strand::Impl
 	: private TaskBase
-	, public ::utils::RefCounted<Impl> {
+	, public ::util::RefCounted<Impl> {
 private:
 	struct DummyTask : TaskBase {
 		DummyTask() noexcept
@@ -125,7 +125,7 @@ void Strand::Impl::submit(TaskBase *task) noexcept
 		submitSelf();
 		return;
 	}
-	
+
 	dummy_.link(nullptr);
 
 	if (tryPutDummy(task)) {

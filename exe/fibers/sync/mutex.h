@@ -13,7 +13,7 @@
 #include "exe/fibers/core/awaiter.h"
 #include "exe/fibers/core/handle.h"
 
-#include "utils/debug.h"
+#include "util/debug.h"
 #include "concurrency/intrusive/forward_list.h"
 
 namespace exe::fibers {

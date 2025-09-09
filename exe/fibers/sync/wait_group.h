@@ -10,8 +10,8 @@
 
 #include "exe/fibers/sync/one_time_notification.h"
 
-#include "utils/debug.h"
-#include "utils/macro.h"
+#include "util/debug.h"
+#include "util/macro.h"
 
 namespace exe::fibers {
 
@@ -19,10 +19,10 @@ namespace exe::fibers {
 // Synchronization primitive for waiting for the completion of tasks,
 // which are expressed as a 64-bit counter
 // Formally, the wait ends when the counter drops to zero
-// 
+//
 // The add call should happens before the corresponding done call, otherwise
 // the behavior is undefined
-// 
+//
 // The add calls should happens before the wait calls
 //
 // WaitGroup can be reused. In this case, all current wait calls should

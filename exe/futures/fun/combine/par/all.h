@@ -15,8 +15,8 @@
 #include "exe/futures/fun/make/contract/contract.h"
 #include "exe/futures/fun/mutator/mutator.h"
 
-#include "utils/type_traits.h"
-#include "utils/utility.h"
+#include "util/type_traits.h"
+#include "util/utility.h"
 
 namespace exe::futures {
 
@@ -44,7 +44,7 @@ public:
 	}
 
 	template <::std::size_t I, typename T>
-	void setResult(::utils::result<T> &&res) noexcept
+	void setResult(::util::result<T> &&res) noexcept
 	{
 		auto order = ::std::memory_order_acq_rel;
 
@@ -108,10 +108,10 @@ public:
 	auto mutate(Fs &&...fs)
 	{
 		using T = ::std::tuple<
-			::utils::change_if_same_t<
+			::util::change_if_same_t<
 				void,
 				typename Fs::value_type,
-				::utils::unit_t
+				::util::unit_t
 			>...
 		>;
 

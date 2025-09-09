@@ -22,7 +22,7 @@ extern "C" void switchMachineContext(void **from, void **to) noexcept;
 
 } // namespace
 
-void MachineContext::setup(::utils::memory_view stack,
+void MachineContext::setup(::util::memory_view stack,
 	ITrampoline *trampoline) noexcept
 {
 	rsp_ = setupMachineContext(

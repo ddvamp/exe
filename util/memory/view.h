@@ -7,7 +7,7 @@
 
 #include <span>
 
-namespace utils {
+namespace util {
 
 using memory_view = ::std::span<::std::byte>;
 

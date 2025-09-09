@@ -10,14 +10,14 @@
 #include <source_location>
 #include <string_view>
 
-namespace utils::detail {
+namespace util::detail {
 
 [[noreturn]] void do_assume(::std::string_view assumption_expression,
 	::std::string_view assumption_message,
 	::std::source_location assumption_location =
 	::std::source_location::current()) noexcept;
 
-} // namespace utils::detail
+} // namespace util::detail
 
 // debug assume with passing an error message and location
 #ifdef UTILS_DISABLE_DEBUG
@@ -26,7 +26,7 @@ namespace utils::detail {
 #	define UTILS_ASSUME(expression, ...)								\
 		do {															\
 			if (!(expression)) [[unlikely]] {							\
-				::utils::detail::do_assume(#expression, __VA_ARGS__);	\
+				::util::detail::do_assume(#expression, __VA_ARGS__);	\
 			}															\
 		} while (false)
 #endif

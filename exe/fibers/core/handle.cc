@@ -7,7 +7,7 @@
 #include "exe/fibers/core/fiber.h"
 #include "exe/fibers/core/handle.h"
 
-#include "utils/debug.h"
+#include "util/debug.h"
 
 namespace exe::fibers {
 

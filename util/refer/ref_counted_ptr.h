@@ -9,10 +9,10 @@
 #include <functional>
 #include <utility>
 
-#include "utils/macro.h"
-#include "utils/refer/ref_counted.h"
+#include "util/macro.h"
+#include "util/refer/ref_counted.h"
 
-namespace utils {
+namespace util {
 
 template <typename T>
 class RefCountedPtr {
@@ -132,6 +132,6 @@ void swap(RefCountedPtr<T> &lhs, RefCountedPtr<T> &rhs) noexcept
 	lhs.swap(rhs);
 }
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_REFER_REF_COUNTED_PTR_H_ */

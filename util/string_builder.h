@@ -10,7 +10,7 @@
 #include <string_view>
 #include <utility>
 
-namespace utils {
+namespace util {
 
 inline ::std::string make_reserved_string(::std::size_t capacity)
 {
@@ -39,7 +39,7 @@ public:
 	explicit string_builder(::std::size_t capacity)
 		: os_(make_reserved_string(capacity))
 	{}
-	
+
 
 	explicit string_builder(::std::string init)
 		: os_(::std::move(init))
@@ -120,6 +120,6 @@ public:
 	}
 };
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_STRING_BUILDER_H_ */

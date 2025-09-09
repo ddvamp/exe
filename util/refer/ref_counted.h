@@ -9,9 +9,9 @@
 #include <concepts>
 #include <type_traits>
 
-#include "utils/macro.h"
+#include "util/macro.h"
 
-namespace utils {
+namespace util {
 
 template <typename Derived>
 class RefCounted;
@@ -84,6 +84,6 @@ public:
 	}
 };
 
-} // namespace utils
+} // namespace util
 
 #endif /* DDV_UTILS_REFER_REF_COUNTED_H_ */

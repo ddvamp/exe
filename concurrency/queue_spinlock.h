@@ -10,7 +10,7 @@
 
 #include "relax.h"
 #include "intrusive/forward_list.h"
-#include "utils/utility.h"
+#include "util/utility.h"
 
 namespace concurrency {
 
@@ -112,7 +112,7 @@ public:
 	{
 		return dummy_.free_.load(::std::memory_order_relaxed) &&
 			dummy_.free_.compare_exchange_weak(
-				::utils::temporary(true),
+				::util::temporary(true),
 				false,
 				::std::memory_order_acquire,
 				::std::memory_order_relaxed
@@ -160,7 +160,7 @@ private:
 			!(next = node.next_.load(::std::memory_order_acquire)) &&
 
 			!tail_.compare_exchange_strong(
-				::utils::temporary(&node),
+				::util::temporary(&node),
 				next = &dummy_,
 				::std::memory_order_release,
 				::std::memory_order_relaxed

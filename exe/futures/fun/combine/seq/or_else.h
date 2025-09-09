@@ -42,8 +42,8 @@ private:
 		requires (
 			has_executor_v<F> &&
 			::std::is_same_v<
-				traits::map_result_t<Fn &, ::utils::error>,
-				::utils::result<typename F::value_type>
+				traits::map_result_t<Fn &, ::util::error>,
+				::util::result<typename F::value_type>
 			>
 		)
 	{
@@ -58,8 +58,8 @@ private:
 			futures::makeCallback<T>(
 				[](auto &res, auto &fn, auto &p) noexcept {
 					::std::move(p).setResult(
-						::utils::map_safely([&]() noexcept (
-							::std::is_nothrow_invocable_v<Fn &, ::utils::error>
+						::util::map_safely([&]() noexcept (
+							::std::is_nothrow_invocable_v<Fn &, ::util::error>
 						) {
 							return ::std::move(res).or_else(fn);
 						})
@@ -80,7 +80,7 @@ template <typename Fn>
 auto orElse(Fn &&fn) noexcept
 	requires (
 		::std::is_nothrow_destructible_v<::std::remove_cvref_t<Fn>> &&
-		::std::is_invocable_v<Fn &, ::utils::error>
+		::std::is_invocable_v<Fn &, ::util::error>
 	)
 {
 	return pipe::OrElse<Fn>(::std::forward<Fn>(fn));

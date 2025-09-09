@@ -10,22 +10,22 @@
 #include <source_location>
 #include <string_view>
 
-#include "utils/macro.h"
+#include "util/macro.h"
 
-namespace utils::detail {
+namespace util::detail {
 
 [[noreturn]] void do_assert(::std::string_view assertion_expression,
 	::std::string_view assertion_message,
 	::std::source_location assertion_location =
 	::std::source_location::current()) noexcept;
 
-} // namespace utils::detail
+} // namespace util::detail
 
 // runtime check with passing an error message and location
 #define UTILS_CHECK(expression, ...)								\
 	do {															\
 		if (!(expression)) [[unlikely]] {							\
-			::utils::detail::do_assert(#expression, __VA_ARGS__);	\
+			::util::detail::do_assert(#expression, __VA_ARGS__);	\
 		}															\
 	} while (false)
 
