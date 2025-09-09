@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTIL_MACRO_H_
-#define DDV_UTIL_MACRO_H_ 1
+#ifndef DDVAMP_UTIL_MACRO_HPP_INCLUDED_
+#define DDVAMP_UTIL_MACRO_HPP_INCLUDED_ 1
 
 // no-op
 #define UTIL_NOTHING static_cast<void>(0)
@@ -17,4 +17,4 @@
 #	define UTIL_NO_UNIQUE_ADDRESS [[no_unique_address]]
 #endif
 
-#endif /* DDV_UTIL_MACRO_H_ */
+#endif /* DDVAMP_UTIL_MACRO_HPP_INCLUDED_ */

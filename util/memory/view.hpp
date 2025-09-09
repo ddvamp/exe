@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTIL_MEMORY_VIEW_H_
-#define DDV_UTIL_MEMORY_VIEW_H_ 1
+#ifndef DDVAMP_UTIL_MEMORY_VIEW_HPP_INCLUDED_
+#define DDVAMP_UTIL_MEMORY_VIEW_HPP_INCLUDED_ 1
 
 #include <span>
 
@@ -13,4 +13,4 @@ using memory_view = ::std::span<::std::byte>;
 
 }
 
-#endif /* DDV_UTIL_MEMORY_VIEW_H_ */
+#endif /* DDVAMP_UTIL_MEMORY_VIEW_HPP_INCLUDED_ */

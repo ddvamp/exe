@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_CONCURRENCY_INTRUSIVE_FORWARD_LIST_H_
-#define DDV_CONCURRENCY_INTRUSIVE_FORWARD_LIST_H_ 1
+#ifndef DDVAMP_CONCURRENCY_INTRUSIVE_FORWARD_LIST_HPP_INCLUDED_
+#define DDVAMP_CONCURRENCY_INTRUSIVE_FORWARD_LIST_HPP_INCLUDED_ 1
 
 #include <atomic>
 
@@ -40,4 +40,4 @@ struct intrusive_concurrent_forward_list_node {
 
 } // namespace concurrency
 
-#endif /* DDV_CONCURRENCY_INTRUSIVE_FORWARD_LIST_H_ */
+#endif /* DDVAMP_CONCURRENCY_INTRUSIVE_FORWARD_LIST_HPP_INCLUDED_ */

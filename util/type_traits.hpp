@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTIL_TYPE_TRAITS_H_
-#define DDV_UTIL_TYPE_TRAITS_H_ 1
+#ifndef DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_
+#define DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_ 1
 
 #include <functional>
 #include <type_traits>
@@ -187,4 +187,4 @@ using change_if_not_same_t =
 
 } // namespace util
 
-#endif /* DDV_UTIL_TYPE_TRAITS_H_ */
+#endif /* DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_ */

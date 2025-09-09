@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_EXECUTORS_EXECUTE_H_
-#define DDV_EXE_EXECUTORS_EXECUTE_H_ 1
+#ifndef DDVAMP_EXE_EXECUTORS_EXECUTE_HPP_INCLUDED_
+#define DDVAMP_EXE_EXECUTORS_EXECUTE_HPP_INCLUDED_ 1
 
 #include <memory>
 #include <type_traits>
@@ -71,4 +71,4 @@ void submit(E &where, Fn &&f)
 
 } // namespace exe::runtime
 
-#endif /* DDV_EXE_EXECUTORS_EXECUTE_H_ */
+#endif /* DDVAMP_EXE_EXECUTORS_EXECUTE_HPP_INCLUDED_ */

@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_CONCURRENCY_MPMC_UNBOUNDED_BLOCKING_QUEUE_H_
-#define DDV_CONCURRENCY_MPMC_UNBOUNDED_BLOCKING_QUEUE_H_ 1
+#ifndef DDVAMP_CONCURRENCY_MPMC_UNBOUNDED_BLOCKING_QUEUE_HPP_INCLUDED_
+#define DDVAMP_CONCURRENCY_MPMC_UNBOUNDED_BLOCKING_QUEUE_HPP_INCLUDED_ 1
 
 #include <concepts>
 #include <condition_variable>
@@ -105,4 +105,4 @@ public:
 
 } // namespace concurrency
 
-#endif /* DDV_CONCURRENCY_MPMC_UNBOUNDED_BLOCKING_QUEUE_H_ */
+#endif /* DDVAMP_CONCURRENCY_MPMC_UNBOUNDED_BLOCKING_QUEUE_HPP_INCLUDED_ */

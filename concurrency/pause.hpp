@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_CONCURRENCY_PAUSE_H_
-#define DDV_CONCURRENCY_PAUSE_H_ 1
+#ifndef DDVAMP_CONCURRENCY_PAUSE_HPP_INCLUDED_
+#define DDVAMP_CONCURRENCY_PAUSE_HPP_INCLUDED_ 1
 
 #if (defined(__GNUC__) || defined(__GNUG__) || defined(__clang__)) &&	\
 	!defined(__INTEL_COMPILER) &&										\
@@ -40,4 +40,4 @@ inline void thread_relax() noexcept
 
 } // namespace concurrency
 
-#endif /* DDV_CONCURRENCY_PAUSE_H_ */
+#endif /* DDVAMP_CONCURRENCY_PAUSE_HPP_INCLUDED_ */

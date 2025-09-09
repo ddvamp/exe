@@ -4,8 +4,8 @@
 
 // to disable, set a macro UTIL_DISABLE_DEBUG
 
-#ifndef DDV_UTIL_DEBUG_RUN_H_
-#define DDV_UTIL_DEBUG_RUN_H_ 1
+#ifndef DDVAMP_UTIL_DEBUG_RUN_HPP_INCLUDED_
+#define DDVAMP_UTIL_DEBUG_RUN_HPP_INCLUDED_ 1
 
 #include "util/macro.hpp"
 
@@ -16,4 +16,4 @@
 #	define UTIL_RUN(function, ...) function(__VA_ARGS__)
 #endif
 
-#endif /* DDV_UTIL_DEBUG_RUN_H_ */
+#endif /* DDVAMP_UTIL_DEBUG_RUN_HPP_INCLUDED_ */

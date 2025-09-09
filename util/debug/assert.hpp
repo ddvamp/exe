@@ -4,8 +4,8 @@
 
 // to disable, set a macro UTIL_DISABLE_DEBUG
 
-#ifndef DDV_UTIL_DEBUG_ASSERT_H_
-#define DDV_UTIL_DEBUG_ASSERT_H_ 1
+#ifndef DDVAMP_UTIL_DEBUG_ASSERT_HPP_INCLUDED_
+#define DDVAMP_UTIL_DEBUG_ASSERT_HPP_INCLUDED_ 1
 
 #include <source_location>
 #include <string_view>
@@ -43,4 +43,4 @@ namespace util::detail {
 #	define UTIL_VERIFY(expression, ...) UTIL_CHECK(expression, __VA_ARGS__)
 #endif
 
-#endif /* DDV_UTIL_DEBUG_ASSERT_H_ */
+#endif /* DDVAMP_UTIL_DEBUG_ASSERT_HPP_INCLUDED_ */

@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FIBER_SYNC_SHARED_MUTEX_H_
-#define DDV_EXE_FIBER_SYNC_SHARED_MUTEX_H_ 1
+#ifndef DDVAMP_EXE_FIBER_SYNC_SHARED_MUTEX_HPP_INCLUDED_
+#define DDVAMP_EXE_FIBER_SYNC_SHARED_MUTEX_HPP_INCLUDED_ 1
 
 #include <atomic>
 #include <cstdint>
@@ -138,4 +138,4 @@ private:
 
 } // namespace exe::fiber
 
-#endif /* DDV_EXE_FIBER_SYNC_SHARED_MUTEX_H_ */
+#endif /* DDVAMP_EXE_FIBER_SYNC_SHARED_MUTEX_HPP_INCLUDED_ */

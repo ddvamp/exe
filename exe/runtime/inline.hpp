@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_EXECUTORS_INLINE_H_
-#define DDV_EXE_EXECUTORS_INLINE_H_ 1
+#ifndef DDVAMP_EXE_EXECUTORS_INLINE_HPP_INCLUDED_
+#define DDVAMP_EXE_EXECUTORS_INLINE_HPP_INCLUDED_ 1
 
 #include "exe/runtime/task/scheduler.hpp"
 
@@ -33,4 +33,4 @@ public:
 
 } // namespace exe::runtime
 
-#endif /* DDV_EXE_EXECUTORS_INLINE_H_ */
+#endif /* DDVAMP_EXE_EXECUTORS_INLINE_HPP_INCLUDED_ */

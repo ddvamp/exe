@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURE_FUN_STATE_SHARED_STATE_H_
-#define DDV_EXE_FUTURE_FUN_STATE_SHARED_STATE_H_ 1
+#ifndef DDVAMP_EXE_FUTURE_FUN_STATE_SHARED_STATE_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_FUN_STATE_SHARED_STATE_HPP_INCLUDED_ 1
 
 #include <optional>
 #include <type_traits>
@@ -176,4 +176,4 @@ private:
 
 } // namespace exe::future::detail
 
-#endif /* DDV_EXE_FUTURE_FUN_STATE_SHARED_STATE_H_ */
+#endif /* DDVAMP_EXE_FUTURE_FUN_STATE_SHARED_STATE_HPP_INCLUDED_ */

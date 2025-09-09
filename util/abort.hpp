@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTIL_ABORT_H_
-#define DDV_UTIL_ABORT_H_ 1
+#ifndef DDVAMP_UTIL_ABORT_HPP_INCLUDED_
+#define DDVAMP_UTIL_ABORT_HPP_INCLUDED_ 1
 
 #include <source_location>
 #include <string_view>
@@ -19,4 +19,4 @@ namespace util {
 
 #define UTIL_ABORT(...) ::util::abort(__VA_ARGS__)
 
-#endif /* DDV_UTIL_ABORT_H_ */
+#endif /* DDVAMP_UTIL_ABORT_HPP_INCLUDED_ */

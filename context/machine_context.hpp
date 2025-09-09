@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_CONTEXT_MACHINE_CONTEXT_H_
-#define DDV_CONTEXT_MACHINE_CONTEXT_H_ 1
+#ifndef DDVAMP_CONTEXT_MACHINE_CONTEXT_HPP_INCLUDED_
+#define DDVAMP_CONTEXT_MACHINE_CONTEXT_HPP_INCLUDED_ 1
 
 #include "context/trampoline.hpp"
 
@@ -26,4 +26,4 @@ public:
 
 } // namespace context
 
-#endif /* DDV_CONTEXT_MACHINE_CONTEXT_H_ */
+#endif /* DDVAMP_CONTEXT_MACHINE_CONTEXT_HPP_INCLUDED_ */

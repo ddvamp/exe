@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURE_FUN_TYPES_FUTURE_H_
-#define DDV_EXE_FUTURE_FUN_TYPES_FUTURE_H_ 1
+#ifndef DDVAMP_EXE_FUTURE_FUN_TYPES_FUTURE_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_FUN_TYPES_FUTURE_HPP_INCLUDED_ 1
 
 #include <type_traits>
 
@@ -148,4 +148,4 @@ inline static constexpr bool has_scheduler_v<FutureHolder<T>> = true;
 
 } // namespace exe::future
 
-#endif /* DDV_EXE_FUTURE_FUN_TYPES_FUTURE_H_ */
+#endif /* DDVAMP_EXE_FUTURE_FUN_TYPES_FUTURE_HPP_INCLUDED_ */

@@ -4,12 +4,12 @@
 
 // debug utilities
 
-#ifndef DDV_UTIL_DEBUG_H_
-#define DDV_UTIL_DEBUG_H_ 1
+#ifndef DDVAMP_UTIL_DEBUG_HPP_INCLUDED_
+#define DDVAMP_UTIL_DEBUG_HPP_INCLUDED_ 1
 
 #include "util/debug/assert.hpp"
 #include "util/debug/assume.hpp"
 #include "util/debug/run.hpp"
 #include "util/debug/unreachable.hpp"
 
-#endif /* DDV_UTIL_DEBUG_H_ */
+#endif /* DDVAMP_UTIL_DEBUG_HPP_INCLUDED_ */

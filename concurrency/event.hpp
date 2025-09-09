@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_CONCURRENCY_EVENT_H_
-#define DDV_CONCURRENCY_EVENT_H_ 1
+#ifndef DDVAMP_CONCURRENCY_EVENT_HPP_INCLUDED_
+#define DDVAMP_CONCURRENCY_EVENT_HPP_INCLUDED_ 1
 
 #include <atomic>
 
@@ -47,4 +47,4 @@ public:
 
 } // namespace concurrency
 
-#endif /* DDV_CONCURRENCY_EVENT_H_ */
+#endif /* DDVAMP_CONCURRENCY_EVENT_HPP_INCLUDED_ */
