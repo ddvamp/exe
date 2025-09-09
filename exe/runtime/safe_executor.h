@@ -7,11 +7,11 @@
 
 #include <type_traits>
 
-#include "exe/executors/executor.h"
+#include "exe/runtime/executor.h"
 
 #include "util/abort.h"
 
-namespace exe::executors {
+namespace exe::runtime {
 
 // A decorator for an executor that aborts the program when
 // an exception is thrown when submitting a task
@@ -45,6 +45,6 @@ public:
 	}
 };
 
-} // namespace exe::executors
+} // namespace exe::runtime
 
 #endif /* DDV_EXE_EXECUTORS_SAFE_EXECUTOR_H_ */

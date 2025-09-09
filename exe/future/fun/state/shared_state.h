@@ -11,8 +11,8 @@
 
 #include "concurrency/meeting.h"
 
-#include "exe/executors/executor.h"
-#include "exe/executors/task.h"
+#include "exe/runtime/executor.h"
+#include "exe/runtime/task.h"
 #include "exe/future/fun/state/callback.h"
 #include "exe/future/fun/traits/map.h"
 
@@ -29,7 +29,7 @@ namespace exe::future::detail {
 // as well as to specify where callback will be called
 template <::util::suitable_for_result T>
 	requires (traits::is_nothrow_move_constructible_v<T>)
-class SharedState : public executors::TaskBase {
+class SharedState : public runtime::TaskBase {
 public:
 	using Result = ::util::result<T>;
 	using Callback = future::Callback<T>;
@@ -38,7 +38,7 @@ private:
 	::std::optional<Result> result_;
 	::std::optional<Callback> callback_;
 	::concurrency::Meeting meeting_{2};
-	executors::INothrowExecutor *executor_ = nullptr;
+	runtime::INothrowExecutor *executor_ = nullptr;
 
 public:
 	[[nodiscard]] static SharedState *create()
@@ -51,12 +51,12 @@ public:
 		state->destroySelf();
 	}
 
-	[[nodiscard]] executors::INothrowExecutor &getExecutor() const noexcept
+	[[nodiscard]] runtime::INothrowExecutor &getExecutor() const noexcept
 	{
 		return *executor_;
 	}
 
-	void setExecutor(executors::INothrowExecutor &where) noexcept
+	void setExecutor(runtime::INothrowExecutor &where) noexcept
 	{
 		executor_ = &where;
 	}

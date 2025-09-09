@@ -5,11 +5,11 @@
 #ifndef DDV_EXE_EXECUTORS_STRAND_H_
 #define DDV_EXE_EXECUTORS_STRAND_H_ 1
 
-#include "exe/executors/executor.h"
+#include "exe/runtime/executor.h"
 
 #include "util/refer/ref_counted_ptr.h"
 
-namespace exe::executors {
+namespace exe::runtime {
 
 // Adapter for an executors that allows to
 // serialize asynchronous critical sections without using explicit locks
@@ -42,6 +42,6 @@ public:
 	void submit(TaskBase *critical_section) noexcept override;
 };
 
-} // namespace exe::executors
+} // namespace exe::runtime
 
 #endif /* DDV_EXE_EXECUTORS_STRAND_H_ */

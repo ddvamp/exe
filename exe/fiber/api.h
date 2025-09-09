@@ -5,14 +5,14 @@
 #ifndef DDV_EXE_FIBER_API_H_
 #define DDV_EXE_FIBER_API_H_ 1
 
-#include "exe/executors/executor.h"
+#include "exe/runtime/executor.h"
 #include "exe/fiber/core/awaiter.h"
 #include "exe/fiber/core/id.h"
 #include "exe/fiber/core/routine.h"
 
 namespace exe::fiber {
 
-using executors::INothrowExecutor;
+using runtime::INothrowExecutor;
 
 // Start fiber on where
 //

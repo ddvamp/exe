@@ -9,12 +9,12 @@
 #include <type_traits>
 #include <utility>
 
-#include "exe/executors/executor.h"
-#include "exe/executors/task.h"
+#include "exe/runtime/executor.h"
+#include "exe/runtime/task.h"
 
 #include "util/macro.h"
 
-namespace exe::executors {
+namespace exe::runtime {
 
 namespace detail {
 
@@ -69,6 +69,6 @@ void submit(E &where, Fn &&f)
 	task.release();
 }
 
-} // namespace exe::executors
+} // namespace exe::runtime
 
 #endif /* DDV_EXE_EXECUTORS_EXECUTE_H_ */

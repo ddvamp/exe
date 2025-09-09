@@ -4,13 +4,13 @@
 
 #include <utility>
 
-#include "exe/executors/tp/thread_pool.h"
+#include "exe/runtime/tp/thread_pool.h"
 
 #include "util/abort.h"
 #include "util/debug.h"
 #include "util/utility.h"
 
-namespace exe::executors::tp {
+namespace exe::runtime::tp {
 
 namespace {
 
@@ -125,4 +125,4 @@ void ThreadPool::stop()
 	joinWorkerThreads();
 }
 
-} // namespace exe::executors::tp
+} // namespace exe::runtime::tp

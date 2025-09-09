@@ -12,9 +12,9 @@
 #include "concurrency/mpmc_unbounded_blocking_queue.h"
 #include "concurrency/wait_point.h"
 
-#include "exe/executors/executor.h"
+#include "exe/runtime/executor.h"
 
-namespace exe::executors::tp {
+namespace exe::runtime::tp {
 
 struct defer_start_t {
 	explicit defer_start_t() = default;
@@ -73,6 +73,6 @@ private:
 	void joinWorkerThreads();
 };
 
-} // namespace exe::executors::tp
+} // namespace exe::runtime::tp
 
 #endif /* DDV_EXE_EXECUTORS_TP_THREAD_POOL_H_ */

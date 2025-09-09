@@ -5,11 +5,11 @@
 #ifndef DDV_EXE_EXECUTORS_INLINE_H_
 #define DDV_EXE_EXECUTORS_INLINE_H_ 1
 
-#include "exe/executors/executor.h"
+#include "exe/runtime/executor.h"
 
 #include "util/debug.h"
 
-namespace exe::executors {
+namespace exe::runtime {
 
 // Executes task immediately at place
 class InlineExecutor : public INothrowExecutor {
@@ -31,6 +31,6 @@ public:
 	return instance;
 }
 
-} // namespace exe::executors
+} // namespace exe::runtime
 
 #endif /* DDV_EXE_EXECUTORS_INLINE_H_ */

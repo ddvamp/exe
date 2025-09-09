@@ -7,7 +7,7 @@
 
 #include "concurrency/intrusive/forward_list.h"
 
-namespace exe::executors {
+namespace exe::runtime {
 
 class ITask {
 public:
@@ -22,6 +22,6 @@ class TaskBase
 	: public ITask
 	, public ::concurrency::intrusive_concurrent_forward_list_node<TaskBase> {};
 
-} // namespace exe::executors
+} // namespace exe::runtime
 
 #endif /* DDV_EXE_EXECUTORS_TASK_H_ */

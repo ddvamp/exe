@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "exe/executors/executor.h"
+#include "exe/runtime/executor.h"
 #include "exe/future/fun/make/contract/contract.h"
 #include "exe/future/fun/combine/seq/via.h"
 #include "exe/future/fun/traits/map.h"
@@ -24,7 +24,7 @@ namespace exe::future {
 namespace detail {
 
 template <typename F>
-class Task : public executors::TaskBase {
+class Task : public runtime::TaskBase {
 private:
 	using T = traits::map_result_t<F &>::value_type;
 
@@ -58,7 +58,7 @@ private:
 
 } // namespace detail
 
-template <executors::concepts::Executor E, typename Fn>
+template <runtime::concepts::Executor E, typename Fn>
 auto submit(E &where, Fn fn)
 	requires (
 		::std::is_nothrow_destructible_v<Fn> &&
@@ -83,7 +83,7 @@ auto submit(E &where, Fn fn)
 
 	task.release();
 
-	if constexpr (executors::concepts::NothrowExecutor<E>) {
+	if constexpr (runtime::concepts::NothrowExecutor<E>) {
 		return ::std::move(contract).f | future::via(where);
 	} else {
 		return ::std::move(contract).f;

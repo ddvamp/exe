@@ -7,9 +7,9 @@
 
 #include <concepts>
 
-#include "exe/executors/task.h"
+#include "exe/runtime/task.h"
 
-namespace exe::executors {
+namespace exe::runtime {
 
 // Executors are to function execution as allocators are to memory allocation
 class IExecutor {
@@ -36,6 +36,6 @@ concept NothrowExecutor = ::std::derived_from<E, INothrowExecutor>;
 
 } // namespace concepts
 
-} // namespace exe::executors
+} // namespace exe::runtime
 
 #endif /* DDV_EXE_EXECUTORS_EXECUTOR_H_ */

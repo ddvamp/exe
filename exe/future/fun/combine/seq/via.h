@@ -19,13 +19,13 @@ class [[nodiscard]] Via : public detail::Mutator {
 	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
 
 private:
-	executors::INothrowExecutor &where_;
+	runtime::INothrowExecutor &where_;
 
 public:
 	template <typename>
 	inline static constexpr bool mutates_nothrow = true;
 
-	explicit Via(executors::INothrowExecutor &where) noexcept
+	explicit Via(runtime::INothrowExecutor &where) noexcept
 		: where_(where)
 	{}
 
@@ -39,7 +39,7 @@ private:
 
 } // namespace pipe
 
-inline auto via(executors::INothrowExecutor &where) noexcept
+inline auto via(runtime::INothrowExecutor &where) noexcept
 {
 	return pipe::Via(where);
 }

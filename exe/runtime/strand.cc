@@ -6,11 +6,11 @@
 #include <new>
 #include <utility>
 
-#include "exe/executors/strand.h"
+#include "exe/runtime/strand.h"
 
 #include "util/debug/assert.h"
 
-namespace exe::executors {
+namespace exe::runtime {
 
 class alignas(::std::hardware_destructive_interference_size) Strand::Impl
 	: private TaskBase
@@ -248,4 +248,4 @@ TaskBase *Strand::Impl::tryTakeNextTask(TaskBase *task) noexcept
 	return next;
 }
 
-} // namespace exe::executors
+} // namespace exe::runtime

@@ -27,7 +27,7 @@
 
 ## Structure
 
-- ***[executors](https://github.com/ddvamp/exe/tree/main/exe/executors)***
+- ***[executors](https://github.com/ddvamp/exe/tree/main/exe/runtime)***
 	- inline (выполняет задачи на месте)
 	- blocking static threadpool
 	- [ ] fast work-stealing threadpool

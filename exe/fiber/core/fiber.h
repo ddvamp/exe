@@ -7,8 +7,8 @@
 
 #include <atomic>
 
-#include "exe/executors/executor.h"
-#include "exe/executors/task.h"
+#include "exe/runtime/executor.h"
+#include "exe/runtime/task.h"
 #include "exe/fiber/api.h"
 #include "exe/fiber/core/awaiter.h"
 #include "exe/fiber/core/coroutine.h"
@@ -18,7 +18,7 @@
 namespace exe::fiber {
 
 // Fiber = stackful coroutine + scheduling + executor
-class [[nodiscard]] Fiber : public executors::TaskBase {
+class [[nodiscard]] Fiber : public runtime::TaskBase {
 private:
 	::context::Stack stack_;
 	Coroutine coroutine_;

@@ -7,7 +7,7 @@
 
 #include <utility>
 
-#include "exe/executors/inline.h"
+#include "exe/runtime/inline.h"
 #include "exe/future/fun/combine/seq/via.h"
 #include "exe/future/fun/mutator/mutator.h"
 #include "exe/future/fun/syntax/pipe.h"
@@ -30,7 +30,7 @@ private:
 	template <concepts::Future F>
 	auto mutate(F f) noexcept
 	{
-		return ::std::move(f) | future::via(executors::getInlineExecutor());
+		return ::std::move(f) | future::via(runtime::getInlineExecutor());
 	}
 };
 

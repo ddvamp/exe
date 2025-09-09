@@ -18,8 +18,8 @@ set(
   ./context/arch/x86_64/machine_context.cc
   ./context/exceptions_context.cc
   ./exe/coroutine/coroutine.cc
-  ./exe/executors/tp/thread_pool.cc
-  ./exe/executors/strand.cc
+  ./exe/runtime/tp/thread_pool.cc
+  ./exe/runtime/strand.cc
   ./exe/fiber/core/fiber.cc
   ./exe/fiber/core/handle.cc
   ./exe/fiber/core/stack.cc
