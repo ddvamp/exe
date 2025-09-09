@@ -9,13 +9,13 @@
 #include <cstdint>
 #include <new>
 
-#include "exe/fibers/sync/condvar.h"
-#include "exe/fibers/sync/mutex.h"
+#include "exe/fiber/sync/condvar.h"
+#include "exe/fiber/sync/mutex.h"
 
 #include "util/debug.h"
 #include "util/macro.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 // Synchronization primitive for waiting for the completion of tasks,
 // which are expressed as a 31-bit counter
@@ -229,6 +229,6 @@ private:
 	}
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_SYNC_WAIT_POINT_H_ */

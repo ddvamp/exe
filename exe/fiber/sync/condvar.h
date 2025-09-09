@@ -8,11 +8,11 @@
 #include <cstdint>
 #include <utility>
 
-#include "exe/fibers/api.h"
-#include "exe/fibers/core/awaiter.h"
-#include "exe/fibers/sync/mutex.h"
+#include "exe/fiber/api.h"
+#include "exe/fiber/core/awaiter.h"
+#include "exe/fiber/sync/mutex.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 class CondVar {
 private:
@@ -166,6 +166,6 @@ private:
 	}
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_SYNC_CONDVAR_H_ */

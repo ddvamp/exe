@@ -7,10 +7,10 @@
 
 #include <functional>
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 using FiberRoutine = ::std::move_only_function<void() noexcept>;
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_CORE_ROUTINE_H_ */

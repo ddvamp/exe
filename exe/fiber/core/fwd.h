@@ -5,10 +5,10 @@
 #ifndef DDV_EXE_FIBERS_CORE_FWD_H_
 #define DDV_EXE_FIBERS_CORE_FWD_H_ 1
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 class Fiber;
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_CORE_FWD_H_ */

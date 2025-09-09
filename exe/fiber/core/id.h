@@ -7,12 +7,12 @@
 
 #include <cstdint>
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 using FiberId = ::std::uint64_t;
 
 inline static constexpr auto kInvalidFiberId = FiberId(0);
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_CORE_ID_H_ */

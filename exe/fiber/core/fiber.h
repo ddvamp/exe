@@ -9,13 +9,13 @@
 
 #include "exe/executors/executor.h"
 #include "exe/executors/task.h"
-#include "exe/fibers/api.h"
-#include "exe/fibers/core/awaiter.h"
-#include "exe/fibers/core/coroutine.h"
-#include "exe/fibers/core/id.h"
-#include "exe/fibers/core/stack.h"
+#include "exe/fiber/api.h"
+#include "exe/fiber/core/awaiter.h"
+#include "exe/fiber/core/coroutine.h"
+#include "exe/fiber/core/id.h"
+#include "exe/fiber/core/stack.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 // Fiber = stackful coroutine + scheduling + executor
 class [[nodiscard]] Fiber : public executors::TaskBase {
@@ -75,6 +75,6 @@ private:
 // create an self-ownership fiber
 [[nodiscard]] Fiber *createFiber(FiberRoutine &&, INothrowExecutor *);
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_CORE_FIBER_H_ */

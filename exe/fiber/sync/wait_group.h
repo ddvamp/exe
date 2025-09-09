@@ -8,12 +8,12 @@
 #include <atomic>
 #include <cstdint>
 
-#include "exe/fibers/sync/one_time_notification.h"
+#include "exe/fiber/sync/one_time_notification.h"
 
 #include "util/debug.h"
 #include "util/macro.h"
 
-namespace exe::fibers {
+namespace exe::fiber {
 
 
 // Synchronization primitive for waiting for the completion of tasks,
@@ -91,6 +91,6 @@ public:
 	}
 };
 
-} // namespace exe::fibers
+} // namespace exe::fiber
 
 #endif /* DDV_EXE_FIBERS_SYNC_WAIT_GROUP_H_ */
