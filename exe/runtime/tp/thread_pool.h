@@ -12,7 +12,7 @@
 #include "concurrency/mpmc_unbounded_blocking_queue.h"
 #include "concurrency/wait_point.h"
 
-#include "exe/runtime/scheduler.h"
+#include "exe/runtime/task/scheduler.h"
 
 namespace exe::runtime::tp {
 

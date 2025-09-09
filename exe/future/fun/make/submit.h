@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "exe/runtime/scheduler.h"
+#include "exe/runtime/task/scheduler.h"
 #include "exe/future/fun/make/contract/contract.h"
 #include "exe/future/fun/combine/seq/via.h"
 #include "exe/future/fun/traits/map.h"

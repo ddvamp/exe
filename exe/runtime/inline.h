@@ -5,7 +5,7 @@
 #ifndef DDV_EXE_EXECUTORS_INLINE_H_
 #define DDV_EXE_EXECUTORS_INLINE_H_ 1
 
-#include "exe/runtime/scheduler.h"
+#include "exe/runtime/task/scheduler.h"
 
 #include "util/debug.h"
 

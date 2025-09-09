@@ -11,8 +11,8 @@
 
 #include "concurrency/meeting.h"
 
-#include "exe/runtime/scheduler.h"
-#include "exe/runtime/task.h"
+#include "exe/runtime/task/scheduler.h"
+#include "exe/runtime/task/task.h"
 #include "exe/future/fun/state/callback.h"
 #include "exe/future/fun/traits/map.h"
 

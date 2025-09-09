@@ -7,8 +7,8 @@
 
 #include <atomic>
 
-#include "exe/runtime/scheduler.h"
-#include "exe/runtime/task.h"
+#include "exe/runtime/task/scheduler.h"
+#include "exe/runtime/task/task.h"
 #include "exe/fiber/api.h"
 #include "exe/fiber/core/awaiter.h"
 #include "exe/fiber/core/coroutine.h"

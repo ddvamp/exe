@@ -5,7 +5,7 @@
 #ifndef DDV_EXE_FIBER_API_H_
 #define DDV_EXE_FIBER_API_H_ 1
 
-#include "exe/runtime/scheduler.h"
+#include "exe/runtime/task/scheduler.h"
 #include "exe/fiber/core/awaiter.h"
 #include "exe/fiber/core/id.h"
 #include "exe/fiber/core/routine.h"

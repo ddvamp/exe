@@ -9,8 +9,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "exe/runtime/scheduler.h"
-#include "exe/runtime/task.h"
+#include "exe/runtime/task/scheduler.h"
+#include "exe/runtime/task/task.h"
 
 #include "util/macro.h"
 
