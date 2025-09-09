@@ -2,55 +2,55 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTIL_REFER_REF_COUNTED_PTR_H_
-#define DDV_UTIL_REFER_REF_COUNTED_PTR_H_ 1
+#ifndef DDV_UTIL_REFER_REF_H_
+#define DDV_UTIL_REFER_REF_H_ 1
 
 #include <cstddef>
 #include <functional>
 #include <utility>
 
 #include "util/macro.hpp"
-#include "util/refer/ref_counted.hpp"
+#include "util/refer/ref_count.hpp"
 
 namespace util {
 
 template <typename T>
-class RefCountedPtr {
+class Ref {
 private:
 	T *ptr_ = nullptr;
 
 	UTIL_NO_UNIQUE_ADDRESS detail::RefValidator<T> v_;
 
 public:
-	constexpr ~RefCountedPtr() noexcept
+	constexpr ~Ref() noexcept
 	{
 		decRef();
 	}
 
-	RefCountedPtr(RefCountedPtr const &that) noexcept
+	Ref(Ref const &that) noexcept
 		: ptr_(that.ptr_)
 	{
 		incRef();
 	}
 
-	RefCountedPtr(RefCountedPtr &&that) noexcept
+	Ref(Ref &&that) noexcept
 	{
 		that.swap(*this);
 	}
 
-	RefCountedPtr &operator= (RefCountedPtr that) noexcept
+	Ref &operator= (Ref that) noexcept
 	{
 		that.swap(*this);
 		return *this;
 	}
 
 public:
-	constexpr RefCountedPtr() noexcept = default;
+	constexpr Ref() noexcept = default;
 
-	constexpr RefCountedPtr(::std::nullptr_t) noexcept
+	constexpr Ref(::std::nullptr_t) noexcept
 	{}
 
-	constexpr explicit RefCountedPtr(T *ptr) noexcept
+	constexpr explicit Ref(T *ptr) noexcept
 		: ptr_(ptr)
 	{}
 
@@ -59,19 +59,19 @@ public:
 		return ptr_ ? ptr_->useCount() : 0;
 	}
 
-	void swap(RefCountedPtr &that) noexcept
+	void swap(Ref &that) noexcept
 	{
 		::std::swap(ptr_, that.ptr_);
 	}
 
 	void reset() noexcept
 	{
-		RefCountedPtr().swap(*this);
+		Ref().swap(*this);
 	}
 
 	void reset(T *ptr) noexcept
 	{
-		RefCountedPtr(ptr).swap(*this);
+		Ref(ptr).swap(*this);
 	}
 
 	[[nodiscard]] T *get() const noexcept
@@ -113,25 +113,25 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-[[nodiscard]] bool operator== (RefCountedPtr<T> const &lhs,
-	RefCountedPtr<T> const &rhs) noexcept
+[[nodiscard]] bool operator== (Ref<T> const &lhs,
+	Ref<T> const &rhs) noexcept
 {
 	return ::std::ranges::equal_to{}(lhs.get(), rhs.get());
 }
 
 template <typename T>
-[[nodiscard]] auto operator<=> (RefCountedPtr<T> const &lhs,
-	RefCountedPtr<T> const &rhs) noexcept
+[[nodiscard]] auto operator<=> (Ref<T> const &lhs,
+	Ref<T> const &rhs) noexcept
 {
 	return ::std::compare_three_way{}(lhs.get(), rhs.get());
 }
 
 template <typename T>
-void swap(RefCountedPtr<T> &lhs, RefCountedPtr<T> &rhs) noexcept
+void swap(Ref<T> &lhs, Ref<T> &rhs) noexcept
 {
 	lhs.swap(rhs);
 }
 
 } // namespace util
 
-#endif /* DDV_UTIL_REFER_REF_COUNTED_PTR_H_ */
+#endif /* DDV_UTIL_REFER_REF_H_ */

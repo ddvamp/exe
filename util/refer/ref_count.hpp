@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTIL_REFER_REF_COUNTED_H_
-#define DDV_UTIL_REFER_REF_COUNTED_H_ 1
+#ifndef DDV_UTIL_REFER_REF_COUNT_H_
+#define DDV_UTIL_REFER_REF_COUNT_H_ 1
 
 #include <atomic>
 #include <concepts>
@@ -14,24 +14,24 @@
 namespace util {
 
 template <typename Derived>
-class RefCounted;
+class RefCount;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-inline constexpr bool is_ref_counted_v =
-	::std::derived_from<T, RefCounted<::std::remove_cv_t<T>>> &&
+inline constexpr bool is_ref_count_v =
+	::std::derived_from<T, RefCount<::std::remove_cv_t<T>>> &&
 	requires (::std::remove_cv_t<T> const &t) {
 		{ t.destroySelf() } noexcept;
 	};
 
 template <typename T>
-struct is_ref_counted : ::std::bool_constant<is_ref_counted_v<T>> {};
+struct is_ref_count : ::std::bool_constant<is_ref_count_v<T>> {};
 
 namespace concepts {
 
 template <typename T>
-concept RefCounted = is_ref_counted_v<T>;
+concept RefCount = is_ref_count_v<T>;
 
 } // namespace concepts
 
@@ -44,8 +44,8 @@ struct RefValidator {
 	constexpr RefValidator() noexcept
 	{
 		static_assert(
-			concepts::RefCounted<T>,
-			"Class does not inherit RefCounted"
+			concepts::RefCount<T>,
+			"Class does not inherit RefCount"
 		);
 	}
 };
@@ -55,14 +55,14 @@ struct RefValidator {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename Derived>
-class RefCounted {
+class RefCount {
 private:
 	mutable ::std::atomic_size_t ref_cnt_;
 
 	UTIL_NO_UNIQUE_ADDRESS detail::RefValidator<Derived> v_;
 
 public:
-	explicit RefCounted(::std::size_t count = 1) noexcept
+	explicit RefCount(::std::size_t count = 1) noexcept
 		: ref_cnt_(count)
 	{}
 
@@ -86,4 +86,4 @@ public:
 
 } // namespace util
 
-#endif /* DDV_UTIL_REFER_REF_COUNTED_H_ */
+#endif /* DDV_UTIL_REFER_REF_COUNT_H_ */

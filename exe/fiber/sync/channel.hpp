@@ -13,14 +13,14 @@
 #include <optional>
 #include <type_traits>
 
-#include "concurrency/queue_spinlock.hpp"
+#include "concurrency/qspinlock.hpp"
 
 #include "exe/fiber/api.hpp"
 #include "exe/fiber/core/awaiter.hpp"
 #include "exe/fiber/core/handle.hpp"
 
 #include "util/debug.hpp"
-#include "util/refer/ref_counted_ptr.hpp"
+#include "util/refer/ref.hpp"
 #include "util/utility.hpp"
 
 namespace exe::fiber {
@@ -193,11 +193,11 @@ public:
 class ChannelAwaiter : public IAwaiter {
 private:
 	ChannelWaitQueue::Node fiber_info_;
-	::concurrency::QueueSpinlock::LockToken &lock_;
+	::concurrency::QSpinlock::LockToken &lock_;
 
 public:
 	template <typename T>
-	ChannelAwaiter(T &object, ::concurrency::QueueSpinlock::LockToken &lock,
+	ChannelAwaiter(T &object, ::concurrency::QSpinlock::LockToken &lock,
 		ChannelWaitQueue &queue) noexcept
 		: fiber_info_{::std::addressof(object)}
 		, lock_(lock)
@@ -230,7 +230,7 @@ class ChannelState {
 private:
 	using OptT = ::std::optional<T>;
 
-	::concurrency::QueueSpinlock spinlock_; // protects channel state
+	::concurrency::QSpinlock spinlock_; // protects channel state
 
 	::std::atomic_size_t size_ = 0;
 	::std::atomic_bool closed_ = false;
@@ -461,7 +461,7 @@ private:
 template <::std::destructible T>
 	requires (::std::is_nothrow_move_constructible_v<T>)
 class ChannelImpl final
-	: public ::util::RefCounted<ChannelImpl<T>>
+	: public ::util::RefCount<ChannelImpl<T>>
 	, public ChannelState<T> {
 private:
 	using Self = ChannelImpl;
@@ -562,7 +562,7 @@ class Channel {
 	using Impl = detail::ChannelImpl<element_type>;
 
 private:
-	::util::RefCountedPtr<Impl> impl_;
+	::util::Ref<Impl> impl_;
 
 public:
 	explicit Channel(::std::size_t const capacity)
@@ -610,7 +610,7 @@ class Channel<T> {
 	using Impl = detail::ChannelImpl<::util::unit_t>;
 
 private:
-	::util::RefCountedPtr<Impl> impl_;
+	::util::Ref<Impl> impl_;
 
 public:
 	explicit Channel(::std::size_t const capacity)

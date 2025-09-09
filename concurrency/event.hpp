@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_CONCURRENCY_ONE_SHOT_EVENT_H_
-#define DDV_CONCURRENCY_ONE_SHOT_EVENT_H_ 1
+#ifndef DDV_CONCURRENCY_EVENT_H_
+#define DDV_CONCURRENCY_EVENT_H_ 1
 
 #include <atomic>
 
@@ -12,7 +12,7 @@
 namespace concurrency {
 
 // Synchronization primitive for waiting for a event and sharing data through it
-class OneShotEvent {
+class Event {
 private:
 	::std::atomic_flag is_ready_;
 
@@ -47,4 +47,4 @@ public:
 
 } // namespace concurrency
 
-#endif /* DDV_CONCURRENCY_ONE_SHOT_EVENT_H_ */
+#endif /* DDV_CONCURRENCY_EVENT_H_ */

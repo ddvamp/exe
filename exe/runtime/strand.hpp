@@ -7,7 +7,7 @@
 
 #include "exe/runtime/task/scheduler.hpp"
 
-#include "util/refer/ref_counted_ptr.hpp"
+#include "util/refer/ref.hpp"
 
 namespace exe::runtime {
 
@@ -23,7 +23,7 @@ class Strand final : public ISafeScheduler {
 private:
 	class Impl;
 
-	::util::RefCountedPtr<Impl> impl_;
+	::util::Ref<Impl> impl_;
 
 public:
 	~Strand() noexcept;

@@ -8,7 +8,7 @@
 #include <atomic>
 #include <cstdint>
 
-#include "concurrency/one_shot_event.hpp"
+#include "concurrency/event.hpp"
 
 #include "util/debug.hpp"
 #include "util/macro.hpp"
@@ -31,7 +31,7 @@ private:
 	using counter_t = ::std::uint64_t;
 
 	::std::atomic<counter_t> count_ = 0;
-	OneShotEvent counter_is_zero_;
+	Event counter_is_zero_;
 
 public:
 	~WaitGroup() = default;

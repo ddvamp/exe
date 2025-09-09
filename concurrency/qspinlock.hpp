@@ -2,19 +2,19 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_CONCURRENCY_QUEUE_SPINLOCK_H_
-#define DDV_CONCURRENCY_QUEUE_SPINLOCK_H_ 1
+#ifndef DDV_CONCURRENCY_QSPINLOCK_H_
+#define DDV_CONCURRENCY_QSPINLOCK_H_ 1
 
 #include <atomic>
 #include <mutex>
 
-#include "relax.hpp"
+#include "pause.hpp"
 #include "intrusive/forward_list.hpp"
 #include "util/utility.hpp"
 
 namespace concurrency {
 
-class QueueSpinlock {
+class QSpinlock {
 private:
 	struct Node : intrusive_concurrent_forward_list_node<Node> {
 		::std::atomic_bool free_;
@@ -28,7 +28,7 @@ public:
 	// for case of high contention
 	class LockToken {
 	private:
-		QueueSpinlock &lock_;
+		QSpinlock &lock_;
 		Node node_;
 		bool fast_;
 
@@ -42,17 +42,17 @@ public:
 		void operator= (LockToken &&) = delete;
 
 	public:
-		explicit LockToken(QueueSpinlock &spinlock) noexcept
+		explicit LockToken(QSpinlock &spinlock) noexcept
 			: lock_(spinlock)
 		{
 			lock();
 		}
 
-		LockToken(QueueSpinlock &spinlock, ::std::defer_lock_t) noexcept
+		LockToken(QSpinlock &spinlock, ::std::defer_lock_t) noexcept
 			: lock_(spinlock)
 		{}
 
-		LockToken(QueueSpinlock &spinlock, ::std::adopt_lock_t) noexcept
+		LockToken(QSpinlock &spinlock, ::std::adopt_lock_t) noexcept
 			: lock_(spinlock)
 			, fast_(true)
 		{}
@@ -92,7 +92,7 @@ public:
 	// for case of high contention
 	class Guard : protected LockToken {
 	public:
-		explicit Guard(QueueSpinlock &lock) noexcept
+		explicit Guard(QSpinlock &lock) noexcept
 			: LockToken(lock)
 		{}
 
@@ -185,4 +185,4 @@ private:
 
 } // namespace concurrency
 
-#endif /* DDV_CONCURRENCY_QUEUE_SPINLOCK_H_ */
+#endif /* DDV_CONCURRENCY_QSPINLOCK_H_ */

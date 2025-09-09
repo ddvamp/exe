@@ -7,7 +7,7 @@
 
 #include <atomic>
 
-#include "relax.hpp"
+#include "pause.hpp"
 
 namespace concurrency {
 

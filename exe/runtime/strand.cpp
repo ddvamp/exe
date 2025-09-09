@@ -14,7 +14,7 @@ namespace exe::runtime {
 
 class alignas(::std::hardware_destructive_interference_size) Strand::Impl
 	: private TaskBase
-	, public ::util::RefCounted<Impl> {
+	, public ::util::RefCount<Impl> {
 private:
 	struct DummyTask : TaskBase {
 		DummyTask() noexcept
