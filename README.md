@@ -27,7 +27,7 @@
 
 ## Structure
 
-- ***[executors](https://github.com/ddvamp/exe/tree/main/exe/runtime)***
+- ***[scheduler](https://github.com/ddvamp/exe/tree/main/exe/runtime)***
 	- inline (выполняет задачи на месте)
 	- blocking static threadpool
 	- [ ] fast work-stealing threadpool
@@ -52,7 +52,7 @@
 		- value (создать готовое значение)
 		- just (создать готовое событие)
 		- failure (создать готовую ошибку)
-		- submit (отправить вычисление в executor и получить его будущий результат)
+		- submit (отправить вычисление в scheduler и получить его будущий результат)
 	- combinators (преобразуют одни фьючи в другие)
 		- seq
 			- via (установить, где будет значение будет потреблено)

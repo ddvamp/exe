@@ -42,7 +42,7 @@ public:
 		return fiber_;
 	}
 
-	// Schedule execution on executor set on fiber
+	// Schedule execution on scheduler set on fiber
 	//
 	// Precondition: isValid() == true
 	void schedule() && noexcept;

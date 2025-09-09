@@ -29,13 +29,13 @@ private:
 	};
 
 private:
-	INothrowExecutor &where_;
+	ISafeScheduler &where_;
 	DummyTask dummy_;
 	TaskBase *head_ = &dummy_;
 	::std::atomic<TaskBase *> tail_ = &dummy_;
 
 public:
-	[[nodiscard]] static Impl *create(INothrowExecutor &where)
+	[[nodiscard]] static Impl *create(ISafeScheduler &where)
 	{
 		return ::new Impl(where);
 	}
@@ -46,7 +46,7 @@ public:
 	}
 
 public:
-	explicit Impl(INothrowExecutor &where) noexcept
+	explicit Impl(ISafeScheduler &where) noexcept
 		: where_(where)
 	{
 		static_assert(
@@ -56,7 +56,7 @@ public:
 		);
 	}
 
-	[[nodiscard]] INothrowExecutor &getExecutor() const noexcept
+	[[nodiscard]] ISafeScheduler &getScheduler() const noexcept
 	{
 		return where_;
 	}
@@ -87,7 +87,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Strand::Strand(INothrowExecutor &where)
+Strand::Strand(ISafeScheduler &where)
 	: impl_(Impl::create(where))
 {}
 
@@ -100,9 +100,9 @@ Strand::~Strand() noexcept = default;
 	impl_->submit(task);
 }
 
-INothrowExecutor &Strand::getExecutor() const noexcept
+ISafeScheduler &Strand::getScheduler() const noexcept
 {
-	return impl_->getExecutor();
+	return impl_->getScheduler();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -70,15 +70,15 @@ public:
 }
 
 Fiber::Fiber(FiberRoutine &&routine, ::context::Stack &&stack,
-	INothrowExecutor *executor) noexcept
+	ISafeScheduler *scheduler) noexcept
 	: stack_(::std::move(stack))
 	, coroutine_(::std::move(routine), stack_.view())
-	, executor_(executor)
+	, scheduler_(scheduler)
 {}
 
 void Fiber::schedule() noexcept
 {
-	executor_->submit(this);
+	scheduler_->submit(this);
 }
 
 void Fiber::resume() noexcept
@@ -93,9 +93,9 @@ void Fiber::suspend(IAwaiter *awaiter) noexcept
 	stop();
 }
 
-void Fiber::teleportTo(INothrowExecutor *executor) noexcept
+void Fiber::teleportTo(ISafeScheduler *scheduler) noexcept
 {
-	executor_ = executor;
+	scheduler_ = scheduler;
 
 	self::yield();
 }
@@ -148,9 +148,9 @@ void Fiber::stop() noexcept
 	coroutine_.suspend();
 }
 
-Fiber *createFiber(FiberRoutine &&routine, INothrowExecutor *executor)
+Fiber *createFiber(FiberRoutine &&routine, ISafeScheduler *scheduler)
 {
-	return new Fiber{::std::move(routine), allocateStack(), executor};
+	return new Fiber{::std::move(routine), allocateStack(), scheduler};
 }
 
 
@@ -166,9 +166,9 @@ FiberId getId() noexcept
 	return Fiber::self().getId();
 }
 
-INothrowExecutor &getExecutor() noexcept
+ISafeScheduler &getScheduler() noexcept
 {
-	return *Fiber::self().getExecutor();
+	return *Fiber::self().getScheduler();
 }
 
 void suspend(IAwaiter &awaiter) noexcept
@@ -188,25 +188,25 @@ void switchTo(FiberHandle &&next) noexcept
 	suspend(awaiter);
 }
 
-void teleportTo(INothrowExecutor &executor)
+void teleportTo(ISafeScheduler &scheduler)
 {
-	Fiber::self().teleportTo(&executor);
+	Fiber::self().teleportTo(&scheduler);
 }
 
 } // namespace self
 
-void go(INothrowExecutor &executor, FiberRoutine &&routine)
+void go(ISafeScheduler &scheduler, FiberRoutine &&routine)
 {
 	UTIL_ASSERT(routine, "empty routine for fiber");
 
-	auto fiber = createFiber(::std::move(routine), &executor);
+	auto fiber = createFiber(::std::move(routine), &scheduler);
 
 	fiber->schedule();
 }
 
 void go(FiberRoutine &&routine)
 {
-	go(self::getExecutor(), ::std::move(routine));
+	go(self::getScheduler(), ::std::move(routine));
 }
 
 } // namespace exe::fiber

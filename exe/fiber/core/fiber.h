@@ -7,7 +7,7 @@
 
 #include <atomic>
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 #include "exe/runtime/task.h"
 #include "exe/fiber/api.h"
 #include "exe/fiber/core/awaiter.h"
@@ -17,12 +17,12 @@
 
 namespace exe::fiber {
 
-// Fiber = stackful coroutine + scheduling + executor
+// Fiber = stackful coroutine + scheduling + scheduler
 class [[nodiscard]] Fiber : public runtime::TaskBase {
 private:
 	::context::Stack stack_;
 	Coroutine coroutine_;
-	INothrowExecutor *executor_;
+	ISafeScheduler *scheduler_;
 	IAwaiter *awaiter_ = nullptr;
 	FiberId const id_ = getNextId();
 
@@ -32,19 +32,19 @@ public:
 	// reference to currently active fiber
 	[[nodiscard]] static Fiber &self() noexcept;
 
-	Fiber(FiberRoutine &&, ::context::Stack &&, INothrowExecutor *) noexcept;
+	Fiber(FiberRoutine &&, ::context::Stack &&, ISafeScheduler *) noexcept;
 
 	[[nodiscard]] FiberId getId() const noexcept
 	{
 		return id_;
 	}
 
-	[[nodiscard]] INothrowExecutor *getExecutor() const noexcept
+	[[nodiscard]] ISafeScheduler *getScheduler() const noexcept
 	{
-		return executor_;
+		return scheduler_;
 	}
 
-	// schedule execution on executor set on fiber
+	// schedule execution on scheduler set on fiber
 	void schedule() noexcept;
 
 	// execute fiber immediately
@@ -52,8 +52,8 @@ public:
 
 	void suspend(IAwaiter *) noexcept;
 
-	// reschedule current fiber on executor
-	void teleportTo(INothrowExecutor *) noexcept;
+	// reschedule current fiber on scheduler
+	void teleportTo(ISafeScheduler *) noexcept;
 
 	// ITask
 	void run() noexcept override;
@@ -73,7 +73,7 @@ private:
 };
 
 // create an self-ownership fiber
-[[nodiscard]] Fiber *createFiber(FiberRoutine &&, INothrowExecutor *);
+[[nodiscard]] Fiber *createFiber(FiberRoutine &&, ISafeScheduler *);
 
 } // namespace exe::fiber
 

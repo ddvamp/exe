@@ -30,7 +30,7 @@ private:
 	template <concepts::Future F>
 	auto mutate(F f) noexcept
 	{
-		return ::std::move(f) | future::via(runtime::getInlineExecutor());
+		return ::std::move(f) | future::via(runtime::getInlineScheduler());
 	}
 };
 
@@ -59,7 +59,7 @@ private:
 	template <concepts::Future F>
 	auto mutate(F f) noexcept
 	{
-		if constexpr (has_executor_v<F>) {
+		if constexpr (has_scheduler_v<F>) {
 			return ::std::move(f);
 		} else {
 			return ::std::move(f) | future::inLine();

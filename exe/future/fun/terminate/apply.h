@@ -37,7 +37,7 @@ private:
 	auto mutate(F &&f)
 		noexcept (::std::is_nothrow_constructible_v<typename F::Callback, Fn>)
 		requires (
-			has_executor_v<F> &&
+			has_scheduler_v<F> &&
 			::std::is_constructible_v<typename F::Callback, Fn>
 		)
 	{

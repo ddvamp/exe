@@ -19,13 +19,13 @@ class [[nodiscard]] Via : public detail::Mutator {
 	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
 
 private:
-	runtime::INothrowExecutor &where_;
+	runtime::ISafeScheduler &where_;
 
 public:
 	template <typename>
 	inline static constexpr bool mutates_nothrow = true;
 
-	explicit Via(runtime::INothrowExecutor &where) noexcept
+	explicit Via(runtime::ISafeScheduler &where) noexcept
 		: where_(where)
 	{}
 
@@ -33,13 +33,13 @@ private:
 	template <concepts::Future F>
 	auto mutate(F f) noexcept
 	{
-		return setExecutor(::std::move(f), where_);
+		return setScheduler(::std::move(f), where_);
 	}
 };
 
 } // namespace pipe
 
-inline auto via(runtime::INothrowExecutor &where) noexcept
+inline auto via(runtime::ISafeScheduler &where) noexcept
 {
 	return pipe::Via(where);
 }

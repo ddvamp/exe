@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 #include "exe/future/fun/make/contract/contract.h"
 #include "exe/future/fun/combine/seq/via.h"
 #include "exe/future/fun/traits/map.h"
@@ -58,7 +58,7 @@ private:
 
 } // namespace detail
 
-template <runtime::concepts::Executor E, typename Fn>
+template <runtime::concepts::Scheduler E, typename Fn>
 auto submit(E &where, Fn fn)
 	requires (
 		::std::is_nothrow_destructible_v<Fn> &&
@@ -83,7 +83,7 @@ auto submit(E &where, Fn fn)
 
 	task.release();
 
-	if constexpr (runtime::concepts::NothrowExecutor<E>) {
+	if constexpr (runtime::concepts::SafeScheduler<E>) {
 		return ::std::move(contract).f | future::via(where);
 	} else {
 		return ::std::move(contract).f;

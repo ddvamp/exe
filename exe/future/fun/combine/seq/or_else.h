@@ -40,7 +40,7 @@ private:
 	template <concepts::Future F>
 	auto mutate(F &&f)
 		requires (
-			has_executor_v<F> &&
+			has_scheduler_v<F> &&
 			::std::is_same_v<
 				traits::map_result_t<Fn &, ::util::error>,
 				::util::result<typename F::value_type>
@@ -51,7 +51,7 @@ private:
 
 		auto contract = Contract<T>();
 
-		auto &where = getExecutor(f);
+		auto &where = getScheduler(f);
 
 		setCallback(
 			::std::move(f),

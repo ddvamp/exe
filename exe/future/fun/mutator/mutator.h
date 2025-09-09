@@ -27,7 +27,7 @@ protected:
 	template <concepts::Future F>
 	static auto makeHolder(F &f) noexcept
 	{
-		if constexpr (has_executor_v<F>) {
+		if constexpr (has_scheduler_v<F>) {
 			return FutureHolder(f);
 		} else {
 			return SemiFutureHolder(f);
@@ -40,47 +40,47 @@ protected:
 
 
 	template <concepts::Future F>
-	[[nodiscard]] static runtime::INothrowExecutor &getExecutor(F const &f)
+	[[nodiscard]] static runtime::ISafeScheduler &getScheduler(F const &f)
 		noexcept
-		requires (has_executor_v<F>)
+		requires (has_scheduler_v<F>)
 	{
-		return f.getState().getExecutor();
+		return f.getState().getScheduler();
 	}
 
 	template <typename F>
-	[[nodiscard]] static runtime::INothrowExecutor &getExecutor(
+	[[nodiscard]] static runtime::ISafeScheduler &getScheduler(
 		FutureHolder<F> const &f) noexcept
 	{
-		return f.raw.getState().getExecutor();
+		return f.raw.getState().getScheduler();
 	}
 
 
 
 	template <concepts::Future F>
-	static auto setExecutor(F f, runtime::INothrowExecutor &where) noexcept
+	static auto setScheduler(F f, runtime::ISafeScheduler &where) noexcept
 	{
-		f.getState().setExecutor(where);
-		return F::with_executor(f.release());
+		f.getState().setScheduler(where);
+		return F::with_scheduler(f.release());
 	}
 
 	template <typename F>
-	static auto setExecutor(SemiFutureHolder<F> f,
-		runtime::INothrowExecutor &where) noexcept
+	static auto setScheduler(SemiFutureHolder<F> f,
+		runtime::ISafeScheduler &where) noexcept
 	{
-		f.raw.getState().setExecutor(where);
+		f.raw.getState().setScheduler(where);
 		return FutureHolder<F>(f.raw);
 	}
 
 
 
 	template <concepts::Future F>
-	static auto unsetExecutor(F f) noexcept
+	static auto unsetScheduler(F f) noexcept
 	{
-		return F::without_executor(::std::move(f));
+		return F::without_scheduler(::std::move(f));
 	}
 
 	template <typename F>
-	static auto unsetExecutor(SemiFutureHolder<F> f) noexcept
+	static auto unsetScheduler(SemiFutureHolder<F> f) noexcept
 	{
 		return ::std::move(f);
 	}
@@ -89,7 +89,7 @@ protected:
 
 	template <concepts::Future F>
 	static void setCallback(F f, F::Callback &&cb) noexcept
-		requires (has_executor_v<F>)
+		requires (has_scheduler_v<F>)
 	{
 		f.release()->setCallback(::std::move(cb));
 	}

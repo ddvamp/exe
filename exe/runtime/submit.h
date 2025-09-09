@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 #include "exe/runtime/task.h"
 
 #include "util/macro.h"
@@ -57,7 +57,7 @@ private:
 
 } // namespace detail
 
-template <concepts::Executor E, typename Fn>
+template <concepts::Scheduler E, typename Fn>
 void submit(E &where, Fn &&f)
 {
 	using Task = detail::Task<::std::remove_cvref_t<Fn>>;

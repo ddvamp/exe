@@ -5,21 +5,21 @@
 #ifndef DDV_EXE_FIBER_API_H_
 #define DDV_EXE_FIBER_API_H_ 1
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 #include "exe/fiber/core/awaiter.h"
 #include "exe/fiber/core/id.h"
 #include "exe/fiber/core/routine.h"
 
 namespace exe::fiber {
 
-using runtime::INothrowExecutor;
+using runtime::ISafeScheduler;
 
 // Start fiber on where
 //
 // Precondition: routine == true
-void go(INothrowExecutor &where, FiberRoutine &&routine);
+void go(ISafeScheduler &where, FiberRoutine &&routine);
 
-// Start fiber on executor of current fiber
+// Start fiber on scheduler of current fiber
 //
 // Precondition: fiber context && routine == true
 void go(FiberRoutine &&routine);
@@ -29,7 +29,7 @@ namespace self {
 
 [[nodiscard]] FiberId getId() noexcept;
 
-[[nodiscard]] INothrowExecutor &getExecutor() noexcept;
+[[nodiscard]] ISafeScheduler &getScheduler() noexcept;
 
 // For synchronization primitives
 // Do not use directly
@@ -42,8 +42,8 @@ void yield() noexcept;
 // otherwise, the call is equivalent to yield
 void switchTo(FiberHandle &&next) noexcept;
 
-// reschedule current fiber on executor
-void teleportTo(INothrowExecutor &executor);
+// reschedule current fiber on scheduler
+void teleportTo(ISafeScheduler &scheduler);
 
 } // namespace self
 

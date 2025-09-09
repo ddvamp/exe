@@ -5,13 +5,13 @@
 #ifndef DDV_EXE_EXECUTORS_STRAND_H_
 #define DDV_EXE_EXECUTORS_STRAND_H_ 1
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 
 #include "util/refer/ref_counted_ptr.h"
 
 namespace exe::runtime {
 
-// Adapter for an executors that allows to
+// Adapter for an scheduler that allows to
 // serialize asynchronous critical sections without using explicit locks
 //
 // Instead of moving the "lock" between threads, it moves critical sections,
@@ -19,7 +19,7 @@ namespace exe::runtime {
 //
 // Sending critical sections is wait-free except for
 // launching a new critical sections of the strand itself
-class Strand final : public INothrowExecutor {
+class Strand final : public ISafeScheduler {
 private:
 	class Impl;
 
@@ -35,9 +35,9 @@ public:
 	void operator= (Strand &&) = delete;
 
 public:
-	explicit Strand(INothrowExecutor &where);
+	explicit Strand(ISafeScheduler &where);
 
-	[[nodiscard]] INothrowExecutor &getExecutor() const noexcept;
+	[[nodiscard]] ISafeScheduler &getScheduler() const noexcept;
 
 	void submit(TaskBase *critical_section) noexcept override;
 };

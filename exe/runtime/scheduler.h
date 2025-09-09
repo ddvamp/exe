@@ -11,15 +11,15 @@
 
 namespace exe::runtime {
 
-// Executors are to function execution as allocators are to memory allocation
-class IExecutor {
+// Schedulers are to function execution as allocators are to memory allocation
+class IScheduler {
 public:
-	virtual ~IExecutor() = default;
+	virtual ~IScheduler() = default;
 
 	virtual void submit(TaskBase *) = 0;
 };
 
-class INothrowExecutor : public IExecutor {
+class ISafeScheduler : public IScheduler {
 public:
 	void submit(TaskBase *) noexcept override = 0;
 };
@@ -29,10 +29,10 @@ public:
 namespace concepts {
 
 template <typename E>
-concept Executor = ::std::derived_from<E, IExecutor>;
+concept Scheduler = ::std::derived_from<E, IScheduler>;
 
 template <typename E>
-concept NothrowExecutor = ::std::derived_from<E, INothrowExecutor>;
+concept SafeScheduler = ::std::derived_from<E, ISafeScheduler>;
 
 } // namespace concepts
 

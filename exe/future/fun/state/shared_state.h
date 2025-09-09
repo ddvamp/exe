@@ -11,7 +11,7 @@
 
 #include "concurrency/meeting.h"
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 #include "exe/runtime/task.h"
 #include "exe/future/fun/state/callback.h"
 #include "exe/future/fun/traits/map.h"
@@ -38,7 +38,7 @@ private:
 	::std::optional<Result> result_;
 	::std::optional<Callback> callback_;
 	::concurrency::Meeting meeting_{2};
-	runtime::INothrowExecutor *executor_ = nullptr;
+	runtime::ISafeScheduler *scheduler_ = nullptr;
 
 public:
 	[[nodiscard]] static SharedState *create()
@@ -51,14 +51,14 @@ public:
 		state->destroySelf();
 	}
 
-	[[nodiscard]] runtime::INothrowExecutor &getExecutor() const noexcept
+	[[nodiscard]] runtime::ISafeScheduler &getScheduler() const noexcept
 	{
-		return *executor_;
+		return *scheduler_;
 	}
 
-	void setExecutor(runtime::INothrowExecutor &where) noexcept
+	void setScheduler(runtime::ISafeScheduler &where) noexcept
 	{
-		executor_ = &where;
+		scheduler_ = &where;
 	}
 
 	void setResult(Result &&result) noexcept
@@ -84,7 +84,7 @@ private:
 
 	void scheduleCallback() noexcept
 	{
-		executor_->submit(this);
+		scheduler_->submit(this);
 	}
 
 	void notify() noexcept

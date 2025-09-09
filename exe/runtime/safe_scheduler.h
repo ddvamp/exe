@@ -7,22 +7,22 @@
 
 #include <type_traits>
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 
 #include "util/abort.h"
 
 namespace exe::runtime {
 
-// A decorator for an executor that aborts the program when
+// A decorator for an scheduler that aborts the program when
 // an exception is thrown when submitting a task
-template <concepts::Executor E>
-	requires (!concepts::NothrowExecutor<E>)
-class SafeExecutor : public INothrowExecutor {
+template <concepts::Scheduler E>
+	requires (!concepts::SafeScheduler<E>)
+class SafeScheduler : public ISafeScheduler {
 private:
 	E &underlying_;
 
 public:
-	explicit SafeExecutor(E &underlying) noexcept
+	explicit SafeScheduler(E &underlying) noexcept
 		: underlying_(underlying)
 	{}
 

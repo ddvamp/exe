@@ -12,7 +12,7 @@
 #include "concurrency/mpmc_unbounded_blocking_queue.h"
 #include "concurrency/wait_point.h"
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 
 namespace exe::runtime::tp {
 
@@ -22,7 +22,7 @@ struct defer_start_t {
 
 inline constexpr defer_start_t defer_start{};
 
-class ThreadPool : public IExecutor {
+class ThreadPool : public IScheduler {
 private:
 	::std::vector<::std::thread> workers_;
 	::std::size_t worker_count_;

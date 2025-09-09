@@ -5,14 +5,14 @@
 #ifndef DDV_EXE_EXECUTORS_INLINE_H_
 #define DDV_EXE_EXECUTORS_INLINE_H_ 1
 
-#include "exe/runtime/executor.h"
+#include "exe/runtime/scheduler.h"
 
 #include "util/debug.h"
 
 namespace exe::runtime {
 
 // Executes task immediately at place
-class InlineExecutor : public INothrowExecutor {
+class InlineScheduler : public ISafeScheduler {
 public:
 	void submit(TaskBase *task) noexcept override
 	{
@@ -25,9 +25,9 @@ public:
 	}
 };
 
-[[nodiscard]] inline InlineExecutor &getInlineExecutor() noexcept
+[[nodiscard]] inline InlineScheduler &getInlineScheduler() noexcept
 {
-	static InlineExecutor instance;
+	static InlineScheduler instance;
 	return instance;
 }
 

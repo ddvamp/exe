@@ -32,10 +32,10 @@ private:
 	{
 		auto mapper = [](auto f) noexcept { return ::std::move(f); };
 
-		if constexpr (has_executor_v<F>) {
+		if constexpr (has_scheduler_v<F>) {
 			return ::std::move(f) | future::flatMap(mapper);
 		} else {
-			return unsetExecutor(
+			return unsetScheduler(
 				makeHolder(f) | future::inLine() | future::flatMap(mapper)
 			);
 		}

@@ -45,7 +45,7 @@ concept Event = FutureOf<F, void>;
 
 
 template <concepts::Future F>
-inline static constexpr bool has_executor_v = false;
+inline static constexpr bool has_scheduler_v = false;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,8 +68,8 @@ protected:
 
 	using Base::Base;
 
-	using without_executor = SemiFuture;
-	using with_executor = Future<T>;
+	using without_scheduler = SemiFuture;
+	using with_scheduler = Future<T>;
 
 public:
 	using typename Base::value_type;
@@ -94,7 +94,7 @@ template <typename T>
 inline constexpr bool is_noncv_future_v<Future<T>> = true;
 
 template <typename T>
-inline static constexpr bool has_executor_v<Future<T>> = true;
+inline static constexpr bool has_scheduler_v<Future<T>> = true;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,8 +118,8 @@ protected:
 		: raw(f)
 	{}
 
-	using without_executor = SemiFutureHolder;
-	using with_executor = FutureHolder<F>;
+	using without_scheduler = SemiFutureHolder;
+	using with_scheduler = FutureHolder<F>;
 
 public:
 	using value_type = F::value_type;
@@ -144,7 +144,7 @@ template <typename T>
 inline constexpr bool is_noncv_future_v<FutureHolder<T>> = true;
 
 template <typename T>
-inline static constexpr bool has_executor_v<FutureHolder<T>> = true;
+inline static constexpr bool has_scheduler_v<FutureHolder<T>> = true;
 
 } // namespace exe::future
 
