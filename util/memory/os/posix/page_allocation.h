@@ -47,7 +47,7 @@ void *allocate_memory(::std::size_t size)
 			throw std::bad_alloc{};
 
 		default:
-			UTILS_UNREACHABLE("mmap memory allocation error");
+			UTIL_UNREACHABLE("mmap memory allocation error");
 		}
 	}
 
@@ -67,7 +67,7 @@ void protect_memory(void *address, ::std::size_t size) noexcept
 			throw std::bad_alloc{};
 
 		default:
-			UTILS_UNREACHABLE("mprotect memory protect error");
+			UTIL_UNREACHABLE("mprotect memory protect error");
 		}
 	}
 }
@@ -76,7 +76,7 @@ void release_memory(void *address, ::std::size_t size) noexcept
 {
 	[[maybe_unused]] auto ret = ::munmap(address, size);
 
-	UTILS_ASSERT(ret == 0, "munmap memory release error");
+	UTIL_ASSERT(ret == 0, "munmap memory release error");
 }
 
 } // namespace

@@ -89,7 +89,7 @@ public:
 		{
 			auto lock = ::std::lock_guard(m_);
 
-			UTILS_VERIFY(
+			UTIL_VERIFY(
 				!::std::exchange(is_closed_, true),
 				"queue already closed"
 			);

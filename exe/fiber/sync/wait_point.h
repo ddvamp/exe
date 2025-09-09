@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FIBERS_SYNC_WAIT_POINT_H_
-#define DDV_EXE_FIBERS_SYNC_WAIT_POINT_H_ 1
+#ifndef DDV_EXE_FIBER_SYNC_WAIT_POINT_H_
+#define DDV_EXE_FIBER_SYNC_WAIT_POINT_H_ 1
 
 #include <atomic>
 #include <cstdint>
@@ -67,7 +67,7 @@ public:
 		[[maybe_unused]] auto const prev_state =
 			state_.fetch_sub(delta, ::std::memory_order_relaxed);
 
-		UTILS_ASSERT(
+		UTIL_ASSERT(
 			isAddOk(prev_state, delta),
 			"increment must be non-zero and "
 			"not overflow the 31-bit counter"
@@ -83,7 +83,7 @@ public:
 		// reducing logically
 		auto const prev_state = state_.fetch_add(delta, order);
 
-		UTILS_ASSERT(
+		UTIL_ASSERT(
 			isDoneOk(prev_state, delta),
 			"decrement must be non-zero and "
 			"not underflow the 31-bit counter"
@@ -131,7 +131,7 @@ private:
 	{
 		auto const version = getVersion(state) - 1;
 
-		UTILS_IGNORE(state_.compare_exchange_strong(
+		UTIL_IGNORE(state_.compare_exchange_strong(
 			state,
 			setHelpingBit(state),
 			::std::memory_order_relaxed
@@ -231,4 +231,4 @@ private:
 
 } // namespace exe::fiber
 
-#endif /* DDV_EXE_FIBERS_SYNC_WAIT_POINT_H_ */
+#endif /* DDV_EXE_FIBER_SYNC_WAIT_POINT_H_ */

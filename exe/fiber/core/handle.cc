@@ -13,12 +13,12 @@ namespace exe::fiber {
 
 FiberHandle::~FiberHandle()
 {
-	UTILS_ASSERT(!isValid(), "fiber is lost");
+	UTIL_ASSERT(!isValid(), "fiber is lost");
 }
 
 FiberHandle &FiberHandle::operator= (FiberHandle &&that) noexcept
 {
-	UTILS_ASSERT(!isValid(), "fiber is lost");
+	UTIL_ASSERT(!isValid(), "fiber is lost");
 
 	fiber_ = that.release();
 
@@ -42,7 +42,7 @@ Fiber *FiberHandle::release() noexcept
 
 Fiber *FiberHandle::releaseChecked() noexcept
 {
-	UTILS_ASSERT(isValid(), "fiber is missing");
+	UTIL_ASSERT(isValid(), "fiber is missing");
 
 	return release();
 }

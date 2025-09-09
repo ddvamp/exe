@@ -64,7 +64,7 @@ public:
 
 /* static */ Fiber &Fiber::self() noexcept
 {
-	UTILS_ASSERT(amIFiber(), "not in the fiber context");
+	UTIL_ASSERT(amIFiber(), "not in the fiber context");
 
 	return *current;
 }
@@ -123,7 +123,7 @@ Fiber *Fiber::doRun() noexcept
 
 	auto awaiter = ::std::exchange(awaiter_, nullptr);
 
-	UTILS_ASSUME(awaiter, "nullptr instead of awaiter");
+	UTIL_ASSUME(awaiter, "nullptr instead of awaiter");
 
 	auto next = awaiter->awaitSymmetricSuspend(FiberHandle{this});
 
@@ -197,7 +197,7 @@ void teleportTo(INothrowExecutor &executor)
 
 void go(INothrowExecutor &executor, FiberRoutine &&routine)
 {
-	UTILS_ASSERT(routine, "empty routine for fiber");
+	UTIL_ASSERT(routine, "empty routine for fiber");
 
 	auto fiber = createFiber(::std::move(routine), &executor);
 

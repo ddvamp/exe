@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_FUN_STATE_CALLBACK_H_
-#define DDV_EXE_FUTURES_FUN_STATE_CALLBACK_H_ 1
+#ifndef DDV_EXE_FUTURE_FUN_STATE_CALLBACK_H_
+#define DDV_EXE_FUTURE_FUN_STATE_CALLBACK_H_ 1
 
 #include <cstddef>
 #include <functional>
@@ -38,8 +38,8 @@ requires (
 )
 class Callback {
 private:
-	UTILS_NO_UNIQUE_ADDRESS Fn fn_;
-	UTILS_NO_UNIQUE_ADDRESS ::util::tuple<Args...> args_;
+	UTIL_NO_UNIQUE_ADDRESS Fn fn_;
+	UTIL_NO_UNIQUE_ADDRESS ::util::tuple<Args...> args_;
 
 public:
 	template <typename TFn, typename ...TArgs>
@@ -90,4 +90,4 @@ template <typename T, typename ...Args, typename ...Ts>
 
 } // namespace exe::future
 
-#endif /* DDV_EXE_FUTURES_FUN_STATE_CALLBACK_H_ */
+#endif /* DDV_EXE_FUTURE_FUN_STATE_CALLBACK_H_ */

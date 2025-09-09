@@ -27,7 +27,7 @@ requires (
 )
 class Task : public TaskBase {
 protected:
-	UTILS_NO_UNIQUE_ADDRESS F fn_;
+	UTIL_NO_UNIQUE_ADDRESS F fn_;
 
 public:
 	Task(F const &f)

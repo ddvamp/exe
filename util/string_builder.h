@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_STRING_BUILDER_H_
-#define DDV_UTILS_STRING_BUILDER_H_
+#ifndef DDV_UTIL_STRING_BUILDER_H_
+#define DDV_UTIL_STRING_BUILDER_H_
 
 #include <sstream>
 #include <string>
@@ -122,4 +122,4 @@ public:
 
 } // namespace util
 
-#endif /* DDV_UTILS_STRING_BUILDER_H_ */
+#endif /* DDV_UTIL_STRING_BUILDER_H_ */

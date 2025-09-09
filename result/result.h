@@ -453,37 +453,37 @@ public:
 
 	[[nodiscard]] T const *operator-> () const noexcept
 	{
-		UTILS_ASSERT(is_ok_, "result stores an error");
+		UTIL_ASSERT(is_ok_, "result stores an error");
 		return ::std::addressof(value_);
 	}
 
 	[[nodiscard]] T *operator-> () noexcept
 	{
-		UTILS_ASSERT(is_ok_, "result stores an error");
+		UTIL_ASSERT(is_ok_, "result stores an error");
 		return ::std::addressof(value_);
 	}
 
 	[[nodiscard]] T const &operator* () const & noexcept
 	{
-		UTILS_ASSERT(is_ok_, "result stores an error");
+		UTIL_ASSERT(is_ok_, "result stores an error");
 		return value_;
 	}
 
 	[[nodiscard]] T &operator* () & noexcept
 	{
-		UTILS_ASSERT(is_ok_, "result stores an error");
+		UTIL_ASSERT(is_ok_, "result stores an error");
 		return value_;
 	}
 
 	[[nodiscard]] T const &&operator* () const && noexcept
 	{
-		UTILS_ASSERT(is_ok_, "result stores an error");
+		UTIL_ASSERT(is_ok_, "result stores an error");
 		return ::std::move(value_);
 	}
 
 	[[nodiscard]] T &&operator* () && noexcept
 	{
-		UTILS_ASSERT(is_ok_, "result stores an error");
+		UTIL_ASSERT(is_ok_, "result stores an error");
 		return ::std::move(value_);
 	}
 
@@ -537,25 +537,25 @@ public:
 
 	[[nodiscard]] E const &error() const & noexcept
 	{
-		UTILS_ASSERT(!is_ok_, "result stores a value");
+		UTIL_ASSERT(!is_ok_, "result stores a value");
 		return error_;
 	}
 
 	[[nodiscard]] E &error() & noexcept
 	{
-		UTILS_ASSERT(!is_ok_, "result stores a value");
+		UTIL_ASSERT(!is_ok_, "result stores a value");
 		return error_;
 	}
 
 	[[nodiscard]] E const &&error() const && noexcept
 	{
-		UTILS_ASSERT(!is_ok_, "result stores a value");
+		UTIL_ASSERT(!is_ok_, "result stores a value");
 		return ::std::move(error_);
 	}
 
 	[[nodiscard]] E &&error() && noexcept
 	{
-		UTILS_ASSERT(!is_ok_, "result stores a value");
+		UTIL_ASSERT(!is_ok_, "result stores a value");
 		return ::std::move(error_);
 	}
 
@@ -1029,7 +1029,7 @@ public:
 
 	void operator* () const noexcept
 	{
-		UTILS_ASSERT(is_ok_, "result stores an error");
+		UTIL_ASSERT(is_ok_, "result stores an error");
 	}
 
 	[[nodiscard]] explicit operator bool() const noexcept
@@ -1059,25 +1059,25 @@ public:
 
 	[[nodiscard]] E const &error() const & noexcept
 	{
-		UTILS_ASSERT(!is_ok_, "result stores a value");
+		UTIL_ASSERT(!is_ok_, "result stores a value");
 		return error_;
 	}
 
 	[[nodiscard]] E &error() & noexcept
 	{
-		UTILS_ASSERT(!is_ok_, "result stores a value");
+		UTIL_ASSERT(!is_ok_, "result stores a value");
 		return error_;
 	}
 
 	[[nodiscard]] E const &&error() const && noexcept
 	{
-		UTILS_ASSERT(!is_ok_, "result stores a value");
+		UTIL_ASSERT(!is_ok_, "result stores a value");
 		return ::std::move(error_);
 	}
 
 	[[nodiscard]] E &&error() && noexcept
 	{
-		UTILS_ASSERT(!is_ok_, "result stores a value");
+		UTIL_ASSERT(!is_ok_, "result stores a value");
 		return ::std::move(error_);
 	}
 

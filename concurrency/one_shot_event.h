@@ -29,7 +29,7 @@ public:
 
 	void notify() noexcept
 	{
-		UTILS_VERIFY(
+		UTIL_VERIFY(
 			!is_ready_.test_and_set(::std::memory_order_release),
 			"one-shot event happened twice"
 		);

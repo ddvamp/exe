@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FIBERS_SYNC_SHARED_MUTEX_H_
-#define DDV_EXE_FIBERS_SYNC_SHARED_MUTEX_H_ 1
+#ifndef DDV_EXE_FIBER_SYNC_SHARED_MUTEX_H_
+#define DDV_EXE_FIBER_SYNC_SHARED_MUTEX_H_ 1
 
 #include <atomic>
 #include <cstdint>
@@ -98,7 +98,7 @@ public:
 			return false;
 		}
 
-		UTILS_IGNORE(in_ += 0b10);
+		UTIL_IGNORE(in_ += 0b10);
 
 		mutex_.unlock();
 
@@ -109,7 +109,7 @@ public:
 	{
 		auto lock = ::std::lock_guard(mutex_);
 
-		UTILS_IGNORE(in_ += 0b10);
+		UTIL_IGNORE(in_ += 0b10);
 	}
 
 	void unlock_shared() noexcept
@@ -118,7 +118,7 @@ public:
 
 		if (state == (0b01 - 0b10ull)) {
 			// synchronization of writer_
-			UTILS_IGNORE(out_.load(::std::memory_order_acquire));
+			UTIL_IGNORE(out_.load(::std::memory_order_acquire));
 
 			::std::move(writer_).schedule();
 		}
@@ -138,4 +138,4 @@ private:
 
 } // namespace exe::fiber
 
-#endif /* DDV_EXE_FIBERS_SYNC_SHARED_MUTEX_H_ */
+#endif /* DDV_EXE_FIBER_SYNC_SHARED_MUTEX_H_ */

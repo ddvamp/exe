@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_FUN_TERMINATE_GET_H_
-#define DDV_EXE_FUTURES_FUN_TERMINATE_GET_H_ 1
+#ifndef DDV_EXE_FUTURE_FUN_TERMINATE_GET_H_
+#define DDV_EXE_FUTURE_FUN_TERMINATE_GET_H_ 1
 
 #include <optional>
 #include <utility>
@@ -50,7 +50,7 @@ private:
 				try {
 					result_is_ready.notify();
 				} catch (...) {
-					UTILS_ABORT("exception in async callback future::get");
+					UTIL_ABORT("exception in async callback future::get");
 				}
 			}
 		);
@@ -58,7 +58,7 @@ private:
 		try {
 			result_is_ready.wait();
 		} catch (...) {
-			UTILS_ABORT("exception while sync wait of future");
+			UTIL_ABORT("exception while sync wait of future");
 		}
 
 		return *::std::move(result);
@@ -74,4 +74,4 @@ inline auto get() noexcept
 
 } // namespace exe::future
 
-#endif /* DDV_EXE_FUTURES_FUN_TERMINATE_GET_H_ */
+#endif /* DDV_EXE_FUTURE_FUN_TERMINATE_GET_H_ */

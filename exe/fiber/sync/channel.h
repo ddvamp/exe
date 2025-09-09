@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FIBERS_SYNC_CHANNEL_H_
-#define DDV_EXE_FIBERS_SYNC_CHANNEL_H_ 1
+#ifndef DDV_EXE_FIBER_SYNC_CHANNEL_H_
+#define DDV_EXE_FIBER_SYNC_CHANNEL_H_ 1
 
 #include <atomic>
 #include <bit>
@@ -291,12 +291,12 @@ public:
 
 		auto token = spinlock_.get_token();
 
-		UTILS_ASSERT(!closed_.load(order), "close of closed channel");
+		UTIL_ASSERT(!closed_.load(order), "close of closed channel");
 
 		closed_.store(true, order);
 
 		// fast assertion
-		UTILS_ASSERT(sendq_.empty(order), "send on closed channel");
+		UTIL_ASSERT(sendq_.empty(order), "send on closed channel");
 
 		auto *receiver = recvq_.takeAll();
 
@@ -361,7 +361,7 @@ private:
 
 		// TODO: how to handle go panic?
 		auto const is_open = !closed_.load(order);
-		UTILS_ASSERT(is_open, "send on closed channel");
+		UTIL_ASSERT(is_open, "send on closed channel");
 
 		auto const has_receivers = !recvq_.empty(order);
 		if (has_receivers) {
@@ -397,7 +397,7 @@ private:
 		self::suspend(awaiter);
 
 		// check if it was woken up when closing
-		UTILS_ASSERT(
+		UTIL_ASSERT(
 			awaiter.success(),
 			"send on closed channel"
 		);
@@ -652,4 +652,4 @@ public:
 
 } // namespace exe::fiber
 
-#endif /* DDV_EXE_FIBERS_SYNC_CHANNEL_H_ */
+#endif /* DDV_EXE_FIBER_SYNC_CHANNEL_H_ */

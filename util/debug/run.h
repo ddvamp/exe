@@ -2,18 +2,18 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-// to disable, set a macro UTILS_DISABLE_DEBUG
+// to disable, set a macro UTIL_DISABLE_DEBUG
 
-#ifndef DDV_UTILS_DEBUG_RUN_H_
-#define DDV_UTILS_DEBUG_RUN_H_ 1
+#ifndef DDV_UTIL_DEBUG_RUN_H_
+#define DDV_UTIL_DEBUG_RUN_H_ 1
 
 #include "util/macro.h"
 
 // run function on debug
-#ifdef UTILS_DISABLE_DEBUG
-#	define UTILS_RUN(function, ...) UTILS_NOTHING
+#ifdef UTIL_DISABLE_DEBUG
+#	define UTIL_RUN(function, ...) UTIL_NOTHING
 #else
-#	define UTILS_RUN(function, ...) function(__VA_ARGS__)
+#	define UTIL_RUN(function, ...) function(__VA_ARGS__)
 #endif
 
-#endif /* DDV_UTILS_DEBUG_RUN_H_ */
+#endif /* DDV_UTIL_DEBUG_RUN_H_ */
