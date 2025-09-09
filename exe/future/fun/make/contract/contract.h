@@ -11,7 +11,7 @@
 #include "exe/future/fun/state/shared_state.h"
 #include "exe/future/fun/types/future.h"
 
-#include "result/result.h"
+#include "exe/future/fun/result/result.h"
 
 namespace exe::future {
 

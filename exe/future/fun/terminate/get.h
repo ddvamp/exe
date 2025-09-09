@@ -14,7 +14,7 @@
 #include "exe/future/fun/mutator/mutator.h"
 #include "exe/future/fun/syntax/pipe.h"
 
-#include "result/result.h"
+#include "exe/future/fun/result/result.h"
 
 #include "util/abort.h"
 

@@ -14,7 +14,7 @@
 #include "exe/future/fun/syntax/pipe.h"
 #include "exe/future/fun/traits/map.h"
 
-#include "result/result.h"
+#include "exe/future/fun/result/result.h"
 
 namespace exe::future {
 

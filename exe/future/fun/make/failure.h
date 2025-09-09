@@ -9,7 +9,7 @@
 
 #include "exe/future/fun/make/contract/contract.h"
 
-#include "result/result.h"
+#include "exe/future/fun/result/result.h"
 
 namespace exe::future {
 
