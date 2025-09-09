@@ -14,9 +14,9 @@ project(
 
 set(
   exe_sources
-  ./context/arch/x86_64/machine_context_sysv_elf.S
-  ./context/arch/x86_64/machine_context.cpp
   ./context/exceptions_context.cpp
+  ./context/machine_context.cpp
+  ./context/machine_context_sysv_elf.S
   ./exe/runtime/tp/thread_pool.cpp
   ./exe/runtime/strand.cpp
   ./exe/fiber/core/fiber.cpp

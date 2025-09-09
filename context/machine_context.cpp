@@ -2,7 +2,7 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#include "context/arch/x86_64/machine_context.hpp"
+#include "context/machine_context.hpp"
 
 namespace context {
 
