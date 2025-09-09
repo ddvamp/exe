@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDVAMP_EXE_FIBER_SYNC_ONE_TIME_NOTIFICATION_HPP_INCLUDED_
-#define DDVAMP_EXE_FIBER_SYNC_ONE_TIME_NOTIFICATION_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_FIBER_SYNC_EVENT_HPP_INCLUDED_
+#define DDVAMP_EXE_FIBER_SYNC_EVENT_HPP_INCLUDED_ 1
 
 #include <utility>
 
@@ -17,7 +17,7 @@ namespace exe::fiber {
 
 // Synchronization primitive for waiting for a one-time notification
 // and sharing data with it
-class OneTimeNotification {
+class Event {
 private:
 	bool notified_ = false;
 	Mutex m_; // protects the condvar
@@ -54,4 +54,4 @@ public:
 
 } // namespace exe::fiber
 
-#endif /* DDVAMP_EXE_FIBER_SYNC_ONE_TIME_NOTIFICATION_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_FIBER_SYNC_EVENT_HPP_INCLUDED_ */

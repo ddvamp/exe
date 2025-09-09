@@ -8,7 +8,7 @@
 #include <atomic>
 #include <cstdint>
 
-#include "exe/fiber/sync/one_time_notification.hpp"
+#include "exe/fiber/sync/event.hpp"
 
 #include "util/debug.hpp"
 #include "util/macro.hpp"
@@ -32,7 +32,7 @@ private:
 	using counter_t = ::std::uint64_t;
 
 	::std::atomic<counter_t> count_ = 0;
-	OneTimeNotification counter_is_zero_;
+	Event counter_is_zero_;
 
 public:
 	~WaitGroup() = default;
