@@ -1287,6 +1287,6 @@ using status = result<void>;
 
 } // namespace util
 
-#include "result/result.ipp"
+#include "result.ipp"
 
 #endif /* DDV_RESULT_RESULT_H_ */
