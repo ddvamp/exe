@@ -41,7 +41,7 @@
 		- wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
 		- wait point (обобщенная wait group)
 	- [ ] future support
-- ***[(go) channels for fiber](https://github.com/ddvamp/exe/blob/main/exe/fiber/sync/channel.h)*** (имплементация каналов из языка go)
+- ***[(go) channels for fiber](https://github.com/ddvamp/exe/blob/main/exe/fiber/sync/channel.hpp)*** (имплементация каналов из языка go)
 	- implementation
 	- [ ] select
 - ***[(functional) future](https://github.com/ddvamp/exe/tree/main/exe/future/fun)*** (фьючи в функциональном стиле)

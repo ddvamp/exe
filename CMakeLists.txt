@@ -15,18 +15,18 @@ project(
 set(
   exe_sources
   ./context/arch/x86_64/machine_context_sysv_elf.S
-  ./context/arch/x86_64/machine_context.cc
-  ./context/exceptions_context.cc
-  ./exe/runtime/tp/thread_pool.cc
-  ./exe/runtime/strand.cc
-  ./exe/fiber/core/fiber.cc
-  ./exe/fiber/core/handle.cc
-  ./exe/fiber/core/stack.cc
-  ./util/debug/assert.cc
-  ./util/debug/assume.cc
-  ./util/debug/unreachable.cc
-  ./util/memory/page_allocation.cc
-  ./util/abort.cc
+  ./context/arch/x86_64/machine_context.cpp
+  ./context/exceptions_context.cpp
+  ./exe/runtime/tp/thread_pool.cpp
+  ./exe/runtime/strand.cpp
+  ./exe/fiber/core/fiber.cpp
+  ./exe/fiber/core/handle.cpp
+  ./exe/fiber/core/stack.cpp
+  ./util/debug/assert.cpp
+  ./util/debug/assume.cpp
+  ./util/debug/unreachable.cpp
+  ./util/memory/page_allocation.cpp
+  ./util/abort.cpp
 )
 
 add_library(exe STATIC)

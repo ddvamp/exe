@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 4.1)
 
 add_executable(exe_tests)
-target_sources(exe_tests PRIVATE dummy_test.cc)
+target_sources(exe_tests PRIVATE dummy_test.cpp)
 
 target_link_libraries(exe_tests PRIVATE exe)
 
