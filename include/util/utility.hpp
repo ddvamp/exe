@@ -74,19 +74,6 @@ template <typename T>
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// Creates decayed copy of an object
-// Deprecated since C++23 (auto{} syntax)
-template <typename T>
-[[nodiscard]] inline constexpr ::std::decay_t<T> decay_copy(T &&t)
-	noexcept (::std::is_nothrow_convertible_v<T, ::std::decay_t<T>>)
-{
-	return ::std::forward<T>(t);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
 // simple utility for combining lambdas
 template <typename ...Ts>
 struct overloaded : Ts... { using Ts::operator()...; };
