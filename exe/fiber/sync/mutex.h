@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FIBERS_SYNC_MUTEX_H_
-#define DDV_EXE_FIBERS_SYNC_MUTEX_H_ 1
+#ifndef DDV_EXE_FIBER_SYNC_MUTEX_H_
+#define DDV_EXE_FIBER_SYNC_MUTEX_H_ 1
 
 #include <atomic>
 #include <mutex>
@@ -58,7 +58,7 @@ private:
 	Node *head_ = &dummy_; // known next owner or dummy
 	::std::atomic<Node *> tail_ = &dummy_; // last added or dummy
 
-#ifndef UTILS_DISABLE_ASSERT
+#ifndef UTIL_DISABLE_ASSERT
 	::std::atomic<FiberId> owner_ = kInvalidFiberId;
 
 	FiberId getOwner() const noexcept
@@ -73,7 +73,7 @@ private:
 
 	void checkOwner() const noexcept
 	{
-		UTILS_CHECK(
+		UTIL_CHECK(
 			getOwner() == self::getId(),
 			"the mutex is not locked"
 		);
@@ -81,7 +81,7 @@ private:
 
 	void checkRecursive() const noexcept
 	{
-		UTILS_CHECK(
+		UTIL_CHECK(
 			getOwner() != self::getId(),
 			"attempt to recursively lock a mutex"
 		);
@@ -89,7 +89,7 @@ private:
 
 	void checkLock() noexcept
 	{
-		UTILS_CHECK(
+		UTIL_CHECK(
 			getOwner() == kInvalidFiberId,
 			"attempt to lock a already locked mutex"
 		);
@@ -98,7 +98,7 @@ private:
 
 	void checkUnlock() noexcept
 	{
-		UTILS_CHECK(
+		UTIL_CHECK(
 			getOwner() == self::getId(),
 			"attempt to unlock a mutex without ownership"
 		);
@@ -120,7 +120,7 @@ public:
 
 	[[nodiscard]] bool try_lock() noexcept
 	{
-		UTILS_RUN(checkRecursive);
+		UTIL_RUN(checkRecursive);
 
 		auto expected = &dummy_;
 
@@ -139,12 +139,12 @@ public:
 			self::suspend(awaiter);
 		}
 
-		UTILS_RUN(checkLock);
+		UTIL_RUN(checkLock);
 	}
 
 	void unlock() noexcept
 	{
-		UTILS_RUN(checkUnlock);
+		UTIL_RUN(checkUnlock);
 
 		auto next = unlockImpl();
 
@@ -275,4 +275,4 @@ private:
 
 } // namespace exe::fiber
 
-#endif /* DDV_EXE_FIBERS_SYNC_MUTEX_H_ */
+#endif /* DDV_EXE_FIBER_SYNC_MUTEX_H_ */

@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_MEMORY_PAGE_ALLOCATION_H_
-#define DDV_UTILS_MEMORY_PAGE_ALLOCATION_H_ 1
+#ifndef DDV_UTIL_MEMORY_PAGE_ALLOCATION_H_
+#define DDV_UTIL_MEMORY_PAGE_ALLOCATION_H_ 1
 
 #include <cstddef>
 
@@ -94,4 +94,4 @@ private:
 
 } // namespace util
 
-#endif /* DDV_UTILS_MEMORY_PAGE_ALLOCATION_H_ */
+#endif /* DDV_UTIL_MEMORY_PAGE_ALLOCATION_H_ */

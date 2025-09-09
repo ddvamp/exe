@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_FUN_STATE_SHARED_STATE_H_
-#define DDV_EXE_FUTURES_FUN_STATE_SHARED_STATE_H_ 1
+#ifndef DDV_EXE_FUTURE_FUN_STATE_SHARED_STATE_H_
+#define DDV_EXE_FUTURE_FUN_STATE_SHARED_STATE_H_ 1
 
 #include <optional>
 #include <type_traits>
@@ -113,7 +113,7 @@ private:
 	State *state_;
 
 protected:
-#ifdef UTILS_DISABLE_DEBUG
+#ifdef UTIL_DISABLE_DEBUG
 
 	~HoldState() = default;
 
@@ -121,7 +121,7 @@ protected:
 
 	~HoldState()
 	{
-		UTILS_CHECK(!hasState(), "destruction of unused HoldState");
+		UTIL_CHECK(!hasState(), "destruction of unused HoldState");
 	}
 
 #endif
@@ -146,19 +146,19 @@ protected:
 
 	[[nodiscard]] State &getState() noexcept
 	{
-		UTILS_RUN(checkState);
+		UTIL_RUN(checkState);
 		return *state_;
 	}
 
 	[[nodiscard]] State const &getState() const noexcept
 	{
-		UTILS_RUN(checkState);
+		UTIL_RUN(checkState);
 		return *state_;
 	}
 
 	[[nodiscard]] State *release() noexcept
 	{
-		UTILS_RUN(checkState);
+		UTIL_RUN(checkState);
 		return ::std::exchange(state_, nullptr);
 	}
 
@@ -170,10 +170,10 @@ protected:
 private:
 	[[maybe_unused]] void checkState() const noexcept
 	{
-		UTILS_CHECK(hasState(), "HoldState does not hold shared state");
+		UTIL_CHECK(hasState(), "HoldState does not hold shared state");
 	}
 };
 
 } // namespace exe::future::detail
 
-#endif /* DDV_EXE_FUTURES_FUN_STATE_SHARED_STATE_H_ */
+#endif /* DDV_EXE_FUTURE_FUN_STATE_SHARED_STATE_H_ */

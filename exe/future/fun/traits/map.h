@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_FUN_TRAITS_MAP_H_
-#define DDV_EXE_FUTURES_FUN_TRAITS_MAP_H_ 1
+#ifndef DDV_EXE_FUTURE_FUN_TRAITS_MAP_H_
+#define DDV_EXE_FUTURE_FUN_TRAITS_MAP_H_ 1
 
 #include <type_traits>
 
@@ -55,4 +55,4 @@ using map_result_t = ::std::remove_cvref_t<invoke_result_t<Fn, Args...>>;
 
 } // namespace exe::future::traits
 
-#endif /* DDV_EXE_FUTURES_FUN_TRAITS_MAP_H_ */
+#endif /* DDV_EXE_FUTURE_FUN_TRAITS_MAP_H_ */

@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_DEFER_H_
-#define DDV_UTILS_DEFER_H_ 1
+#ifndef DDV_UTIL_DEFER_H_
+#define DDV_UTIL_DEFER_H_ 1
 
 #include <concepts>
 #include <exception>
@@ -63,7 +63,7 @@ struct failure_guard_policy {
 template <detail::suitable_for_deferred_action T>
 class [[nodiscard]] defer {
 protected:
-	UTILS_NO_UNIQUE_ADDRESS T action_;
+	UTIL_NO_UNIQUE_ADDRESS T action_;
 
 public:
 	~defer()
@@ -103,7 +103,7 @@ template <
 class [[nodiscard]] scope_guard : protected Policy {
 protected:
 	bool active_;
-	UTILS_NO_UNIQUE_ADDRESS T action_;
+	UTIL_NO_UNIQUE_ADDRESS T action_;
 
 public:
 	~scope_guard()
@@ -276,4 +276,4 @@ auto rollback_exchange(T &val, U &&new_val)
 
 } // namespace util
 
-#endif /* DDV_UTILS_DEFER_H_ */
+#endif /* DDV_UTIL_DEFER_H_ */

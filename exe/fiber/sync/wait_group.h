@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FIBERS_SYNC_WAIT_GROUP_H_
-#define DDV_EXE_FIBERS_SYNC_WAIT_GROUP_H_ 1
+#ifndef DDV_EXE_FIBER_SYNC_WAIT_GROUP_H_
+#define DDV_EXE_FIBER_SYNC_WAIT_GROUP_H_ 1
 
 #include <atomic>
 #include <cstdint>
@@ -52,7 +52,7 @@ public:
 		[[maybe_unused]] auto const count
 			= count_.fetch_add(delta, ::std::memory_order_relaxed);
 
-		UTILS_ASSERT(
+		UTIL_ASSERT(
 			count < count + delta,
 			"increment must be non-zero and not overflow the counter"
 		);
@@ -64,7 +64,7 @@ public:
 	{
 		auto const count = count_.fetch_sub(delta, ::std::memory_order_release);
 
-		UTILS_ASSERT(
+		UTIL_ASSERT(
 			count - delta < count,
 			"decrement must be non-zero and not underflow the counter"
 		);
@@ -81,7 +81,7 @@ public:
 		counter_is_zero_.wait();
 
 		// synchronization
-		UTILS_IGNORE(count_.load(::std::memory_order_acquire));
+		UTIL_IGNORE(count_.load(::std::memory_order_acquire));
 	}
 
 	// in case of instance reuse
@@ -93,4 +93,4 @@ public:
 
 } // namespace exe::fiber
 
-#endif /* DDV_EXE_FIBERS_SYNC_WAIT_GROUP_H_ */
+#endif /* DDV_EXE_FIBER_SYNC_WAIT_GROUP_H_ */

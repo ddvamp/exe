@@ -25,7 +25,7 @@ public:
 	explicit Meeting(seat_t participants) noexcept
 		: seats_(participants)
 	{
-		UTILS_ASSERT(participants > 1, "too few participants");
+		UTIL_ASSERT(participants > 1, "too few participants");
 	}
 
 	// syncs with previous calls and
@@ -34,7 +34,7 @@ public:
 	{
 		auto left = seats_.fetch_sub(1, ::std::memory_order_acq_rel);
 
-		UTILS_ASSERT(left > 0, "meeting has already taken place");
+		UTIL_ASSERT(left > 0, "meeting has already taken place");
 
 		return left == 1;
 	}

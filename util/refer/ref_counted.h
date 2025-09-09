@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_REFER_REF_COUNTED_H_
-#define DDV_UTILS_REFER_REF_COUNTED_H_ 1
+#ifndef DDV_UTIL_REFER_REF_COUNTED_H_
+#define DDV_UTIL_REFER_REF_COUNTED_H_ 1
 
 #include <atomic>
 #include <concepts>
@@ -59,7 +59,7 @@ class RefCounted {
 private:
 	mutable ::std::atomic_size_t ref_cnt_;
 
-	UTILS_NO_UNIQUE_ADDRESS detail::RefValidator<Derived> v_;
+	UTIL_NO_UNIQUE_ADDRESS detail::RefValidator<Derived> v_;
 
 public:
 	explicit RefCounted(::std::size_t count = 1) noexcept
@@ -86,4 +86,4 @@ public:
 
 } // namespace util
 
-#endif /* DDV_UTILS_REFER_REF_COUNTED_H_ */
+#endif /* DDV_UTIL_REFER_REF_COUNTED_H_ */

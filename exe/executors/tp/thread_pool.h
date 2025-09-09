@@ -29,7 +29,7 @@ private:
 	::concurrency::MPMCUnboundedBlockingQueue<TaskBase *> tasks_;
 	::concurrency::WaitPoint task_count_;
 
-#ifndef UTILS_DISABLE_DEBUG
+#ifndef UTIL_DISABLE_DEBUG
 	enum class State {
 		CREATED,
 		STARTED,

@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FUTURES_FUN_TERMINATE_DETACH_H_
-#define DDV_EXE_FUTURES_FUN_TERMINATE_DETACH_H_ 1
+#ifndef DDV_EXE_FUTURE_FUN_TERMINATE_DETACH_H_
+#define DDV_EXE_FUTURE_FUN_TERMINATE_DETACH_H_ 1
 
 #include <utility>
 
@@ -47,4 +47,4 @@ inline auto detach() noexcept
 
 } // namespace exe::future
 
-#endif /* DDV_EXE_FUTURES_FUN_TERMINATE_DETACH_H_ */
+#endif /* DDV_EXE_FUTURE_FUN_TERMINATE_DETACH_H_ */

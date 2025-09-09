@@ -17,7 +17,7 @@ public:
 	[[noreturn]] void run() noexcept
 	{
 		doRun();
-		UTILS_UNREACHABLE("ITrampoline::run out of bounds");
+		UTIL_UNREACHABLE("ITrampoline::run out of bounds");
 	}
 
 private:

@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_EXE_FIBERS_CORE_FIBER_H_
-#define DDV_EXE_FIBERS_CORE_FIBER_H_ 1
+#ifndef DDV_EXE_FIBER_CORE_FIBER_H_
+#define DDV_EXE_FIBER_CORE_FIBER_H_ 1
 
 #include <atomic>
 
@@ -77,4 +77,4 @@ private:
 
 } // namespace exe::fiber
 
-#endif /* DDV_EXE_FIBERS_CORE_FIBER_H_ */
+#endif /* DDV_EXE_FIBER_CORE_FIBER_H_ */

@@ -18,7 +18,7 @@ thread_local Coroutine *current = nullptr;
 // debug checking of ctor precondition
 Routine &check(Routine &routine) noexcept
 {
-	UTILS_ASSERT(routine, "empty routine on coroutine creation");
+	UTIL_ASSERT(routine, "empty routine on coroutine creation");
 
 	return routine;
 }
@@ -36,8 +36,8 @@ Coroutine::Coroutine(Routine &&routine)
 
 void Coroutine::resume()
 {
-	UTILS_ASSERT(!isCompleted(), "resuming a completed coroutine");
-	UTILS_ASSERT(!isActive(), "coroutine is already active");
+	UTIL_ASSERT(!isCompleted(), "resuming a completed coroutine");
+	UTIL_ASSERT(!isActive(), "coroutine is already active");
 
 	auto cleanup = ::util::rollback_exchange(current, this);
 
@@ -46,7 +46,7 @@ void Coroutine::resume()
 
 /* static */ void Coroutine::suspend() noexcept
 {
-	UTILS_ASSERT(current, "not in the coroutine context");
+	UTIL_ASSERT(current, "not in the coroutine context");
 
 	current->impl_.suspend();
 }

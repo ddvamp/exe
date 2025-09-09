@@ -83,7 +83,7 @@
 
 <!-- -->
 
-**-DUTILS_DISABLE_DEBUG**
+**-DUTIL_DISABLE_DEBUG**
 
 ## Third-party libraries
 

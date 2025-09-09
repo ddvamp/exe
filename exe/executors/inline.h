@@ -16,7 +16,7 @@ class InlineExecutor : public INothrowExecutor {
 public:
 	void submit(TaskBase *task) noexcept override
 	{
-		UTILS_ASSERT(
+		UTIL_ASSERT(
 			task,
 			"nullptr instead of the task"
 		);

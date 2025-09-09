@@ -2,8 +2,8 @@
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 
-#ifndef DDV_UTILS_UTILITY_H_
-#define DDV_UTILS_UTILITY_H_ 1
+#ifndef DDV_UTIL_UTILITY_H_
+#define DDV_UTIL_UTILITY_H_ 1
 
 #include <cstddef>
 #include <utility>
@@ -104,7 +104,7 @@ requires (
 )
 class builder {
 private:
-	UTILS_NO_UNIQUE_ADDRESS Fn fn_;
+	UTIL_NO_UNIQUE_ADDRESS Fn fn_;
 
 public:
 	explicit builder(Fn const &fn)
@@ -131,7 +131,7 @@ public:
 
 template <::std::size_t I, typename T>
 struct tuple_val {
-	UTILS_NO_UNIQUE_ADDRESS T val_;
+	UTIL_NO_UNIQUE_ADDRESS T val_;
 };
 
 template <typename, typename ...Ts>
@@ -184,4 +184,4 @@ template <typename ...Ts>
 
 } // namespace util
 
-#endif /* DDV_UTILS_UTILITY_H_ */
+#endif /* DDV_UTIL_UTILITY_H_ */
