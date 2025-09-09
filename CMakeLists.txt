@@ -20,25 +20,28 @@ project(
 
 set(
   exe_sources
-  ./context/exceptions_context.cpp
-  ./context/machine_context.cpp
-  ./context/machine_context_sysv_elf.S
-  ./exe/runtime/tp/thread_pool.cpp
-  ./exe/runtime/strand.cpp
-  ./exe/fiber/core/fiber.cpp
-  ./exe/fiber/core/handle.cpp
-  ./exe/fiber/core/stack.cpp
-  ./util/debug/assert.cpp
-  ./util/debug/assume.cpp
-  ./util/debug/unreachable.cpp
-  ./util/memory/page_allocation.cpp
-  ./util/abort.cpp
+
+  src/context/exceptions_context.cpp
+  src/context/machine_context.cpp
+  src/context/machine_context_sysv_elf.S
+
+  src/exe/fiber.cpp
+  src/exe/handle.cpp
+  src/exe/stack.cpp
+  src/exe/strand.cpp
+  src/exe/thread_pool.cpp
+
+  src/util/abort.cpp
+  src/util/assert.cpp
+  src/util/assume.cpp
+  src/util/page_allocation.cpp
+  src/util/unreachable.cpp
 )
 
 add_library(exe STATIC)
 target_sources(exe PRIVATE ${exe_sources})
 
-target_include_directories(exe PUBLIC ./)
+target_include_directories(exe PUBLIC include/)
 
 target_compile_features(exe PUBLIC cxx_std_23)
 
