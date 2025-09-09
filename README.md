@@ -32,8 +32,6 @@
 	- blocking static threadpool
 	- [ ] fast work-stealing threadpool
 	- strand ([сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
-- ***[stackful coroutines](https://github.com/ddvamp/exe/tree/main/exe/coroutine)***
-- [ ] ***stackless coroutines***
 - ***[fiber](https://github.com/ddvamp/exe/tree/main/exe/fiber)***
     - API & implementation
 	- synchronization primitives
