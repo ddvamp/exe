@@ -9,7 +9,7 @@
 #include <mutex>
 
 #include "relax.h"
-#include "util/intrusive/forward_list.h"
+#include "concurrency/intrusive/forward_list.h"
 #include "util/utility.h"
 
 namespace concurrency {

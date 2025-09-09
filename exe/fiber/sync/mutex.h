@@ -14,7 +14,7 @@
 #include "exe/fiber/core/handle.h"
 
 #include "util/debug.h"
-#include "util/intrusive/forward_list.h"
+#include "concurrency/intrusive/forward_list.h"
 
 namespace exe::fiber {
 
