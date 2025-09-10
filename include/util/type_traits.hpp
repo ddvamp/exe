@@ -1,6 +1,6 @@
 //
-//
-//
+// type_traits.hpp
+// ~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,185 +11,138 @@
 #ifndef DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_
 #define DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_ 1
 
-#include <functional>
-#include <type_traits>
+#include <type_traits> // IWYU pragma: export
 #include <utility>
 
 namespace util {
 
-// true if and only if T is a cv qualified
+/* Checks whether the type is cv-qualified */
+
 template <typename>
-inline constexpr bool is_cv_v = false;
+inline constexpr bool is_qualified_v = false;
 
 template <typename T>
-inline constexpr bool is_cv_v<T const> = true;
+inline constexpr bool is_qualified_v<T const> = true;
 
 template <typename T>
-inline constexpr bool is_cv_v<T volatile> = true;
+inline constexpr bool is_qualified_v<T volatile> = true;
 
 template <typename T>
-inline constexpr bool is_cv_v<T const volatile> = true;
+inline constexpr bool is_qualified_v<T const volatile> = true;
 
 template <typename T>
-struct is_cv : ::std::bool_constant<is_cv_v<T>> {};
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-template <::std::size_t I, typename Head, typename ...Tail>
-struct pack_element_impl : pack_element_impl<I - 1, Tail...> {};
-
-template <typename Head, typename ...Tail>
-struct pack_element_impl<0, Head, Tail...> {
-	using type = Head;
-};
-
-template <::std::size_t, typename ...>
-struct pack_element {};
-
-template <::std::size_t I, typename ...Ts>
-	requires (I < sizeof...(Ts))
-struct pack_element<I, Ts...> : pack_element_impl<I, Ts...> {};
-
-template <::std::size_t I, typename ...Ts>
-using pack_element_t = pack_element<I, Ts...>::type;
-
+struct is_qualified : ::std::bool_constant<is_qualified_v<T>> {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Meta holders for types and values */
 
-template <bool ...>
-struct all_helper;
-
-template <bool ...Vs>
-inline constexpr bool all_true_v =
-	::std::is_same_v<all_helper<true, Vs...>, all_helper<Vs..., true>>;
-
-template <bool ...Vs>
-struct all_true : ::std::bool_constant<all_true_v<Vs...>> {};
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-// true if and only if T is a specialization of Template
-template <typename T, template <typename ...> typename Template>
-inline constexpr bool is_specialization_v = false;
-
-template <template <typename ...> typename Template, typename ...Ts>
-inline constexpr bool is_specialization_v<Template<Ts...>, Template> = true;
-
-template <typename T, template <typename ...> typename Template>
-struct is_specialization
-	: ::std::bool_constant<is_specialization_v<T, Template>>
-{};
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T, template <typename ...> typename ...Templates>
-inline constexpr bool is_specialization_any_of_v =
-	!all_true_v<!is_specialization_v<T, Templates>...>;
-
-template <typename T, template <typename ...> typename ...Templates>
-struct is_specialization_any_of
-	: ::std::bool_constant<is_specialization_any_of_v<T, Templates...>> {};
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-template <typename T, typename ...Ts>
-inline constexpr bool is_any_of_v = !all_true_v<!::std::is_same_v<T, Ts>...>;
-
-template <typename T, typename ...Ts>
-struct is_any_of : ::std::bool_constant<is_any_of_v<T, Ts...>> {};
-
-
-////////////////////////////////////////////////////////////////////////////////
-
+template <typename>
+struct type {};
 
 template <typename ...>
-struct are_all_same_helper;
+struct types {};
+
+template <auto>
+struct value {};
+
+template <auto ...>
+struct values {};
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* For eager checking of bool values */
+
+template <bool ...Vs>
+inline constexpr bool is_all_of_v = ::std::is_same_v<values<true, Vs...>,
+                                                     values<Vs..., true>>;
+
+template <bool ...Vs>
+struct is_all_of : ::std::bool_constant<is_all_of_v<Vs...>> {};
+
+template <bool ...Vs>
+inline constexpr bool is_none_of_v = ::std::is_same_v<values<false, Vs...>,
+                                                      values<Vs..., false>>;
+
+template <bool ...Vs>
+struct is_none_of : ::std::bool_constant<is_none_of_v<Vs...>> {};
+
+template <bool ...Vs>
+inline constexpr bool is_any_of_v = !is_none_of_v<Vs...>;
+
+template <bool ...Vs>
+struct is_any_of : ::std::bool_constant<is_any_of_v<Vs...>> {};
+
+
+template <typename ...Traits>
+inline constexpr bool conjunction_v = is_all_of_v<Traits::value...>;
+
+template <typename ...Traits>
+struct conjunction : ::std::bool_constant<conjunction_v<Traits...>> {};
+
+template <typename ...Traits>
+inline constexpr bool disjunction_v = is_any_of_v<Traits::value...>;
+
+template <typename ...Traits>
+struct disjunction : ::std::bool_constant<disjunction_v<Traits...>> {};
+
+template <typename Trait>
+inline constexpr bool negation_v = !static_cast<bool>(Trait::value);
+
+template <typename Trait>
+struct negation : ::std::bool_constant<negation_v<Trait>> {};
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Checks whether all types are the same */
+
+template <typename ...>
+inline constexpr bool is_all_same_v = true;
+
+template <typename T, typename ...Ts>
+inline constexpr bool is_all_same_v<T, Ts...> = ::std::is_same_v<
+    types<T, Ts...>, types<Ts..., T>>;
 
 template <typename ...Ts>
-inline constexpr bool are_all_same_v =
-	::std::is_same_v<
-		are_all_same_helper<pack_element_t<0, Ts...>, Ts...>,
-		are_all_same_helper<Ts..., pack_element_t<0, Ts...>>
-	>;
+struct is_all_same : ::std::bool_constant<is_all_same_v<Ts...>> {};
 
-template <>
-inline constexpr bool are_all_same_v<> = true;
+////////////////////////////////////////////////////////////////////////////////
+
+/* Checks whether all types are unique */
+
+namespace detail {
+
+template <typename T, ::std::size_t>
+struct proxy : type<T> {};
+
+template <typename ...>
+struct proxies;
+
+template <typename ...Ts, ::std::size_t ...Is>
+struct proxies<::std::index_sequence<Is...>, Ts...> : proxy<Ts, Is>... {};
 
 template <typename ...Ts>
-struct are_all_same : ::std::bool_constant<are_all_same_v<Ts...>> {};
+using proxies_t = proxies<::std::index_sequence_for<Ts...>, Ts...>;
 
+} // namespace detail
 
-////////////////////////////////////////////////////////////////////////////////
+#if 1 /* experimental */
 
+template <typename ...Ts>
+inline constexpr bool is_all_unique_v = sizeof(detail::proxies_t<Ts...>) == 1;
 
-// determine whether T can be direct-initialized with
-// result of applying INVOKE operation to F and Args...
-template <typename T, typename Fn, typename ...Args>
-inline constexpr bool is_constructible_with_v = requires {
-	T(::std::invoke(::std::declval<Fn>(), ::std::declval<Args>()...));
+#else
+
+template <typename ...Ts>
+inline constexpr bool is_all_unique_v = requires (detail::proxies_t<Ts...> *p,
+                                                  void (*use)(...)) {
+  use(static_cast<type<Ts> *>(p)...);
 };
 
-template <typename T, typename Fn, typename ...Args>
-struct is_constructible_with
-	: ::std::bool_constant<is_constructible_with_v<T, Fn, Args...>>
-{};
+#endif
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-// determine whether direct-initialization of T from
-// result of applying INVOKE operation to F and Args...
-// is both valid and not potentially-throwing
-template <typename T, typename Fn, typename ...Args>
-inline constexpr bool is_nothrow_constructible_with_v = requires {
-	{T(::std::invoke(::std::declval<Fn>(), ::std::declval<Args>()...))} noexcept;
-};
-
-template <typename T, typename Fn, typename ...Args>
-struct is_nothrow_constructible_with
-	: ::std::bool_constant<is_nothrow_constructible_with_v<T, Fn, Args...>>
-{};
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-template <typename Expected, typename Checked, typename Alternative>
-struct change_if_same {
-	using type = Checked;
-};
-
-template <typename Checked, typename Alternative>
-struct change_if_same<Checked, Checked, Alternative> {
-	using type = Alternative;
-};
-
-template <typename Expected, typename Checked, typename Alternative>
-using change_if_same_t = change_if_same<Expected, Checked, Alternative>::type;
-
-
-
-template <typename Expected, typename Checked, typename Alternative>
-struct change_if_not_same {
-	using type = Alternative;
-};
-
-template <typename Checked, typename Alternative>
-struct change_if_not_same<Checked, Checked, Alternative> {
-	using type = Checked;
-};
-
-template <typename Expected, typename Checked, typename Alternative>
-using change_if_not_same_t =
-	change_if_not_same<Expected, Checked, Alternative>::type;
+template <typename ...Ts>
+struct is_all_unique : ::std::bool_constant<is_all_unique_v<Ts...>> {};
 
 } // namespace util
 

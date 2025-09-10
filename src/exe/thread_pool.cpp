@@ -104,15 +104,8 @@ ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 		"nullptr instead of the task"
 	);
 
-	UTIL_VERIFY(
-		tasks_.put(::util::builder{
-			[this, task]() noexcept {
-				task_count_.add();
-				return task;
-			}
-		}),
-		"using thread pool after stop"
-	);
+	task_count_.add();
+	UTIL_VERIFY(tasks_.put(task), "using thread pool after stop");
 }
 
 void ThreadPool::waitIdle()
