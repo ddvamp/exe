@@ -1,6 +1,6 @@
 //
-//
-//
+// abort.hpp
+// ~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -16,13 +16,17 @@
 
 namespace util {
 
-// abnormal program termination with passing an error message and location
-[[noreturn]] void abort(::std::string_view message,
-	::std::source_location location =
-	::std::source_location::current()) noexcept;
+// Abnormal program termination with passing an error message and location
+[[noreturn]] void abort(::std::string_view const message,
+                        ::std::source_location const location =
+                            ::std::source_location::current()) noexcept;
 
 } // namespace util
 
-#define UTIL_ABORT(...) ::util::abort(__VA_ARGS__)
+#ifdef UTIL_ABORT
+# error "UTIL_ABORT macro could not be defined because it is already defined somewhere else"
+#else
+# define UTIL_ABORT(...) ::util::abort(__VA_ARGS__)
+#endif
 
 #endif /* DDVAMP_UTIL_ABORT_HPP_INCLUDED_ */

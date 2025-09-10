@@ -1,6 +1,6 @@
 //
-//
-//
+// unreachable.cpp
+// ~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,32 +8,29 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#include <cstdlib>
-#include <iostream>
+#include <util/debug/unreachable.hpp>
 
-#include "util/debug/unreachable.hpp"
-#include "util/string_builder.hpp"
+#include <cstdlib>
+#include <format>
+#include <iostream>
+#include <source_location>
+#include <string_view>
 
 namespace util::detail {
 
-void do_unreachable(::std::string_view msg,
-	::std::source_location loc) noexcept
-{
-	string_builder os(1024);
-	os
-		<< "An unreachable point has been reached at "
-		<< loc.file_name()
-		<< ':'
-		<< loc.line()
-		<< ": "
-		<< loc.function_name()
-		<< " with message: "
-		<< msg
-		<< "\nAborting!\n";
+void do_unreachable(::std::string_view const msg,
+                    ::std::source_location const loc) noexcept {
+  try {
+    auto const output = ::std::format(
+        "Debug error! Unreachable point has been reached at "
+        "{}:{}: {} with message '{}'. Abort!\n",
+        loc.file_name(), loc.line(), loc.function_name(), msg);
+    ::std::cerr << output << ::std::flush;
+  } catch (...) {
+    // [TODO]: ?Backup logging
+  }
 
-	::std::cerr << os.view() << ::std::flush;
-
-	::std::abort();
+  ::std::abort();
 }
 
 } // namespace util::detail
