@@ -113,9 +113,9 @@ void Fiber::releaseResources() noexcept
 
 void Fiber::step() noexcept
 {
-	auto rollback = ::util::rollback_exchange(current, this);
-
+	auto const prev = ::std::exchange(current, this);
 	coroutine_.resume();
+	current = prev;
 }
 
 Fiber *Fiber::doRun() noexcept

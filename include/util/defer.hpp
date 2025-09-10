@@ -1,6 +1,6 @@
 //
-//
-//
+// defer.hpp
+// ~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,274 +11,166 @@
 #ifndef DDVAMP_UTIL_DEFER_HPP_INCLUDED_
 #define DDVAMP_UTIL_DEFER_HPP_INCLUDED_ 1
 
+#include <util/macro.hpp>
+#include <util/type_traits.hpp>
+
 #include <concepts>
 #include <exception>
-#include <type_traits>
 #include <utility>
-
-#include "util/macro.hpp"
 
 namespace util {
 
-namespace detail {
-
 template <typename T>
-concept suitable_for_deferred_action =
-	::std::is_class_v<T> &&
-	::std::is_move_constructible_v<T> &&
-	::std::is_destructible_v<T> &&
-	::std::is_invocable_v<T &> &&
-	::std::is_void_v<::std::invoke_result_t<T &>>;
+concept suitable_for_defer =
+    ::std::is_nothrow_move_constructible_v<T> &&
+    ::std::is_nothrow_destructible_v<T> &&
+    ::std::is_invocable_v<T &&> &&
+    ::std::is_void_v<::std::invoke_result_t<T &&>>;
+
+/* RAII class for performing an action at the end of a scope */
+
+template <suitable_for_defer T>
+class [[nodiscard]] defer final {
+ private:
+  UTIL_NO_UNIQUE_ADDRESS T action_;
+
+ public:
+  constexpr ~defer() noexcept (::std::is_nothrow_invocable_v<T &&>) {
+    ::std::forward<T>(action_)();
+  }
+
+  defer(defer const &) = delete;
+  void operator= (defer const &) = delete;
+
+  defer(defer &&) = delete;
+  void operator= (defer &&) = delete;
+
+ public:
+  constexpr explicit defer(T action) noexcept
+			: action_(::std::forward<T>(action)) {}
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 template <typename Policy>
-concept guard_policy = requires (Policy const &p)
-{
-	{ p.should_be_activated() } noexcept -> ::std::same_as<bool>;
-	requires ::std::is_default_constructible_v<Policy>;
-	requires ::std::is_destructible_v<Policy>;
+concept scope_guard_policy = requires (Policy const &p) {
+	requires ::std::is_class_v<Policy>;
+	requires ::std::is_nothrow_default_constructible_v<Policy>;
+	requires ::std::is_nothrow_destructible_v<Policy>;
+
+	{ p.check() } noexcept -> ::std::same_as<bool>;
 };
 
 struct default_guard_policy {
-	bool should_be_activated() const noexcept
-	{
+	[[nodiscard]] constexpr bool check() const noexcept {
 		return true;
 	}
 };
 
-struct success_guard_policy {
-	int uncaught_on_creating_ = ::std::uncaught_exceptions();
+static_assert(scope_guard_policy<default_guard_policy>);
 
-	bool should_be_activated() const noexcept
-	{
-		return ::std::uncaught_exceptions() <= uncaught_on_creating_;
-	}
-};
+/** RAII class for performing an action at the end of a scope
+ *  if it is active and the policy is met
+ */
 
-struct failure_guard_policy {
-	int uncaught_on_creating_ = ::std::uncaught_exceptions();
+template <suitable_for_defer T,
+					scope_guard_policy Policy = default_guard_policy>
+class [[nodiscard]] scope_guard final : private Policy {
+ private:
+ 	UTIL_NO_UNIQUE_ADDRESS T action_;
+	bool active_; // [TODO]: State (active + used)
 
-	bool should_be_activated() const noexcept
-	{
-		return ::std::uncaught_exceptions() > uncaught_on_creating_;
-	}
-};
-
-} // namespace detail
-
-// RAII class for performing an action at the end of a scope
-template <detail::suitable_for_deferred_action T>
-class [[nodiscard]] defer {
-protected:
-	UTIL_NO_UNIQUE_ADDRESS T action_;
-
-public:
-	~defer()
-		noexcept (
-			::std::is_nothrow_invocable_v<T &> &&
-			::std::is_nothrow_destructible_v<T>
-		)
-	{
-		action_();
-	}
-
-	defer(defer const &) = delete;
-	void operator= (defer const &) = delete;
-
-	defer(defer &&) = delete;
-	void operator= (defer &&) = delete;
-
-public:
-	explicit defer(T const &act)
-		noexcept (::std::is_nothrow_copy_constructible_v<T>)
-		requires (::std::is_copy_constructible_v<T>)
-		: action_(act)
-	{}
-
-	explicit defer(T &&act)
-		noexcept (::std::is_nothrow_move_constructible_v<T>)
-		: action_(::std::move(act))
-	{}
-};
-
-// RAII class for performing an action at the end of a scope
-// if it is active and the conditions are met
-template <
-	detail::suitable_for_deferred_action T,
-	detail::guard_policy Policy = detail::default_guard_policy
->
-class [[nodiscard]] scope_guard : protected Policy {
-protected:
-	bool active_;
-	UTIL_NO_UNIQUE_ADDRESS T action_;
-
-public:
-	~scope_guard()
-		noexcept (
-			::std::is_nothrow_invocable_v<T &> &&
-			::std::is_nothrow_destructible_v<T> &&
-			::std::is_nothrow_destructible_v<Policy>
-		)
-	{
+ public:
+	constexpr ~scope_guard() noexcept (::std::is_nothrow_invocable_v<T &&>) {
 		if (should_be_activated()) {
-			action_();
+			::std::forward<T>(action_)();
 		}
 	}
 
 	scope_guard(scope_guard const &) = delete;
 	void operator= (scope_guard const &) = delete;
 
-	scope_guard(scope_guard &&that) noexcept
-		requires (
-			::std::is_nothrow_move_constructible_v<T> &&
-			::std::is_nothrow_move_constructible_v<Policy>
-		)
-		: Policy(::std::move(that))
-		, action_(::std::move(that.action_))
-		, active_(::std::exchange(that.active_, false))
-	{}
+	scope_guard(scope_guard &&) = delete;
 	void operator= (scope_guard &&) = delete;
 
-public:
-	explicit scope_guard(T const &act)
-		noexcept (
-			::std::is_nothrow_default_constructible_v<Policy> &&
-			::std::is_nothrow_copy_constructible_v<T>
-		)
-		requires (::std::is_copy_constructible_v<T>)
-		: Policy()
-		, action_(act)
-		, active_(true)
-	{}
+ public:
+	constexpr explicit scope_guard(T action) noexcept
+			: Policy()
+			, action_(::std::forward<T>(action)) {}
 
-	explicit scope_guard(T &&act)
-		noexcept (
-			::std::is_nothrow_default_constructible_v<Policy> &&
-			::std::is_nothrow_move_constructible_v<T>
-		)
-		: Policy()
-		, action_(::std::move(act))
-		, active_(true)
-	{}
-
-public:
-	bool should_be_activated() const noexcept
-	{
-		return active_ && Policy::should_be_activated();
+ public:
+	[[nodiscard]] constexpr bool should_be_activated() const noexcept {
+		return active_ && Policy::check();
 	}
 
-	void enable() noexcept
-	{
+	void enable() noexcept {
 		active_ = true;
 	}
 
-	void disable() noexcept
-	{
+	void disable() noexcept {
 		active_ = false;
 	}
 
 	void activate_under_policy() &&
-		noexcept (::std::is_nothrow_invocable_v<T &>)
-	{
-		if (Policy::should_be_activated()) {
+		  noexcept (::std::is_nothrow_invocable_v<T &&>) {
+		if (Policy::check()) {
 			active_ = false;
-			action_();
+			::std::forward<T>(action_)();
 		}
 	}
 
 	void activate_if_should_be() &&
-		noexcept (::std::is_nothrow_invocable_v<T &>)
-	{
+			noexcept (::std::is_nothrow_invocable_v<T &&>) {
 		if (should_be_activated()) {
 			active_ = false;
-			action_();
+			::std::forward<T>(action_)();
 		}
 	}
 };
 
-// CTAD for alias templates (P1814R0)
-#if (defined(__GNUC__) || defined(__GNUG__)) && \
-	!defined(__clang__) && !defined(__INTEL_COMPILER)
+////////////////////////////////////////////////////////////////////////////////
 
-template <typename Policy>
-struct with_policy {
-	template <typename T>
-	using scope_guard = util::scope_guard<T, Policy>;
+/* Guards that are triggered only if there is or is not an exception */
+
+class success_guard_policy {
+ private:
+	int uncaught_on_creating_ = ::std::uncaught_exceptions();
+
+ public:
+	[[nodiscard]] bool check() const noexcept {
+		return ::std::uncaught_exceptions() <= uncaught_on_creating_;
+	}
 };
 
-template <typename T>
-using scope_success = scope_guard<T, detail::success_guard_policy>;
+static_assert(scope_guard_policy<success_guard_policy>);
 
 template <typename T>
-using scope_failure = scope_guard<T, detail::failure_guard_policy>;
+using scope_success = scope_guard<T, success_guard_policy>;
 
-#else
+class failure_guard_policy {
+ private:
+	int uncaught_on_creating_ = ::std::uncaught_exceptions();
 
-template <typename Policy>
-struct with_policy {
-	template <typename T>
-	class [[nodiscard]] scope_guard : public util::scope_guard<T, Policy> {
-		using util::scope_guard<T, Policy>::scope_guard;
-	};
-
-	template <typename T>
-	scope_guard(T) -> scope_guard<T>;
+ public:
+	[[nodiscard]] bool check() const noexcept {
+		return ::std::uncaught_exceptions() > uncaught_on_creating_;
+	}
 };
 
-template <typename T>
-class [[nodiscard]] scope_success :
-	public scope_guard<T, detail::success_guard_policy> {
-	using scope_guard<T, detail::success_guard_policy>::scope_guard;
-};
+static_assert(scope_guard_policy<failure_guard_policy>);
 
 template <typename T>
-scope_success(T) -> scope_success<T>;
-
-template <typename T>
-class [[nodiscard]] scope_failure :
-	public scope_guard<T, detail::failure_guard_policy> {
-	using scope_guard<T, detail::failure_guard_policy>::scope_guard;
-};
-
-template <typename T>
-scope_failure(T) -> scope_failure<T>;
-
-#endif
-
+using scope_failure = scope_guard<T, failure_guard_policy>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Type deduction helpers */
 
-// changes val to new_val and creates an RAII-object
-// to undo this at the end of the scope
-template <typename T, typename U = T>
-auto rollback_exchange(T &val, U &&new_val)
-	noexcept (
-		::std::is_nothrow_move_constructible_v<T> &&
-		::std::is_nothrow_assignable_v<T &, U> &&
-		::std::is_nothrow_destructible_v<T>
-	)
-	requires (
-		::std::is_object_v<T> &&
-		!::std::is_const_v<T> &&
-
-		::std::is_move_constructible_v<T> &&
-		::std::is_move_assignable_v<T> &&
-		::std::is_destructible_v<T> &&
-
-		::std::is_assignable_v<T &, U>
-	)
-{
-	return defer{
-		[old_val = ::std::exchange(val, ::std::forward<U>(new_val)), &val]()
-			noexcept (
-				::std::is_nothrow_move_assignable_v<T> &&
-				::std::is_nothrow_destructible_v<T>
-			)
-		{
-			val = ::std::move(old_val);
-		}
-	};
-}
+template <typename Policy>
+struct guard_with_policy {
+	template <typename T>
+	using type = scope_guard<T, Policy>;
+};
 
 } // namespace util
 
