@@ -15,12 +15,13 @@
 #include "exe/runtime/strand.hpp"
 
 #include "util/debug/assert.hpp"
+#include "util/refer/ref_count.hpp"
 
 namespace exe::runtime {
 
-class alignas(::std::hardware_destructive_interference_size) Strand::Impl
+class alignas (::std::hardware_destructive_interference_size) Strand::Impl
 	: private TaskBase
-	, public ::util::RefCount<Impl> {
+	, public ::util::ref_count<Impl> {
 private:
 	struct DummyTask : TaskBase {
 		DummyTask() noexcept
@@ -46,7 +47,7 @@ public:
 		return ::new Impl(where);
 	}
 
-	void destroySelf() const noexcept
+	void destroy_self() const noexcept
 	{
 		delete this;
 	}
@@ -147,7 +148,7 @@ void Strand::Impl::submit(TaskBase *task) noexcept
 /* virtual */ void Strand::Impl::run() noexcept
 {
 	runSelf();
-	decRef();
+	dec_ref();
 }
 
 void Strand::Impl::runSelf() noexcept
@@ -196,7 +197,7 @@ void Strand::Impl::afterAcquire(TaskBase *task) noexcept
 
 void Strand::Impl::submitSelf() noexcept
 {
-	incRef();
+	inc_ref();
 	where_.submit(this);
 }
 

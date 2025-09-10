@@ -29,7 +29,7 @@ class Strand final : public ISafeScheduler {
 private:
 	class Impl;
 
-	::util::Ref<Impl> impl_;
+	::util::ref<Impl> impl_;
 
 public:
 	~Strand() noexcept;

@@ -1,6 +1,6 @@
 //
-//
-//
+// ref.hpp
+// ~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,131 +11,123 @@
 #ifndef DDVAMP_UTIL_REFER_REF_HPP_INCLUDED_
 #define DDVAMP_UTIL_REFER_REF_HPP_INCLUDED_ 1
 
+#include <util/debug/assert.hpp>
+
+#include <concepts>
 #include <cstddef>
 #include <functional>
+#include <type_traits>
 #include <utility>
-
-#include "util/macro.hpp"
-#include "util/refer/ref_count.hpp"
 
 namespace util {
 
 template <typename T>
-class Ref {
-private:
-	T *ptr_ = nullptr;
+requires ::std::is_class_v<T>
+class [[nodiscard]] ref {
+ private:
+  T *ptr_ = nullptr;
 
-	UTIL_NO_UNIQUE_ADDRESS detail::RefValidator<T> v_;
+ public:
+  constexpr ~ref() {
+    dec_ref();
+  }
 
-public:
-	constexpr ~Ref() noexcept
-	{
-		decRef();
-	}
+  ref(ref const &that) noexcept : ptr_(that.ptr_) {
+    inc_ref();
+  }
 
-	Ref(Ref const &that) noexcept
-		: ptr_(that.ptr_)
-	{
-		incRef();
-	}
+  ref(ref &&that) noexcept : ref(that.release()) {}
 
-	Ref(Ref &&that) noexcept
-	{
-		that.swap(*this);
-	}
+  ref &operator= (ref that) noexcept {
+    swap(that);
+    return *this;
+  }
 
-	Ref &operator= (Ref that) noexcept
-	{
-		that.swap(*this);
-		return *this;
-	}
+ public:
+  constexpr ref() noexcept = default;
 
-public:
-	constexpr Ref() noexcept = default;
+  constexpr ref(::std::nullptr_t) noexcept {}
 
-	constexpr Ref(::std::nullptr_t) noexcept
-	{}
+  // Constructs a ref without increasing the counter
+  constexpr explicit ref(T *ptr) noexcept : ptr_(ptr) {}
 
-	constexpr explicit Ref(T *ptr) noexcept
-		: ptr_(ptr)
-	{}
+  [[nodiscard]] ::std::size_t use_count() const noexcept
+      requires (requires {
+                  { ptr_->use_count() } noexcept ->
+                      ::std::same_as<::std::size_t>;
+                }) {
+    return ptr_ ? ptr_->use_count() : 0uz;
+  }
 
-	[[nodiscard]] auto useCount() const noexcept
-	{
-		return ptr_ ? ptr_->useCount() : 0;
-	}
+  void swap(ref &that) noexcept {
+    ::std::swap(ptr_, that.ptr_);
+  }
 
-	void swap(Ref &that) noexcept
-	{
-		::std::swap(ptr_, that.ptr_);
-	}
+  void reset() noexcept {
+    ref().swap(*this);
+  }
 
-	void reset() noexcept
-	{
-		Ref().swap(*this);
-	}
+  // Replaces a ref without increasing the counter
+  void reset(T *ptr) noexcept {
+    UTIL_ASSERT(ptr_ != ptr, "Self reseting");
+    ref(ptr).swap(*this);
+  }
 
-	void reset(T *ptr) noexcept
-	{
-		Ref(ptr).swap(*this);
-	}
+  [[nodiscard]] T *get() const noexcept {
+    return ptr_;
+  }
 
-	[[nodiscard]] T *get() const noexcept
-	{
-		return ptr_;
-	}
+  [[nodiscard]] T &operator* () const noexcept {
+    UTIL_ASSERT(ptr_, "nullptr dereference");
+    return *ptr_;
+  }
 
-	[[nodiscard]] T &operator* () const noexcept
-	{
-		return *get();
-	}
+  [[nodiscard]] T *operator-> () const noexcept {
+    return ptr_;
+  }
 
-	[[nodiscard]] T *operator-> () const noexcept
-	{
-		return get();
-	}
+  [[nodiscard]] T *release() noexcept {
+    return ::std::exchange(ptr_, nullptr);
+  }
 
-	explicit operator bool() const noexcept
-	{
-		return ptr_;
-	}
+  explicit operator bool() const noexcept {
+    return ptr_;
+  }
 
-private:
-	void incRef() const noexcept
-	{
-		if (ptr_) {
-			ptr_->incRef();
-		}
-	}
+ private:
+  void inc_ref() const noexcept
+      requires (requires {
+                  { ptr_->inc_ref() } noexcept -> ::std::same_as<void>;
+                }) {
+    if (ptr_) {
+      ptr_->inc_ref();
+    }
+  }
 
-	void decRef() const noexcept
-	{
-		if (ptr_) {
-			ptr_->decRef();
-		}
-	}
+  void dec_ref() const noexcept
+      requires (requires {
+                  { ptr_->dec_ref() } noexcept -> ::std::same_as<void>;
+                }) {
+    if (ptr_) {
+      ptr_->dec_ref();
+    }
+  }
 };
 
-////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-[[nodiscard]] bool operator== (Ref<T> const &lhs,
-	Ref<T> const &rhs) noexcept
-{
-	return ::std::ranges::equal_to{}(lhs.get(), rhs.get());
+[[nodiscard]] bool operator== (ref<T> const &lhs, ref<T> const &rhs) noexcept {
+  return ::std::ranges::equal_to{}(lhs.get(), rhs.get());
 }
 
 template <typename T>
-[[nodiscard]] auto operator<=> (Ref<T> const &lhs,
-	Ref<T> const &rhs) noexcept
-{
-	return ::std::compare_three_way{}(lhs.get(), rhs.get());
+[[nodiscard]] auto operator<=> (ref<T> const &lhs, ref<T> const &rhs) noexcept {
+  return ::std::compare_three_way{}(lhs.get(), rhs.get());
 }
 
 template <typename T>
-void swap(Ref<T> &lhs, Ref<T> &rhs) noexcept
-{
-	lhs.swap(rhs);
+void swap(ref<T> &lhs, ref<T> &rhs) noexcept {
+  lhs.swap(rhs);
 }
 
 } // namespace util
