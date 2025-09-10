@@ -41,7 +41,11 @@ set(
 add_library(exe STATIC)
 target_sources(exe PRIVATE ${exe_sources})
 
-target_include_directories(exe PUBLIC include/)
+target_include_directories(
+  exe
+  PUBLIC include/
+  PRIVATE src/util/
+)
 
 target_compile_features(exe PUBLIC cxx_std_23)
 

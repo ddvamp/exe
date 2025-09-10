@@ -1,6 +1,6 @@
 //
-//
-//
+// page_allocation.hpp
+// ~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,92 +11,86 @@
 #ifndef DDVAMP_UTIL_MEMORY_PAGE_ALLOCATION_HPP_INCLUDED_
 #define DDVAMP_UTIL_MEMORY_PAGE_ALLOCATION_HPP_INCLUDED_ 1
 
-#include <cstddef>
+#include <util/memory/view.hpp>
 
-#include "util/memory/view.hpp"
+#include <cstddef>
+#include <utility>
 
 namespace util {
 
-class page_allocation {
-private:
-	::std::byte *begin_ = nullptr;
-	::std::size_t size_ = 0;
+class [[nodiscard]] page_allocation {
+ private:
+  ::std::byte *begin_ = nullptr;
+  ::std::size_t size_ = 0;
 
-public:
-	~page_allocation()
-	{
-		release();
+ public:
+  ~page_allocation() {
+    deallocate();
+  }
+
+  page_allocation(page_allocation const &) = delete;
+  void operator= (page_allocation const &) = delete;
+
+  page_allocation(page_allocation &&that) noexcept {
+		swap(that);
 	}
 
-	page_allocation(page_allocation const &) = delete;
-	void operator= (page_allocation const &) = delete;
+  page_allocation &operator= (page_allocation &&that) noexcept {
+		auto(::std::move(that)).swap(*this);
+    return *this;
+  }
 
-	page_allocation(page_allocation &&that) noexcept
-	{
-		steal(that);
-	}
-	page_allocation &operator= (page_allocation &&that) noexcept
-	{
-		release();
-		steal(that);
-		return *this;
-	}
+ public:
+  page_allocation() noexcept = default;
 
-public:
-	page_allocation() = default;
+  [[nodiscard]] ::std::byte *begin() const noexcept {
+    return begin_;
+  }
 
-	::std::byte *begin() const noexcept
-	{
-		return begin_;
-	}
+  [[nodiscard]] ::std::byte *end() const noexcept {
+    return begin_ + size_;
+  }
 
-	::std::byte *end() const noexcept
-	{
-		return begin_ + size_;
-	}
+  [[nodiscard]] ::std::size_t size() const noexcept {
+    return size_;
+  }
 
-	::std::size_t size() const noexcept
-	{
-		return size_;
-	}
+  [[nodiscard]] memory_view view() const noexcept {
+    return {begin_, size_};
+  }
 
-	memory_view view() const noexcept
-	{
-		return {begin_, size_};
-	}
+  [[nodiscard]] static ::std::size_t page_size() noexcept;
+  [[nodiscard]] static ::std::size_t max_pages() noexcept;
 
-	static ::std::size_t page_size() noexcept;
-	static ::std::size_t max_pages() noexcept;
+  [[nodiscard]] static ::std::size_t pages_to_bytes(
+      ::std::size_t const page_count) noexcept;
+  [[nodiscard]] static ::std::size_t bytes_to_pages(
+      ::std::size_t const at_least) noexcept;
 
-	// precondition: count != 0 && count <= max_pages()
-	static page_allocation allocate_pages(::std::size_t count);
+  // Throws: std::bad_alloc if the storage cannot be obtained or
+	// 				 zero pages are requested
+  static page_allocation allocate_pages(::std::size_t const count);
 
-	// precondition: page_count != 0 &&
-	// protected memory in the range [begin_, begin_ + size_)
-	void protect_pages(::std::size_t page_offset,
-		::std::size_t page_count) const;
+  // Precondition: page_count != 0 &&
+  //               protected memory in the range [begin_, begin_ + size_)
+  void protect_pages(::std::size_t const page_offset,
+                     ::std::size_t const page_count);
 
-private:
-	page_allocation(::std::byte *begin, ::std::size_t size) noexcept
-		: begin_(begin)
-		, size_(size)
-	{}
-
-	void reset() noexcept
-	{
-		begin_ = nullptr;
-		size_ = 0;
+	void swap(page_allocation &that) noexcept {
+		::std::swap(begin_, that.begin_);
+		::std::swap(size_, that.size_);
 	}
 
-	void steal(page_allocation &that) noexcept
-	{
-		begin_ = that.begin_;
-		size_ = that.size_;
-		that.reset();
-	}
+ private:
+  page_allocation(::std::byte *begin, ::std::size_t size) noexcept
+      : begin_(begin), size_(size) {}
 
-	void release() const noexcept;
+  void deallocate() const noexcept;
 };
+
+inline void swap(page_allocation &lhs, page_allocation &rhs) noexcept {
+	lhs.swap(rhs);
+}
 
 } // namespace util
 
