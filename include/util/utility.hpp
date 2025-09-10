@@ -77,6 +77,21 @@ template <typename ...Ts>
               static_cast<bool>(::std::forward<Ts>(ts)))) == 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+/** Similar to https://en.cppreference.com/w/cpp/memory/voidify.html
+ *  but forcibly removes cv-qualification
+ */
+
+template <typename T>
+[[nodiscard]] inline constexpr void *voidify(T &obj) noexcept {
+  return const_cast<void *>(
+      static_cast<void const volatile *>(::std::addressof(obj)));
+}
+
+template <typename T>
+void *voidify(T const &&obj) = delete;
+
 } // namespace util
 
 #endif /* DDVAMP_UTIL_UTILITY_HPP_INCLUDED_ */
