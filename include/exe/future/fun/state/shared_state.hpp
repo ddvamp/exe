@@ -15,7 +15,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "concurrency/meeting.hpp"
+#include "concurrency/rendezvous.hpp"
 
 #include "exe/runtime/task/scheduler.hpp"
 #include "exe/runtime/task/task.hpp"
@@ -43,7 +43,7 @@ public:
 private:
 	::std::optional<Result> result_;
 	::std::optional<Callback> callback_;
-	::concurrency::Meeting meeting_{2};
+	::concurrency::Rendezvous rendezvous_;
 	runtime::ISafeScheduler *scheduler_ = nullptr;
 
 public:
@@ -95,7 +95,7 @@ private:
 
 	void notify() noexcept
 	{
-		if (meeting_.Arrive()) {
+		if (rendezvous_.Arrive()) {
 			scheduleCallback();
 		}
 	}
