@@ -126,7 +126,7 @@ public:
 
 	[[nodiscard]] bool try_lock() noexcept
 	{
-		UTIL_RUN(checkRecursive);
+		UTIL_DEBUG_RUN(checkRecursive);
 
 		auto expected = &dummy_;
 
@@ -145,12 +145,12 @@ public:
 			self::suspend(awaiter);
 		}
 
-		UTIL_RUN(checkLock);
+		UTIL_DEBUG_RUN(checkLock);
 	}
 
 	void unlock() noexcept
 	{
-		UTIL_RUN(checkUnlock);
+		UTIL_DEBUG_RUN(checkUnlock);
 
 		auto next = unlockImpl();
 

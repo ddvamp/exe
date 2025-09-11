@@ -152,19 +152,19 @@ protected:
 
 	[[nodiscard]] State &getState() noexcept
 	{
-		UTIL_RUN(checkState);
+		UTIL_DEBUG_RUN(checkState);
 		return *state_;
 	}
 
 	[[nodiscard]] State const &getState() const noexcept
 	{
-		UTIL_RUN(checkState);
+		UTIL_DEBUG_RUN(checkState);
 		return *state_;
 	}
 
 	[[nodiscard]] State *release() noexcept
 	{
-		UTIL_RUN(checkState);
+		UTIL_DEBUG_RUN(checkState);
 		return ::std::exchange(state_, nullptr);
 	}
 
