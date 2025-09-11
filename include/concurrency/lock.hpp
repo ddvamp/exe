@@ -1,6 +1,6 @@
 //
-//
-//
+// lock.hpp
+// ~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,116 +11,119 @@
 #ifndef DDVAMP_CONCURRENCY_LOCK_HPP_INCLUDED_
 #define DDVAMP_CONCURRENCY_LOCK_HPP_INCLUDED_ 1
 
-#include <algorithm>
-#include <array>
-#include <cstddef>
-#include <memory>
-#include <mutex>
-#include <span>
+#include <util/abort.hpp>
+#include <util/defer.hpp>
+#include <util/type_traits.hpp>
+#include <util/utility.hpp>
 
-#include "util/defer.hpp"
-#include "util/type_traits.hpp"
+#include <algorithm>	// std::ranges::sort
+#include <array>
+#include <memory> 		// std::addressof
+#include <mutex> 			// std::scoped_lock
 
 namespace concurrency {
 
 namespace detail {
 
-struct any_lock_base {
-	void *lock_;
-	void(*fn_)(void *, bool);
-
-	void lock() const
-	{
-		fn_(lock_, true);
-	}
-
-	void unlock() const noexcept
-	{
-		fn_(lock_, false);
-	}
-};
-
-struct any_lock {
-	any_lock_base base_;
-
-	operator void const * () const noexcept
-	{
-		return base_.lock_;
-	}
-
-	any_lock_base const *operator-> () const noexcept
-	{
-		return &base_;
-	}
-};
-
-template <typename LockPtr>
-void lockImpl(::std::span<LockPtr> locks)
-{
-	::std::ranges::sort(locks);
-
-	auto next = ::std::size_t(0);
-
-	auto unlock_on_exception = ::util::defer(
-		[&]() noexcept {
-			while (next-- != 0) {
-				locks[next]->unlock();
-			}
-		}
-	);
-
-	do {
-		locks[next]->lock();
-	} while (++next != size(locks));
-
-	next = 0;
+template <typename T>
+void Lock(void *m) {
+  static_cast<T *>(m)->lock();
 }
+
+template <typename T>
+void Unlock(void *m) {
+  static_cast<T *>(m)->unlock();
+}
+
+// About comparison of void*
+// https://quuxplusone.github.io/blog/2019/01/20/std-less-nightmare/
+struct AnyMutex {
+  void *m_;
+  void (*lock_)(void *);
+  void (*unlock_)(void *);
+
+  void Lock() const {
+    lock_(m_);
+  }
+
+  void Unlock() const {
+    unlock_(m_);
+  }
+
+  AnyMutex const *operator-> () const noexcept {
+    return this;
+  }
+
+  operator void * () const noexcept {
+    return m_;
+  }
+};
+
+template <typename It>
+void LockImpl(It const begin, It const end) {
+  ::std::ranges::sort(begin, end);
+
+  auto it = begin;
+
+  ::util::defer unlock_on_exception([&]() noexcept {
+    if (it == begin) [[likely]] {
+      return;
+    }
+
+    try {
+      do {
+        (*--it)->unlock();
+      } while (it != begin);
+    } catch (...) {
+      UTIL_ABORT("An object of the type with Cpp17BasicLockable requirement, "
+                "threw an exception when calling the unlock method");
+    }
+  });
+
+  do {
+    (*it)->lock();
+  } while (++it != end);
+
+  it = begin;
+}
+
+template <typename Lock>
+inline constexpr bool is_basic_lockable_v = requires (Lock &lock) {
+  { lock.lock() };
+  { lock.unlock() }; // Must throws nothing
+};
 
 } // namespace detail
 
-////////////////////////////////////////////////////////////////////////////////
+/** To capture locks in a consistent order
+ *
+ *  Each lock must meet the Cpp17BasicLockable requirement and be atomic.
+ *  Atomic means that lock itself must respect this order (use Lock function)
+ */
 
-template <typename Lock>
-concept BasicLockable = requires (Lock &lock) {
-	{ lock.lock() };
-	{ lock.unlock() } noexcept;
-};
-
-template <BasicLockable Lock1, BasicLockable Lock2, BasicLockable ...LockN>
-void lock(Lock1 &lock1, Lock2 &lock2, LockN &...lockn)
-{
-	auto list = []<typename ...Locks>(Locks &...locks) {
-		if constexpr (::util::are_all_same_v<Locks...>) {
-			return ::std::array{::std::addressof(locks)...};
-		} else {
-			return ::std::array{
-				detail::any_lock{
-					.lock_ = ::std::addressof(locks),
-					.fn_ = [](void *obj, bool lock) {
-						auto m = static_cast<Locks *>(obj);
-						if (lock) {
-							m->lock();
-						} else {
-							m->unlock();
-						}
-					},
-				}...
-			};
-		}
-	} (lock1, lock2, lockn...);
-
-	detail::lockImpl(list);
+template <typename ...Locks>
+void Lock(Locks &...locks)
+    requires (::util::is_all_of_v<(sizeof...(Locks) > 1),
+                                  detail::is_basic_lockable_v<Locks>...>) {
+  if constexpr (::util::is_all_same_v<Locks...>) {
+    ::std::array arr{::std::addressof(locks)...};
+    detail::LockImpl(arr.begin(), arr.end());
+  } else {
+    ::std::array arr{detail::AnyMutex{.m_ = ::util::voidify(locks),
+                                      .lock_ = detail::Lock<Locks>,
+                                      .unlock_ = detail::Unlock<Locks>}...};
+    detail::LockImpl(arr.begin(), arr.end());
+  }
 }
 
-template <typename ...MutexTypes>
-::std::scoped_lock<MutexTypes...> make_scoped_lock(MutexTypes &...m)
-{
-	if constexpr (sizeof...(m) < 2) {
-		return ::std::scoped_lock(m...);
-	} else {
-		::util::lock(m...);
-		return {::std::adopt_lock, m...};
-	}
+template <typename ...Mutexes>
+[[nodiscard]] ::std::scoped_lock<Mutexes...> MakeScopedLock(Mutexes &...ms) {
+  if constexpr (sizeof...(Mutexes) > 1) {
+    concurrency::Lock(ms...);
+    return ::std::scoped_lock{::std::adopt_lock, ms...};
+  } else {
+    return ::std::scoped_lock{ms...};
+  }
 }
 
 } // namespace concurrency
