@@ -52,7 +52,7 @@ void ThreadPool::workLoop()
 
 	// TODO: exception handling
 	try {
-		while (auto item = tasks_.take()) {
+		while (auto item = tasks_.Pop()) {
 			auto task = *item;
 
 			task->run();
@@ -105,7 +105,7 @@ ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 	);
 
 	task_count_.add();
-	UTIL_VERIFY(tasks_.put(task), "using thread pool after stop");
+	UTIL_VERIFY(tasks_.Push(task), "using thread pool after stop");
 }
 
 void ThreadPool::waitIdle()
@@ -120,7 +120,7 @@ void ThreadPool::stop()
 		"attempt to stop non-working thread pool"
 	);
 
-	tasks_.close();
+	tasks_.Close();
 	joinWorkerThreads();
 }
 
