@@ -1,6 +1,6 @@
 //
-//
-//
+// meeting.hpp
+// ~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,39 +11,50 @@
 #ifndef DDVAMP_CONCURRENCY_MEETING_HPP_INCLUDED_
 #define DDVAMP_CONCURRENCY_MEETING_HPP_INCLUDED_ 1
 
+#include <util/debug/assert.hpp>
+
 #include <atomic>
 #include <cstdint>
 
-#include "util/debug.hpp"
-
 namespace concurrency {
 
-// Synchronization primitive for determining the last participant
-// and synchronizing it with all the previous ones
+/** Synchronization primitive for determining the last participant
+ *  and synchronizing it with all the previous ones
+ */
+
 class Meeting {
-private:
-	using seat_t = ::std::uint64_t;
+ private:
+  using Count = ::std::uint64_t;
 
-	::std::atomic<seat_t> seats_;
+  ::std::atomic<Count> seats_;
 
-public:
-	// sets the number of calls (participants)
-	explicit Meeting(seat_t participants) noexcept
-		: seats_(participants)
-	{
-		UTIL_ASSERT(participants > 1, "too few participants");
-	}
+  // To guarantee the expected implementation
+  static_assert(::std::atomic<Count>::is_always_lock_free);
 
-	// syncs with previous calls and
-	// returns true if this is the last one (participant)
-	[[nodiscard]] bool takesPlace() noexcept
-	{
-		auto left = seats_.fetch_sub(1, ::std::memory_order_acq_rel);
+ public:
+  explicit Meeting(Count const init) noexcept {
+    Reset(init);
+  }
 
-		UTIL_ASSERT(left > 0, "meeting has already taken place");
+  // In case of instance reuse
+  void Reset(Count const init) noexcept {
+    UTIL_ASSERT(init > 1, "At least two participants are required");
+    seats_.store(init, ::std::memory_order_relaxed);
+  }
 
-		return left == 1;
-	}
+  // Returns true and syncs with previous participants if this one is the last
+  // May be false negative
+  [[nodiscard]] bool IsReady() const noexcept {
+    return seats_.load(::std::memory_order_acquire) == 1;
+  }
+
+  // Returns true and syncs with previous participants if this one is the last,
+  // otherwise, he announces his arrival
+  [[nodiscard]] bool Arrive() noexcept {
+    auto const left = seats_.fetch_sub(1, ::std::memory_order_acq_rel);
+    UTIL_ASSERT(left > 0, "The amount of participants exceeded expectation");
+    return left == 1;
+  }
 };
 
 } // namespace concurrency

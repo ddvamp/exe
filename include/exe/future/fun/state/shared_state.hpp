@@ -95,7 +95,7 @@ private:
 
 	void notify() noexcept
 	{
-		if (meeting_.takesPlace()) {
+		if (meeting_.Arrive()) {
 			scheduleCallback();
 		}
 	}
