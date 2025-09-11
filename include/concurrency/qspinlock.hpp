@@ -1,6 +1,6 @@
 //
-//
-//
+// qspinlock.hpp
+// ~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,182 +11,189 @@
 #ifndef DDVAMP_CONCURRENCY_QSPINLOCK_HPP_INCLUDED_
 #define DDVAMP_CONCURRENCY_QSPINLOCK_HPP_INCLUDED_ 1
 
-#include <atomic>
-#include <mutex>
+#include <concurrency/pause.hpp>
+#include <concurrency/intrusive/forward_list.hpp>
 
-#include "pause.hpp"
-#include "intrusive/forward_list.hpp"
-#include "util/utility.hpp"
+#include <util/utility.hpp>
+#include <util/debug/assert.hpp>
+
+#include <atomic>
+#include <new> // std::hardware_destructive_interference_size
 
 namespace concurrency {
 
-class QSpinlock {
-private:
-	struct Node : IntrusiveForwardListNode<Node> {
-		::std::atomic_bool free_;
-	};
+class alignas (::std::hardware_destructive_interference_size) QSpinlock {
+ private:
+  struct Node : IntrusiveForwardListNode<Node> {
+    ::std::atomic_bool locked_ = false;
+  };
 
-	Node dummy_{nullptr, true};
-	Node *head_ = &dummy_;
-	::std::atomic<Node *> tail_ = &dummy_;
+  Node dummy_;
+  ::std::atomic<Node *> tail_ = &dummy_;
 
-public:
-	// for case of high contention
-	class LockToken {
-	private:
-		QSpinlock &lock_;
-		Node node_;
-		bool fast_;
+  // To guarantee the expected implementation
+  static_assert(::std::atomic_bool::is_always_lock_free);
+  static_assert(::std::atomic<Node *>::is_always_lock_free);
 
-	public:
-		~LockToken() = default;
+ public:
+  ~QSpinlock() {
+    UTIL_ASSERT(!IsLocked(), "QSpinlock is destroyed when locked");
+  }
 
-		LockToken(LockToken const &) = delete;
-		void operator= (LockToken const &) = delete;
+  QSpinlock(QSpinlock const &) = delete;
+  void operator= (QSpinlock const &) = delete;
 
-		LockToken(LockToken &&) = delete;
-		void operator= (LockToken &&) = delete;
+  QSpinlock(QSpinlock &&) = delete;
+  void operator= (QSpinlock &&) = delete;
 
-	public:
-		explicit LockToken(QSpinlock &spinlock) noexcept
-			: lock_(spinlock)
-		{
-			lock();
-		}
+ public:
+  QSpinlock() = default;
 
-		LockToken(QSpinlock &spinlock, ::std::defer_lock_t) noexcept
-			: lock_(spinlock)
-		{}
+  class Token final {
+   private:
+    QSpinlock &lock_;
+    Node node_;
 
-		LockToken(QSpinlock &spinlock, ::std::adopt_lock_t) noexcept
-			: lock_(spinlock)
-			, fast_(true)
-		{}
+   public:
+    ~Token() = default;
 
-	public:
-		void lock() noexcept
-		{
-			fast_ = lock_.try_lock();
+    Token(Token const &) = delete;
+    void operator= (Token const &) = delete;
 
-			if (!fast_) [[likely]] {
-				lock_.lockInit(node_);
-			}
-		}
+    Token(Token &&) = delete;
+    void operator= (Token &&) = delete;
 
-		void unlock() noexcept
-		{
-			lock_.unlockFini(node_, fast_);
-		}
-	};
+   public:
+    explicit Token(QSpinlock &spinlock) noexcept : lock_(spinlock) {}
 
-	[[nodiscard]] auto get_token() noexcept
-	{
-		return LockToken(*this);
-	}
+    // This method is not intended to be used in a loop. Use Lock instead
+    [[nodiscard]] bool TryLock() noexcept {
+      return lock_.TryLock();
+    }
 
-	[[nodiscard]] auto get_deferred_token() noexcept
-	{
-		return LockToken(*this, ::std::defer_lock);
-	}
+    void Lock() noexcept {
+      lock_.Lock(node_);
+    }
 
-	// precondition: locked
-	[[nodiscard]] auto get_adopted_token() noexcept
-	{
-		return LockToken(*this, ::std::adopt_lock);
-	}
+    void Unlock() noexcept {
+      lock_.Unlock(node_);
+    }
 
-	// for case of high contention
-	class Guard : protected LockToken {
-	public:
-		explicit Guard(QSpinlock &lock) noexcept
-			: LockToken(lock)
-		{}
+    // Cpp17Lockable
+    // https://eel.is/c++draft/thread.req.lockable.req
 
-		~Guard()
-		{
-			unlock();
-		}
-	};
+    // This method is not intended to be used in a loop. Use lock instead
+    [[nodiscard]] bool try_lock() noexcept {
+      return TryLock();
+    }
 
-	[[nodiscard]] auto lock_with_guard() noexcept
-	{
-		return Guard(*this);
-	}
+    void lock() noexcept {
+      Lock();
+    }
 
-public:
-	[[nodiscard]] bool try_lock() noexcept
-	{
-		return dummy_.free_.load(::std::memory_order_relaxed) &&
-			dummy_.free_.compare_exchange_weak(
-				::util::temporary(true),
-				false,
-				::std::memory_order_acquire,
-				::std::memory_order_relaxed
-			);
-	}
+    void unlock() noexcept {
+      Unlock();
+    }
+  };
 
-	void lock() noexcept
-	{
-		if (!try_lock()) [[unlikely]] {
-			auto node = Node{};
+  [[nodiscard]] Token GetToken() noexcept {
+    return Token(*this);
+  }
 
-			lockInit(node);
-			lockFini(node);
-		}
-	}
+  class Guard final {
+   private:
+    Token token_;
 
-	void unlock() noexcept
-	{
-		head_->free_.store(true, ::std::memory_order_release);
-	}
+   public:
+    ~Guard() {
+      token_.Unlock();
+    }
 
-private:
-	void lockInit(Node &node) noexcept
-	{
-		auto const prev = tail_.exchange(&node, ::std::memory_order_acq_rel);
+    Guard(Guard const &) = delete;
+    void operator= (Guard const &) = delete;
 
-		if (prev == &dummy_) [[unlikely]] {
-			while (!try_lock()) {
-				Pause();
-			}
-		} else {
-			prev->next_.store(&node, ::std::memory_order_release);
+    Guard(Guard &&) = delete;
+    void operator= (Guard &&) = delete;
 
-			while (!node.free_.load(::std::memory_order_acquire)) {
-				Pause();
-			}
-		}
-	}
+   public:
+    explicit Guard(QSpinlock &lock) noexcept : token_(lock) {
+      token_.Lock();
+    }
+  };
 
-	void lockFini(Node &node) noexcept
-	{
-		auto next = static_cast<Node *>(nullptr);
+  [[nodiscard]] Guard MakeGuard() noexcept {
+    return Guard(*this);
+  }
 
-		if (
-			!(next = node.next_.load(::std::memory_order_acquire)) &&
+ private:
+  [[nodiscard]] bool IsLocked() const noexcept {
+    return dummy_.locked_.load(::std::memory_order_relaxed);
+  }
 
-			!tail_.compare_exchange_strong(
-				::util::temporary(&node),
-				next = &dummy_,
-				::std::memory_order_release,
-				::std::memory_order_relaxed
-			)
-		) [[unlikely]] {
-			while (!(next = node.next_.load(::std::memory_order_acquire))) {
-				Pause();
-			}
-		}
+  [[nodiscard]] bool TryLock() noexcept {
+    if (IsLocked()) [[unlikely]] {
+      return false;
+    }
 
-		head_ = next;
-	}
+    return dummy_.locked_.compare_exchange_weak(::util::temporary(false), true,
+                                                ::std::memory_order_acquire,
+                                                ::std::memory_order_relaxed);
+  }
 
-	void unlockFini(Node &node, bool fast) noexcept
-	{
-		if (!fast) [[likely]] {
-			lockFini(node);
-		}
-		unlock();
-	}
+  void Lock(Node &node) noexcept {
+    auto const fast = TryLock();
+    node.Link(fast ? &dummy_ : nullptr);
+    if (fast) [[likely]] {
+      // spinlock way
+      return;
+    }
+
+    LockCold(node);
+  }
+
+  void LockCold(Node &node) noexcept {
+    node.locked_.store(true, ::std::memory_order_relaxed);
+
+    auto const pred = tail_.exchange(&node, ::std::memory_order_acq_rel);
+    if (pred == &dummy_) [[likely]] {
+      // spinlock way
+      while (!TryLock()) {
+        Pause(); // [TODO]: Better spin wait
+      }
+
+      return;
+    }
+
+    pred->next_.store(&node, ::std::memory_order_release);
+
+    while (node.locked_.load(::std::memory_order_acquire)) {
+      Pause(); // [TODO]: Better spin wait
+    }
+  }
+
+  void Unlock(Node &node) noexcept {
+    auto *succ = node.next_.load(::std::memory_order_acquire);
+    if (!succ) [[unlikely]] {
+      succ = UnlockCold(node);
+    }
+
+    succ->locked_.store(false, ::std::memory_order_release);
+  }
+
+  [[nodiscard]] Node *UnlockCold(Node &node) noexcept {
+    if (tail_.compare_exchange_strong(::util::temporary(&node), &dummy_,
+                                      ::std::memory_order_relaxed,
+                                      ::std::memory_order_acquire)) [[likely]] {
+      return &dummy_;
+    }
+
+    Node *succ;
+    while (!(succ = node.next_.load(::std::memory_order_relaxed))) {
+      Pause(); // [TODO]: Better spin wait
+    }
+
+    return succ;
+  }
 };
 
 } // namespace concurrency

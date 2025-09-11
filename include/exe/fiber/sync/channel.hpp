@@ -27,6 +27,7 @@
 
 #include "util/debug.hpp"
 #include "util/refer/ref.hpp"
+#include "util/refer/ref_count.hpp"
 #include "util/utility.hpp"
 
 namespace exe::fiber {
@@ -199,11 +200,11 @@ public:
 class ChannelAwaiter : public IAwaiter {
 private:
 	ChannelWaitQueue::Node fiber_info_;
-	::concurrency::QSpinlock::LockToken &lock_;
+	::concurrency::QSpinlock::Token &lock_;
 
 public:
 	template <typename T>
-	ChannelAwaiter(T &object, ::concurrency::QSpinlock::LockToken &lock,
+	ChannelAwaiter(T &object, ::concurrency::QSpinlock::Token &lock,
 		ChannelWaitQueue &queue) noexcept
 		: fiber_info_{::std::addressof(object)}
 		, lock_(lock)
@@ -295,7 +296,7 @@ public:
 	{
 		constexpr auto order = ::std::memory_order_relaxed;
 
-		auto token = spinlock_.get_token();
+		auto token = spinlock_.GetToken();
 
 		UTIL_ASSERT(!closed_.load(order), "close of closed channel");
 
@@ -363,7 +364,7 @@ private:
 	{
 		constexpr auto order = ::std::memory_order_relaxed;
 
-		auto token = spinlock_.get_token();
+		auto token = spinlock_.GetToken();
 
 		// TODO: how to handle go panic?
 		auto const is_open = !closed_.load(order);
@@ -415,7 +416,7 @@ private:
 	{
 		constexpr auto order = ::std::memory_order_relaxed;
 
-		auto token = spinlock_.get_token();
+		auto token = spinlock_.GetToken();
 
 		auto const is_closed = closed_.load(order);
 		auto const has_elements = !buffer_.empty();
@@ -467,7 +468,7 @@ private:
 template <::std::destructible T>
 	requires (::std::is_nothrow_move_constructible_v<T>)
 class ChannelImpl final
-	: public ::util::RefCount<ChannelImpl<T>>
+	: public ::util::ref_count<ChannelImpl<T>>
 	, public ChannelState<T> {
 private:
 	using Self = ChannelImpl;
@@ -509,8 +510,7 @@ private:
 
 		constexpr auto element_size = sizeof(T);
 
-		if constexpr ([[maybe_unused]] auto overflow_is_possible =
-			element_size > 1) {
+		if constexpr (element_size > 1) {
 			constexpr auto max_possible = max_size / element_size;
 			if (extra_count > max_possible) {
 				throw ::std::bad_array_new_length{};
@@ -568,7 +568,7 @@ class Channel {
 	using Impl = detail::ChannelImpl<element_type>;
 
 private:
-	::util::Ref<Impl> impl_;
+	::util::ref<Impl> impl_;
 
 public:
 	explicit Channel(::std::size_t const capacity)
@@ -616,7 +616,7 @@ class Channel<T> {
 	using Impl = detail::ChannelImpl<::util::unit_t>;
 
 private:
-	::util::Ref<Impl> impl_;
+	::util::ref<Impl> impl_;
 
 public:
 	explicit Channel(::std::size_t const capacity)
