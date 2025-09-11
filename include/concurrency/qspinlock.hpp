@@ -147,13 +147,13 @@ private:
 
 		if (prev == &dummy_) [[unlikely]] {
 			while (!try_lock()) {
-				thread_relax();
+				Pause();
 			}
 		} else {
 			prev->next_.store(&node, ::std::memory_order_release);
 
 			while (!node.free_.load(::std::memory_order_acquire)) {
-				thread_relax();
+				Pause();
 			}
 		}
 	}
@@ -173,7 +173,7 @@ private:
 			)
 		) [[unlikely]] {
 			while (!(next = node.next_.load(::std::memory_order_acquire))) {
-				thread_relax();
+				Pause();
 			}
 		}
 

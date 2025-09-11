@@ -31,7 +31,7 @@ public:
 	void lock() noexcept
 	{
 		while (!try_lock()) {
-			thread_relax();
+			Pause();
 		}
 	}
 
