@@ -56,7 +56,7 @@ void ThreadPool::workLoop()
 			auto task = *item;
 
 			task->run();
-			task_count_.done(1, ::std::memory_order_release);
+			task_count_.Done(1, ::std::memory_order_release);
 		}
 	} catch (...) {
 		UTIL_ABORT("exception inside thread pool");
@@ -104,13 +104,13 @@ ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 		"nullptr instead of the task"
 	);
 
-	task_count_.add();
+	task_count_.Add();
 	UTIL_VERIFY(tasks_.Push(task), "using thread pool after stop");
 }
 
 void ThreadPool::waitIdle()
 {
-	task_count_.wait(::std::memory_order_acquire);
+	task_count_.Wait(::std::memory_order_acquire);
 }
 
 void ThreadPool::stop()
