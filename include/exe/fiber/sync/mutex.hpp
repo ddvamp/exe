@@ -30,7 +30,7 @@ class Mutex {
 private:
 	friend class CondVar;
 
-	struct FiberInfo : ::concurrency::intrusive_concurrent_forward_list_node<> {
+	struct FiberInfo : ::concurrency::IntrusiveForwardListNode<> {
 		FiberHandle handle_;
 	};
 

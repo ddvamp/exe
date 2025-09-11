@@ -22,7 +22,7 @@ namespace concurrency {
 
 class QSpinlock {
 private:
-	struct Node : intrusive_concurrent_forward_list_node<Node> {
+	struct Node : IntrusiveForwardListNode<Node> {
 		::std::atomic_bool free_;
 	};
 

@@ -26,7 +26,7 @@ public:
 
 class TaskBase
 	: public ITask
-	, public ::concurrency::intrusive_concurrent_forward_list_node<TaskBase> {};
+	, public ::concurrency::IntrusiveForwardListNode<TaskBase> {};
 
 } // namespace exe::runtime
 
