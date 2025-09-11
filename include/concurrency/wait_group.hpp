@@ -1,6 +1,6 @@
 //
-//
-//
+// wait_group.hpp
+// ~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,89 +11,158 @@
 #ifndef DDVAMP_CONCURRENCY_WAIT_GROUP_HPP_INCLUDED_
 #define DDVAMP_CONCURRENCY_WAIT_GROUP_HPP_INCLUDED_ 1
 
+#include <util/utility.hpp>
+#include <util/debug/assert.hpp>
+
 #include <atomic>
-#include <cstdint>
-
-#include "concurrency/event.hpp"
-
-#include "util/debug.hpp"
-#include "util/macro.hpp"
+#include <condition_variable>
+#include <cstdint> // std::uint64_t
+#include <mutex>
 
 namespace concurrency {
 
-// Synchronization primitive for waiting for the completion of tasks,
-// which are expressed as a 64-bit counter
-// Formally, the wait ends when the counter drops to zero
-//
-// The add call should happens before the corresponding done call, otherwise
-// the behavior is undefined
-//
-// The add calls should happens before the wait calls
-//
-// WaitGroup can be reused. In this case, all current wait calls should
-// end (happens) before subsequent add calls
+/** Synchronization primitive for waiting for the completion of tasks,
+ *  which are expressed as a 32-bit counter. Formally, the wait ends when
+ *  the counter drops to zero. It can be used multiple times, but
+ *  waiting sessions must happen before one another
+ */
 class WaitGroup {
-private:
-	using counter_t = ::std::uint64_t;
+ private:
+  using State = ::std::uint64_t;
 
-	::std::atomic<counter_t> count_ = 0;
-	Event counter_is_zero_;
+  enum Constants : State {
+    kMaxCount = 0xFFFF'FFFF,
+    kOneWaiter
+  };
 
-public:
-	~WaitGroup() = default;
+  // [ 32 bits | 32 bits ]
+  // [ waiters | counter ]
+  ::std::atomic<State> state_;
+  ::std::mutex m_;
+  ::std::condition_variable count_is_zero_;
 
-	WaitGroup(WaitGroup const &) = delete;
-	void operator= (WaitGroup const &) = delete;
+  // To guarantee the expected implementation
+  static_assert(::std::atomic<State>::is_always_lock_free);
 
-	WaitGroup(WaitGroup &&) = delete;
-	void operator= (WaitGroup &&) = delete;
+ public:
+  ~WaitGroup() {
+    UTIL_ASSERT(GetCount(state_.load(::std::memory_order_relaxed)) == 0,
+                "WaitGroup is destroyed during waiting session");
+  }
 
-public:
-	WaitGroup() = default;
+  WaitGroup(WaitGroup const &) = delete;
+  void operator= (WaitGroup const &) = delete;
 
-	// increases the counter by delta
-	void add(counter_t const delta = 1) noexcept
-	{
-		[[maybe_unused]] auto const count
-			= count_.fetch_add(delta, ::std::memory_order_relaxed);
+  WaitGroup(WaitGroup &&) = delete;
+  void operator= (WaitGroup &&) = delete;
 
-		UTIL_ASSERT(
-			count < count + delta,
-			"increment must be non-zero and not overflow the counter"
-		);
-	}
+ public:
+  // Throws: std::system_error
+  // Error conditions:
+  // - resource_unavailable_try_again (condvar)
+  explicit WaitGroup(State const init = 0) {
+    Reset(init);
+  }
 
-	// reduces the counter by delta, performs synchronization, and
-	// if the counter drops to zero, unblocks all threads currently waiting for
-	void done(counter_t const delta = 1) noexcept
-	{
-		auto const count = count_.fetch_sub(delta, ::std::memory_order_release);
+  // Sets the value of the counter at the beginning of the waiting session.
+  // This call must happen after any previous session calls and
+  // happen before any current session calls
+  void Reset(State const init = 0) noexcept {
+    UTIL_ASSERT(init <= kMaxCount,
+                "The init value does not fit into the 32-bit counter");
+    state_.store(init, ::std::memory_order_relaxed);
+  }
 
-		UTIL_ASSERT(
-			count - delta < count,
-			"decrement must be non-zero and not underflow the counter"
-		);
+  // Returns true if the counter is already zero
+  [[nodiscard]] bool IsReady() const noexcept {
+    return GetCount(state_.load(::std::memory_order_acquire)) == 0;
+  }
 
-		if (count == delta) {
-			counter_is_zero_.Fire();
-		}
-	}
+  // Increases the counter by delta
+  void Add(State const delta = 1) noexcept {
+    [[maybe_unused]] auto const state = state_.fetch_add(
+        delta, ::std::memory_order_relaxed);
+    UTIL_ASSERT(
+        IsAddCorrect(state, delta),
+        "The delta must be non-zero and not overflow the 32-bit counter");
+  }
 
-	// blocks the current thread until the counter drops to zero, and
-	// synchronizes with threads that performed synchronization when calling done
-	void wait() noexcept
-	{
-		counter_is_zero_.Wait();
+  // Decreases the counter by delta and if the counter drops to zero,
+  // unlocks all currently waiting threads, if any.
+  // This call must happen after corresponding Add() call
+  //
+  // Throws: std::system_error
+  // Error conditions:
+  // - operation_not_permitted (mutex)
+  // - resource_deadlock_would_occur (mutex)
+  void Done(State const delta = 1) {
+    auto const state = state_.fetch_sub(delta, ::std::memory_order_release);
+    UTIL_ASSERT(
+        IsDoneCorrect(state, delta),
+        "The delta must be non-zero and not underflow the 32-bit counter");
+    if (IsNotifyNeeded(state - delta)) [[unlikely]] {
+      { ::std::lock_guard guard(m_); }  // lock-unlock
+      count_is_zero_.notify_all();
+    }
+  }
 
-		// synchronization
-		UTIL_IGNORE(count_.load(::std::memory_order_acquire));
-	}
+  // Blocks the current thread until the counter drops to zero.
+  // For a single waiting session this call must happen after
+  // all Reset() calls and all Add() calls on the zero counter
+  //
+  // Throws: std::system_error
+  // Error conditions:
+  // - operation_not_permitted (mutex)
+  // - resource_deadlock_would_occur (mutex)
+  void Wait() {
+    if (IsReady()) [[likely]] {
+      // Fast path
+      return;
+    }
 
-	// in case of instance reuse
-	void clear() noexcept
-	{
-		counter_is_zero_.Reset();
-	}
+    auto const state = state_.fetch_add(kOneWaiter,
+                                        ::std::memory_order_acquire);
+    if (GetCount(state) == 0) [[likely]] {
+      // Fast path
+      return;
+    }
+
+    ::std::unique_lock lock(m_);
+    while (!IsReady()) {
+      count_is_zero_.wait(lock);
+    }
+  }
+
+ private:
+  // Checks if delta is correct (fits into the counter and is not zero), and
+  // that the counter is not overflowing after increasing by delta
+  [[maybe_unused, nodiscard]] inline static bool IsAddCorrect(
+      State const state, State const delta) noexcept {
+    // cnt + delta <= MAX_CNT && delta != 0
+    return delta - 1 < GetCount(~state);
+  }
+
+  // Checks if delta is correct (fits into the counter and is not zero), and
+  // that the counter is not underflowing after decreasing by delta
+  [[maybe_unused, nodiscard]] inline static bool IsDoneCorrect(
+      State const state, State const delta) noexcept {
+    // cnt - delta >= 0 && delta != 0
+    return delta - 1 < GetCount(state);
+  }
+
+  [[nodiscard]] inline static bool IsNotifyNeeded(State const state) noexcept {
+    return ::util::all_of(GetCount(state) == 0, GetWaitersCount(state) != 0);
+  }
+
+  [[nodiscard]] inline static ::std::uint32_t GetCount(State const state)
+      noexcept {
+    return static_cast<::std::uint32_t>(state);
+  }
+
+  [[nodiscard]] inline static ::std::uint32_t GetWaitersCount(State const state)
+      noexcept {
+    return static_cast<::std::uint32_t>(state >> 32);
+  }
 };
 
 } // namespace concurrency
