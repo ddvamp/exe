@@ -78,7 +78,7 @@ template <suitable_for_defer T,
 class [[nodiscard]] scope_guard final : private Policy {
  private:
  	UTIL_NO_UNIQUE_ADDRESS T action_;
-	bool active_; // [TODO]: State (active + used)
+	bool active_;
 
  public:
 	constexpr ~scope_guard() noexcept (::std::is_nothrow_invocable_v<T &&>) {
@@ -99,32 +99,17 @@ class [[nodiscard]] scope_guard final : private Policy {
 			, action_(::std::forward<T>(action)) {}
 
  public:
-	[[nodiscard]] constexpr bool should_be_activated() const noexcept {
-		return active_ && Policy::check();
-	}
-
-	void enable() noexcept {
+	constexpr void enable() noexcept {
 		active_ = true;
 	}
 
-	void disable() noexcept {
+	constexpr void disable() noexcept {
 		active_ = false;
 	}
 
-	void activate_under_policy() &&
-		  noexcept (::std::is_nothrow_invocable_v<T &&>) {
-		if (Policy::check()) {
-			active_ = false;
-			::std::forward<T>(action_)();
-		}
-	}
-
-	void activate_if_should_be() &&
-			noexcept (::std::is_nothrow_invocable_v<T &&>) {
-		if (should_be_activated()) {
-			active_ = false;
-			::std::forward<T>(action_)();
-		}
+ private:
+	[[nodiscard]] constexpr bool should_be_activated() const noexcept {
+		return active_ && Policy::check();
 	}
 };
 
@@ -164,7 +149,7 @@ using scope_failure = scope_guard<T, failure_guard_policy>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Type deduction helpers */
+/* Type deduction helper */
 
 template <typename Policy>
 struct guard_with_policy {
