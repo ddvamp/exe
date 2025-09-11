@@ -65,8 +65,7 @@ public:
 
 	// reduces the counter by delta, performs synchronization, and
 	// if the counter drops to zero, unblocks all threads currently waiting for
-	void done(counter_t const delta = 1)
-		noexcept (noexcept(counter_is_zero_.notify()))
+	void done(counter_t const delta = 1) noexcept
 	{
 		auto const count = count_.fetch_sub(delta, ::std::memory_order_release);
 
@@ -76,16 +75,15 @@ public:
 		);
 
 		if (count == delta) {
-			counter_is_zero_.notify();
+			counter_is_zero_.Fire();
 		}
 	}
 
 	// blocks the current thread until the counter drops to zero, and
 	// synchronizes with threads that performed synchronization when calling done
-	void wait()
-		noexcept (noexcept(counter_is_zero_.wait()))
+	void wait() noexcept
 	{
-		counter_is_zero_.wait();
+		counter_is_zero_.Wait();
 
 		// synchronization
 		UTIL_IGNORE(count_.load(::std::memory_order_acquire));
@@ -94,7 +92,7 @@ public:
 	// in case of instance reuse
 	void clear() noexcept
 	{
-		counter_is_zero_.reset();
+		counter_is_zero_.Reset();
 	}
 };
 

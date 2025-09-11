@@ -22,8 +22,6 @@
 
 #include "exe/future/fun/result/result.hpp"
 
-#include "util/abort.hpp"
-
 namespace exe::future {
 
 namespace pipe {
@@ -53,19 +51,13 @@ private:
 			[&](auto &&res) noexcept {
 				result.emplace(::std::move(res));
 
-				try {
-					result_is_ready.notify();
-				} catch (...) {
-					UTIL_ABORT("exception in async callback future::get");
-				}
+				// [TODO]: Race with Wait leading to UB
+				// ?Maybe use SimpleEvent (bool + mutex + cv)
+				result_is_ready.Fire();
 			}
 		);
 
-		try {
-			result_is_ready.wait();
-		} catch (...) {
-			UTIL_ABORT("exception while sync wait of future");
-		}
+		result_is_ready.Wait();
 
 		return *::std::move(result);
 	}
