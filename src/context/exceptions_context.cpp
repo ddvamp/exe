@@ -1,6 +1,6 @@
 //
-//
-//
+// exceptions_context.cpp
+// ~~~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,9 +8,9 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#include <cstring>
+#include <context/exceptions_context.hpp>
 
-#include "context/exceptions_context.hpp"
+#include <cstring>
 
 namespace __cxxabiv1 {
 
@@ -20,18 +20,15 @@ extern "C" struct __cxa_eh_globals *__cxa_get_globals() noexcept;
 
 namespace context {
 
-void ExceptionsContext::switchTo(ExceptionsContext &target) noexcept
-{
-	constexpr auto kStateSize = sizeof(exceptions_state_buf_);
+void ExceptionsContext::SwitchTo(ExceptionsContext &target) noexcept {
+  auto *current = ::__cxxabiv1::__cxa_get_globals();
 
-	auto this_thread_exceptions = ::__cxxabiv1::__cxa_get_globals();
+  State tmp;
 
-	decltype(exceptions_state_buf_) tmp;
-
-	// prevent aliasing
-	::std::memcpy(tmp, target.exceptions_state_buf_, kStateSize);
-	::std::memcpy(exceptions_state_buf_, this_thread_exceptions, kStateSize);
-	::std::memcpy(this_thread_exceptions, tmp, kStateSize);
+  // Prevent aliasing
+  ::std::memcpy(tmp, target.state_, sizeof(State));
+  ::std::memcpy(state_, current, sizeof(State));
+  ::std::memcpy(current, tmp, sizeof(State));
 }
 
 } // namespace context

@@ -43,24 +43,24 @@ public:
 
 	void resume() noexcept
 	{
-		context_.switchToSaved();
+		context_.SwitchToSaved();
 	}
 
 	/* internal call functions */
 
 	void suspend() noexcept
 	{
-		context_.switchToSaved();
+		context_.SwitchToSaved();
 	}
 
 	[[noreturn]] void cancel() noexcept
 	{
 		is_completed_ = true;
-		context_.exitToSaved();
+		context_.ExitToSaved();
 	}
 
 private:
-	[[noreturn]] void doRun() noexcept override
+	[[noreturn]] void DoRun() noexcept override
 	{
 		routine_();
 

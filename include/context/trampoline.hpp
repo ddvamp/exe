@@ -1,6 +1,6 @@
 //
-//
-//
+// trampoline.hpp
+// ~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,23 +11,22 @@
 #ifndef DDVAMP_CONTEXT_TRAMPOLINE_HPP_INCLUDED_
 #define DDVAMP_CONTEXT_TRAMPOLINE_HPP_INCLUDED_ 1
 
-#include "util/debug.hpp"
+#include <util/debug/unreachable.hpp>
 
 namespace context {
 
-// entry point for context
+// Entry point for context
 class ITrampoline {
-public:
-	virtual ~ITrampoline() = default;
+ public:
+  virtual ~ITrampoline() = default;
 
-	[[noreturn]] void run() noexcept
-	{
-		doRun();
-		UTIL_UNREACHABLE("ITrampoline::run out of bounds");
-	}
+  [[noreturn]] void Run() noexcept {
+    DoRun();
+    UTIL_UNREACHABLE("ITrampoline::Run out of bounds");
+  }
 
-private:
-	[[noreturn]] virtual void doRun() noexcept = 0;
+ private:
+  [[noreturn]] virtual void DoRun() noexcept = 0;
 };
 
 } // namespace context

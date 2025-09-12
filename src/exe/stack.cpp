@@ -50,7 +50,7 @@ public:
 	// TODO: harmful noexcept
 	void deallocate(Stack &stack) noexcept try
 	{
-		UTIL_ASSERT(stack.allocationSize() != 0, "stack in moved-from state");
+		UTIL_ASSERT(stack.AllocationSize() != 0, "stack in moved-from state");
 
 		::std::lock_guard lock{m_};
 
@@ -63,7 +63,7 @@ private:
 	static Stack allocateNewStack()
 	{
 		constexpr ::std::size_t kStackPages = 16;
-		return Stack::allocatePages(kStackPages);
+		return Stack::AllocatePages(kStackPages);
 	}
 };
 

@@ -1,6 +1,6 @@
 //
-//
-//
+// machine_context.cpp
+// ~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,39 +8,34 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#include "context/machine_context.hpp"
+#include <context/machine_context.hpp>
 
 namespace context {
 
 namespace {
 
-[[noreturn]] void machineContextTrampoline(
-	void *, void *, void *, void *, void *, void *, void *arg7) noexcept
-{
-	auto t = static_cast<ITrampoline *>(arg7);
-	t->run();
+[[noreturn]] void MachineContextTrampoline(void *, void *, void *,
+                                           void *, void *, void *,
+                                           void *arg7) noexcept {
+  static_cast<ITrampoline *>(arg7)->Run();
 }
 
-extern "C" void *setupMachineContext(void *stack,
-	decltype(machineContextTrampoline) trampoline, void *arg) noexcept;
+extern "C" void *SetupMachineContext(
+    void *stack, decltype(MachineContextTrampoline) trampoline,
+    void *arg) noexcept;
 
-extern "C" void switchMachineContext(void **from, void **to) noexcept;
+extern "C" void SwitchMachineContext(void **from, void **to) noexcept;
 
 } // namespace
 
-void MachineContext::setup(::util::memory_view stack,
-	ITrampoline *trampoline) noexcept
-{
-	rsp_ = setupMachineContext(
-		&stack.back(),
-		machineContextTrampoline,
-		trampoline
-	);
+void MachineContext::Setup(::util::memory_view stack,
+                           ITrampoline *trampoline) noexcept {
+  rsp_ = SetupMachineContext(&stack.back(), MachineContextTrampoline,
+                             trampoline);
 }
 
-void MachineContext::switchTo(MachineContext &target) noexcept
-{
-	switchMachineContext(&rsp_, &target.rsp_);
+void MachineContext::SwitchTo(MachineContext &target) noexcept {
+  SwitchMachineContext(&rsp_, &target.rsp_);
 }
 
 } // namespace context

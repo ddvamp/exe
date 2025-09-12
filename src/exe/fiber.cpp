@@ -78,7 +78,7 @@ public:
 Fiber::Fiber(FiberRoutine &&routine, ::context::Stack &&stack,
 	ISafeScheduler *scheduler) noexcept
 	: stack_(::std::move(stack))
-	, coroutine_(::std::move(routine), stack_.view())
+	, coroutine_(::std::move(routine), stack_.View())
 	, scheduler_(scheduler)
 {}
 

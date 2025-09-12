@@ -1,6 +1,6 @@
 //
-//
-//
+// exceptions_context.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -16,13 +16,15 @@
 namespace context {
 
 class ExceptionsContext {
-private:
-	::std::uintptr_t exceptions_state_buf_[2]{};
+ private:
+  using State = ::std::uintptr_t[2];
 
-public:
-	// save current context in this and reset target context
-	// (this and target are allowed to be aliased)
-	void switchTo(ExceptionsContext &target) noexcept;
+  State state_{};
+
+ public:
+  // Save current context in this and reset target context
+  // (this and target are allowed to be aliased)
+  void SwitchTo(ExceptionsContext &target) noexcept;
 };
 
 } // namespace context
