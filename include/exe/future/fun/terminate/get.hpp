@@ -11,10 +11,9 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_TERMINATE_GET_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_TERMINATE_GET_HPP_INCLUDED_ 1
 
+#include <atomic>
 #include <optional>
 #include <utility>
-
-#include "concurrency/event.hpp"
 
 #include "exe/future/fun/combine/seq/inline.hpp"
 #include "exe/future/fun/mutator/mutator.hpp"
@@ -44,20 +43,25 @@ private:
 
 		::std::optional<::util::result<T>> result;
 
-		::concurrency::Event result_is_ready;
+		// [TODO]: Write future::Event or concurrency::StrongEvent
+		::std::atomic_flag f1 = false;
+		::std::atomic_flag f2 = false;
 
 		setCallback(
 			makeHolder(f) | future::inLineIfNeeded(),
 			[&](auto &&res) noexcept {
 				result.emplace(::std::move(res));
 
-				// [TODO]: Race with Wait leading to UB
-				// ?Maybe use SimpleEvent (bool + mutex + cv)
-				result_is_ready.Fire();
+				f1.test_and_set(::std::memory_order_relaxed);
+				f1.notify_all();
+				f2.test_and_set(::std::memory_order_release);
 			}
 		);
 
-		result_is_ready.Wait();
+		f1.wait(false, ::std::memory_order_relaxed);
+		while (!f2.test(::std::memory_order_acquire)) {
+			// Relax();
+		}
 
 		return *::std::move(result);
 	}
