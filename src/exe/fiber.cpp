@@ -84,7 +84,7 @@ Fiber::Fiber(FiberRoutine &&routine, ::context::Stack &&stack,
 
 void Fiber::schedule() noexcept
 {
-	scheduler_->submit(this);
+	scheduler_->Submit(this);
 }
 
 void Fiber::resume() noexcept

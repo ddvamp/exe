@@ -1,6 +1,6 @@
 //
-//
-//
+// scheduler.hpp
+// ~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,40 +8,49 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_EXECUTORS_EXECUTOR_HPP_INCLUDED_
-#define DDVAMP_EXE_EXECUTORS_EXECUTOR_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_RUNTIME_TASK_SCHEDULER_HPP_INCLUDED_
+#define DDVAMP_EXE_RUNTIME_TASK_SCHEDULER_HPP_INCLUDED_ 1
+
+#include <exe/runtime/task/task.hpp>
 
 #include <concepts>
 
-#include "exe/runtime/task/task.hpp"
+namespace exe::runtime::task {
 
-namespace exe::runtime {
+struct IScheduler {
+ protected:
+  // Lifetime cannot be controlled via IScheduler *
+  ~IScheduler() = default;
 
-// Schedulers are to function execution as allocators are to memory allocation
-class IScheduler {
-public:
-	virtual ~IScheduler() = default;
-
-	virtual void submit(task::TaskBase *) = 0;
+ public:
+  virtual void Submit(TaskBase *) = 0;
 };
 
-class ISafeScheduler : public IScheduler {
-public:
-	void submit(task::TaskBase *) noexcept override = 0;
+/* Safe means nothrow task scheduling */
+
+struct ISafeScheduler : IScheduler {
+ protected:
+  // Lifetime cannot be controlled via ISafeScheduler *
+  ~ISafeScheduler() = default;
+
+ public:
+  void Submit(TaskBase *) noexcept override = 0;
 };
 
-////////////////////////////////////////////////////////////////////////////////
 
 namespace concepts {
 
-template <typename E>
-concept Scheduler = ::std::derived_from<E, IScheduler>;
+template <typename S>
+concept Scheduler = ::std::derived_from<S, IScheduler>;
 
-template <typename E>
-concept SafeScheduler = ::std::derived_from<E, ISafeScheduler>;
+template <typename S>
+concept SafeScheduler = Scheduler<S> && ::std::derived_from<S, ISafeScheduler>;
+
+template <typename S>
+concept UnsafeScheduler = Scheduler<S> && !SafeScheduler<S>;
 
 } // namespace concepts
 
-} // namespace exe::runtime
+} // namespace exe::runtime::task
 
-#endif /* DDVAMP_EXE_EXECUTORS_EXECUTOR_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_RUNTIME_TASK_SCHEDULER_HPP_INCLUDED_ */

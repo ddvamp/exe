@@ -25,7 +25,7 @@ namespace exe::runtime {
 //
 // Sending critical sections is wait-free except for
 // launching a new critical sections of the strand itself
-class Strand final : public ISafeScheduler {
+class Strand final : public task::ISafeScheduler {
 private:
 	class Impl;
 
@@ -45,7 +45,7 @@ public:
 
 	[[nodiscard]] ISafeScheduler &getScheduler() const noexcept;
 
-	void submit(task::TaskBase *critical_section) noexcept override;
+	void Submit(task::TaskBase *critical_section) noexcept override;
 };
 
 } // namespace exe::runtime

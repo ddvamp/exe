@@ -100,14 +100,14 @@ Strand::Strand(ISafeScheduler &where)
 
 Strand::~Strand() noexcept = default;
 
-/* virtual */ void Strand::submit(task::TaskBase *task) noexcept
+/* virtual */ void Strand::Submit(task::TaskBase *task) noexcept
 {
 	UTIL_ASSERT(task, "nullptr instead of task");
 
 	impl_->submit(task);
 }
 
-ISafeScheduler &Strand::getScheduler() const noexcept
+task::ISafeScheduler &Strand::getScheduler() const noexcept
 {
 	return impl_->getScheduler();
 }
@@ -198,7 +198,7 @@ void Strand::Impl::afterAcquire(TaskBase *task) noexcept
 void Strand::Impl::submitSelf() noexcept
 {
 	inc_ref();
-	where_.submit(this);
+	where_.Submit(this);
 }
 
 bool Strand::Impl::isActualTask(TaskBase *task) const noexcept

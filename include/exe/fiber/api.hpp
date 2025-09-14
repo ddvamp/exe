@@ -18,7 +18,7 @@
 
 namespace exe::fiber {
 
-using runtime::ISafeScheduler;
+using runtime::task::ISafeScheduler;
 
 // Start fiber on where
 //

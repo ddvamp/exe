@@ -28,7 +28,7 @@ struct defer_start_t {
 
 inline constexpr defer_start_t defer_start{};
 
-class ThreadPool : public IScheduler {
+class ThreadPool : public task::IScheduler {
 private:
 	::std::vector<::std::thread> workers_;
 	::std::size_t worker_count_;
@@ -62,7 +62,7 @@ public:
 
 	static ThreadPool *current() noexcept;
 
-	void submit(task::TaskBase *task) override;
+	void Submit(task::TaskBase *task) override;
 
 	// wait until the number of tasks drops to zero
 	void waitIdle();

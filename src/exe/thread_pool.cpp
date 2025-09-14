@@ -97,7 +97,7 @@ ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 	UTIL_ASSERT(workers != 0, "zero-size thread pool was requested");
 }
 
-/* virtual */ void ThreadPool::submit(task::TaskBase *task)
+/* virtual */ void ThreadPool::Submit(task::TaskBase *task)
 {
 	UTIL_ASSERT(
 		task,
