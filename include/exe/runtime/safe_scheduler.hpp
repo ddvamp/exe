@@ -1,6 +1,6 @@
 //
-//
-//
+// safe_scheduler.hpp
+// ~~~~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,49 +8,45 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_EXECUTORS_SAFE_EXECUTOR_HPP_INCLUDED_
-#define DDVAMP_EXE_EXECUTORS_SAFE_EXECUTOR_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_RUNTIME_SAFE_SCHEDULER_HPP_INCLUDED_
+#define DDVAMP_EXE_RUNTIME_SAFE_SCHEDULER_HPP_INCLUDED_ 1
+
+#include <exe/runtime/task/scheduler.hpp>
+#include <exe/runtime/task/task.hpp>
+
+#include <util/abort.hpp>
 
 #include <type_traits>
 
-#include "exe/runtime/task/scheduler.hpp"
-
-#include "util/abort.hpp"
-
 namespace exe::runtime {
 
-// A decorator for an scheduler that aborts the program when
-// an exception is thrown when submitting a task
-template <concepts::Scheduler E>
-	requires (!concepts::SafeScheduler<E>)
-class SafeScheduler : public ISafeScheduler {
-private:
-	E &underlying_;
+/** A scheduler decorator that aborts the program when
+ *  an exception is thrown when scheduling a task
+ */
 
-public:
-	explicit SafeScheduler(E &underlying) noexcept
-		: underlying_(underlying)
-	{}
+template <task::concepts::UnsafeScheduler S>
+class SafeScheduler final : public task::ISafeScheduler {
+ private:
+  S &underlying_;
 
-	void submit(TaskBase *task) noexcept override
-	{
-		try {
-			if constexpr (::std::is_abstract_v<E>) {
-				underlying_.submit(task);
-			} else {
-				underlying_.E::submit(task);
-			}
-		} catch (...) {
-			UTIL_ABORT("an exception was thrown when submitting the task");
-		}
-	}
+ public:
+  explicit SafeScheduler(S &underlying) noexcept : underlying_(underlying) {}
 
-	[[nodiscard]] E &getUnderlying() const noexcept
-	{
-		return underlying_;
-	}
+  [[nodiscard]] S &GetUnderlying() const noexcept {
+    return underlying_;
+  }
+
+  void Submit(task::TaskBase *task) noexcept override try {
+    if constexpr (::std::is_abstract_v<S>) {
+      underlying_.Submit(task);
+    } else {
+      underlying_.S::Submit(task);
+    }
+  } catch (...) {
+    UTIL_ABORT("An exception was thrown when scheduling the task");
+  }
 };
 
 } // namespace exe::runtime
 
-#endif /* DDVAMP_EXE_EXECUTORS_SAFE_EXECUTOR_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_RUNTIME_SAFE_SCHEDULER_HPP_INCLUDED_ */
