@@ -32,7 +32,7 @@ class ThreadPool : public IScheduler {
 private:
 	::std::vector<::std::thread> workers_;
 	::std::size_t worker_count_;
-	::concurrency::MPMCUnboundedBlockingQueue<TaskBase *> tasks_;
+	::concurrency::MPMCUnboundedBlockingQueue<task::TaskBase *> tasks_;
 	::concurrency::WaitPoint task_count_;
 
 #ifndef UTIL_DISABLE_DEBUG
@@ -62,7 +62,7 @@ public:
 
 	static ThreadPool *current() noexcept;
 
-	void submit(TaskBase *task) override;
+	void submit(task::TaskBase *task) override;
 
 	// wait until the number of tasks drops to zero
 	void waitIdle();

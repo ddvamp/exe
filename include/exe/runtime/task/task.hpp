@@ -1,6 +1,6 @@
 //
-//
-//
+// task.hpp
+// ~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,26 +8,30 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_EXECUTORS_TASK_HPP_INCLUDED_
-#define DDVAMP_EXE_EXECUTORS_TASK_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_RUNTIME_TASK_TASK_HPP_INCLUDED_
+#define DDVAMP_EXE_RUNTIME_TASK_TASK_HPP_INCLUDED_ 1
 
-#include "concurrency/intrusive/forward_list.hpp"
+#include <concurrency/intrusive/forward_list.hpp>
 
-namespace exe::runtime {
+namespace exe::runtime::task {
 
-class ITask {
-public:
-	virtual ~ITask() noexcept = default;
+struct ITask {
+ protected:
+  // Lifetime cannot be controlled via ITask *
+  ~ITask() = default;
 
-	// the user must take care of passing arguments, returning values,
-	// and handling exceptions himself
-	virtual void run() noexcept = 0;
+ public:
+  // The user must take care of passing arguments, returning values,
+  // and handling exceptions himself
+  virtual void Run() noexcept = 0;
 };
 
-class TaskBase
-	: public ITask
-	, public ::concurrency::IntrusiveForwardListNode<TaskBase> {};
+struct TaskBase : ITask, ::concurrency::IntrusiveForwardListNode<TaskBase> {
+ protected:
+  // Lifetime cannot be controlled via TaskBase *
+  ~TaskBase() = default;
+};
 
-} // namespace exe::runtime
+} // namespace exe::runtime::task
 
-#endif /* DDVAMP_EXE_EXECUTORS_TASK_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_RUNTIME_TASK_TASK_HPP_INCLUDED_ */

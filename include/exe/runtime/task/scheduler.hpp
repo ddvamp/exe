@@ -22,12 +22,12 @@ class IScheduler {
 public:
 	virtual ~IScheduler() = default;
 
-	virtual void submit(TaskBase *) = 0;
+	virtual void submit(task::TaskBase *) = 0;
 };
 
 class ISafeScheduler : public IScheduler {
 public:
-	void submit(TaskBase *) noexcept override = 0;
+	void submit(task::TaskBase *) noexcept override = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

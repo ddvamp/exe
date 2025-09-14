@@ -35,7 +35,7 @@ namespace exe::future::detail {
 // as well as to specify where callback will be called
 template <::util::suitable_for_result T>
 	requires (traits::is_nothrow_move_constructible_v<T>)
-class SharedState : public runtime::TaskBase {
+class SharedState : public runtime::task::TaskBase {
 public:
 	using Result = ::util::result<T>;
 	using Callback = future::Callback<T>;
@@ -82,7 +82,7 @@ public:
 private:
 	SharedState() noexcept = default;
 
-	void run() noexcept override
+	void Run() noexcept override
 	{
 		(*callback_)(*::std::move(result_));
 		destroySelf();

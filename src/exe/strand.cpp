@@ -20,7 +20,7 @@
 namespace exe::runtime {
 
 class alignas (::std::hardware_destructive_interference_size) Strand::Impl
-	: private TaskBase
+	: private task::TaskBase
 	, public ::util::ref_count<Impl> {
 private:
 	struct DummyTask : TaskBase {
@@ -29,7 +29,7 @@ private:
 			link(this);
 		}
 
-		void run() noexcept override
+		void Run() noexcept override
 		{
 			// do nothing
 		}
@@ -71,7 +71,7 @@ public:
 	void submit(TaskBase *task) noexcept;
 
 private:
-	void run() noexcept override;
+	void Run() noexcept override;
 
 	void runSelf() noexcept;
 
@@ -100,7 +100,7 @@ Strand::Strand(ISafeScheduler &where)
 
 Strand::~Strand() noexcept = default;
 
-/* virtual */ void Strand::submit(TaskBase *task) noexcept
+/* virtual */ void Strand::submit(task::TaskBase *task) noexcept
 {
 	UTIL_ASSERT(task, "nullptr instead of task");
 
@@ -145,7 +145,7 @@ void Strand::Impl::submit(TaskBase *task) noexcept
 	}
 }
 
-/* virtual */ void Strand::Impl::run() noexcept
+/* virtual */ void Strand::Impl::Run() noexcept
 {
 	runSelf();
 	dec_ref();
@@ -161,7 +161,7 @@ void Strand::Impl::runSelf() noexcept
 	}
 
 dummy_next:
-	curr->run();
+	curr->Run();
 
 	if ((curr = tryTakeNextTask(&dummy_))) {
 		dummy_.link(nullptr);
@@ -171,7 +171,7 @@ dummy_next:
 	return;
 
 run_task:
-	::std::exchange(curr, next)->run();
+	::std::exchange(curr, next)->Run();
 
 take_next:
 	if ((next = loadNext(curr))) {
@@ -206,12 +206,12 @@ bool Strand::Impl::isActualTask(TaskBase *task) const noexcept
 	return task != &dummy_;
 }
 
-/* static */ TaskBase *Strand::Impl::loadNext(TaskBase *task) noexcept
+/* static */ task::TaskBase *Strand::Impl::loadNext(task::TaskBase *task) noexcept
 {
 	return task->next_.load(::std::memory_order_acquire);
 }
 
-TaskBase *Strand::Impl::putTask(TaskBase *task) noexcept
+task::TaskBase *Strand::Impl::putTask(task::TaskBase *task) noexcept
 {
 	return
 		tail_.exchange(task, ::std::memory_order_acq_rel)->
@@ -241,7 +241,7 @@ bool Strand::Impl::tryPutDummy(TaskBase *expected) noexcept
 	);
 }
 
-TaskBase *Strand::Impl::tryTakeNextTask(TaskBase *task) noexcept
+task::TaskBase *Strand::Impl::tryTakeNextTask(task::TaskBase *task) noexcept
 {
 	auto next = static_cast<TaskBase *>(nullptr);
 

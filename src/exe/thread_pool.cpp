@@ -55,7 +55,7 @@ void ThreadPool::workLoop()
 		while (auto item = tasks_.Pop()) {
 			auto task = *item;
 
-			task->run();
+			task->Run();
 			task_count_.Done(1, ::std::memory_order_release);
 		}
 	} catch (...) {
@@ -97,7 +97,7 @@ ThreadPool::ThreadPool(::std::size_t workers, defer_start_t)
 	UTIL_ASSERT(workers != 0, "zero-size thread pool was requested");
 }
 
-/* virtual */ void ThreadPool::submit(TaskBase *task)
+/* virtual */ void ThreadPool::submit(task::TaskBase *task)
 {
 	UTIL_ASSERT(
 		task,

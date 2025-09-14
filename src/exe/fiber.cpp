@@ -89,7 +89,7 @@ void Fiber::schedule() noexcept
 
 void Fiber::resume() noexcept
 {
-	run();
+	Run();
 }
 
 void Fiber::suspend(IAwaiter *awaiter) noexcept
@@ -136,7 +136,7 @@ Fiber *Fiber::doRun() noexcept
 	return next.release();
 }
 
-/* virtual */ void Fiber::run() noexcept
+/* virtual */ void Fiber::Run() noexcept
 {
 	auto next = this;
 

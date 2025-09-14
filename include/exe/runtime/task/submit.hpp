@@ -31,7 +31,7 @@ requires (
 	::std::is_nothrow_invocable_v<F &> &&
 	::std::is_void_v<::std::invoke_result_t<F &>>
 )
-class Task : public TaskBase {
+class Task : public task::TaskBase {
 protected:
 	UTIL_NO_UNIQUE_ADDRESS F fn_;
 
@@ -48,7 +48,7 @@ public:
 		: fn_(::std::move(f))
 	{}
 
-	void run() noexcept override
+	void Run() noexcept override
 	{
 		fn_();
 		destroySelf();

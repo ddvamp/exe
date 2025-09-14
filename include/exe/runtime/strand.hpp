@@ -45,7 +45,7 @@ public:
 
 	[[nodiscard]] ISafeScheduler &getScheduler() const noexcept;
 
-	void submit(TaskBase *critical_section) noexcept override;
+	void submit(task::TaskBase *critical_section) noexcept override;
 };
 
 } // namespace exe::runtime

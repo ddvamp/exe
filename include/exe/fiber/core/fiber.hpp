@@ -24,7 +24,7 @@
 namespace exe::fiber {
 
 // Fiber = stackful coroutine + scheduling + scheduler
-class [[nodiscard]] Fiber : public runtime::TaskBase {
+class [[nodiscard]] Fiber : public runtime::task::TaskBase {
 private:
 	::context::Stack stack_;
 	Coroutine coroutine_;
@@ -62,7 +62,7 @@ public:
 	void teleportTo(ISafeScheduler *) noexcept;
 
 	// ITask
-	void run() noexcept override;
+	void Run() noexcept override;
 
 private:
 	[[nodiscard]] Fiber *doRun() noexcept;
