@@ -1,6 +1,6 @@
 //
-//
-//
+// submit.hpp
+// ~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,73 +8,70 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_EXECUTORS_EXECUTE_HPP_INCLUDED_
-#define DDVAMP_EXE_EXECUTORS_EXECUTE_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_RUNTIME_TASK_SUBMIT_HPP_INCLUDED_
+#define DDVAMP_EXE_RUNTIME_TASK_SUBMIT_HPP_INCLUDED_ 1
+
+#include <exe/runtime/task/scheduler.hpp>
+#include <exe/runtime/task/task.hpp>
+
+#include <util/macro.hpp>
+#include <util/type_traits.hpp>
 
 #include <memory>
-#include <type_traits>
 #include <utility>
 
-#include "exe/runtime/task/scheduler.hpp"
-#include "exe/runtime/task/task.hpp"
+namespace exe::runtime::task {
 
-#include "util/macro.hpp"
+namespace concepts {
 
-namespace exe::runtime {
+template <typename T>
+concept SuitableForSubmit =
+    ::std::is_move_constructible_v<T> &&
+    ::std::is_nothrow_destructible_v<T> &&
+    ::std::is_nothrow_invocable_v<T &&> &&
+    ::std::is_void_v<::std::invoke_result_t<T &&>>;
+
+} // namespace concepts
 
 namespace detail {
 
-template <typename F>
-requires (
-	::std::is_class_v<F> &&
-	::std::is_nothrow_destructible_v<F> &&
-	::std::is_nothrow_invocable_v<F &> &&
-	::std::is_void_v<::std::invoke_result_t<F &>>
-)
-class Task : public task::TaskBase {
-protected:
-	UTIL_NO_UNIQUE_ADDRESS F fn_;
+template <concepts::SuitableForSubmit Fn>
+class Task final : public TaskBase {
+ private:
+  UTIL_NO_UNIQUE_ADDRESS Fn fn_;
 
-public:
-	Task(F const &f)
-		noexcept (::std::is_nothrow_copy_constructible_v<F>)
-		requires (::std::is_copy_constructible_v<F>)
-		: fn_(f)
-	{}
+ public:
+  explicit Task(Fn &&fn) noexcept(::std::is_nothrow_move_constructible_v<Fn>)
+      : fn_(::std::forward<Fn>(fn)) {}
 
-	Task(F &&f)
-		noexcept (::std::is_nothrow_move_constructible_v<F>)
-		requires (::std::is_move_constructible_v<F>)
-		: fn_(::std::move(f))
-	{}
+  void Run() noexcept override {
+    ::std::forward<Fn>(fn_)();
+    DestroySelf();
+  }
 
-	void Run() noexcept override
-	{
-		fn_();
-		destroySelf();
-	}
-
-private:
-	void destroySelf() noexcept
-	{
-		delete this;
-	}
+ private:
+  void DestroySelf() const noexcept {
+    delete this;
+  }
 };
 
 } // namespace detail
 
-template <concepts::Scheduler E, typename Fn>
-void submit(E &where, Fn &&f)
-{
-	using Task = detail::Task<::std::remove_cvref_t<Fn>>;
+/* fn is destroyed in case of an exception from scheduler */
 
-	auto task = ::std::make_unique<Task>(::std::forward<Fn>(f));
-
-	where.submit(task.get());
-
-	task.release();
+template <concepts::SuitableForSubmit Fn, concepts::Scheduler S>
+void Submit(S &scheduler, Fn fn) {
+  auto task = ::std::make_unique<detail::Task<Fn>>(::std::forward<Fn>(fn));
+  scheduler.Submit(task.get());
+  task.release();
 }
 
-} // namespace exe::runtime
+template <concepts::SuitableForSubmit Fn, concepts::SafeScheduler S>
+void Submit(S &scheduler, Fn fn) {
+  auto const task = ::new detail::Task<Fn>(::std::forward<Fn>(fn));
+  scheduler.Submit(task);
+}
 
-#endif /* DDVAMP_EXE_EXECUTORS_EXECUTE_HPP_INCLUDED_ */
+} // namespace exe::runtime::task
+
+#endif /* DDVAMP_EXE_RUNTIME_TASK_SUBMIT_HPP_INCLUDED_ */
