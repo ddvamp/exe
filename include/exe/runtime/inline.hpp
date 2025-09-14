@@ -1,6 +1,6 @@
 //
-//
-//
+// inline.hpp
+// ~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,35 +8,31 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_EXECUTORS_INLINE_HPP_INCLUDED_
-#define DDVAMP_EXE_EXECUTORS_INLINE_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_RUNTIME_INLINE_HPP_INCLUDED_
+#define DDVAMP_EXE_RUNTIME_INLINE_HPP_INCLUDED_ 1
 
-#include "exe/runtime/task/scheduler.hpp"
+#include <exe/runtime/task/scheduler.hpp>
+#include <exe/runtime/task/task.hpp>
 
-#include "util/debug.hpp"
+#include <util/debug/assert.hpp>
 
 namespace exe::runtime {
 
-// Executes task immediately at place
-class InlineScheduler : public ISafeScheduler {
-public:
-	void submit(TaskBase *task) noexcept override
-	{
-		UTIL_ASSERT(
-			task,
-			"nullptr instead of the task"
-		);
+/* Executes task immediately at place */
 
-		task->run();
+class Inline : public task::ISafeScheduler {
+ public:
+  void Submit(task::TaskBase *task) noexcept override {
+  	UTIL_ASSERT(task, "nullptr instead of the task");
+  	task->Run();
 	}
 };
 
-[[nodiscard]] inline InlineScheduler &getInlineScheduler() noexcept
-{
-	static InlineScheduler instance;
-	return instance;
+[[nodiscard]] inline Inline &GetInline() noexcept {
+  static Inline instance;
+  return instance;
 }
 
 } // namespace exe::runtime
 
-#endif /* DDVAMP_EXE_EXECUTORS_INLINE_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_RUNTIME_INLINE_HPP_INCLUDED_ */
