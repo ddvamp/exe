@@ -22,6 +22,7 @@ namespace util {
 
 template <typename T>
 concept suitable_for_defer =
+		::std::is_object_v<T> && !is_qualified_v<T> &&
     ::std::is_nothrow_move_constructible_v<T> &&
     ::std::is_nothrow_destructible_v<T> &&
     ::std::is_invocable_v<T &&> &&
@@ -36,7 +37,7 @@ class [[nodiscard]] defer final {
 
  public:
   constexpr ~defer() noexcept (::std::is_nothrow_invocable_v<T &&>) {
-    ::std::forward<T>(action_)();
+    ::std::move(action_)();
   }
 
   defer(defer const &) = delete;
@@ -46,8 +47,7 @@ class [[nodiscard]] defer final {
   void operator= (defer &&) = delete;
 
  public:
-  constexpr explicit defer(T action) noexcept
-			: action_(::std::forward<T>(action)) {}
+  constexpr explicit defer(T action) noexcept : action_(::std::move(action)) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ class [[nodiscard]] scope_guard final : private Policy {
  public:
 	constexpr ~scope_guard() noexcept (::std::is_nothrow_invocable_v<T &&>) {
 		if (should_be_activated()) {
-			::std::forward<T>(action_)();
+			::std::move(action_)();
 		}
 	}
 
@@ -96,7 +96,7 @@ class [[nodiscard]] scope_guard final : private Policy {
  public:
 	constexpr explicit scope_guard(T action) noexcept
 			: Policy()
-			, action_(::std::forward<T>(action)) {}
+			, action_(::std::move(action)) {}
 
  public:
 	constexpr void enable() noexcept {

@@ -22,30 +22,26 @@
 
 namespace exe::runtime::task {
 
-namespace concepts {
+namespace detail {
 
 template <typename T>
-concept SuitableForSubmit =
-    ::std::is_move_constructible_v<T> &&
+concept SuitableForTask =
+		::std::is_object_v<T> && !::util::is_qualified_v<T> &&
     ::std::is_nothrow_destructible_v<T> &&
     ::std::is_nothrow_invocable_v<T &&> &&
     ::std::is_void_v<::std::invoke_result_t<T &&>>;
 
-} // namespace concepts
-
-namespace detail {
-
-template <concepts::SuitableForSubmit Fn>
+template <SuitableForTask Fn>
 class Task final : public TaskBase {
  private:
   UTIL_NO_UNIQUE_ADDRESS Fn fn_;
 
  public:
-  explicit Task(Fn &&fn) noexcept(::std::is_nothrow_move_constructible_v<Fn>)
-      : fn_(::std::forward<Fn>(fn)) {}
+  explicit Task(Fn fn) noexcept(::std::is_nothrow_move_constructible_v<Fn>)
+      : fn_(::std::move(fn)) {}
 
   void Run() noexcept override {
-    ::std::forward<Fn>(fn_)();
+    ::std::move(fn_)();
     DestroySelf();
   }
 
@@ -59,16 +55,17 @@ class Task final : public TaskBase {
 
 /* fn is destroyed in case of an exception from scheduler */
 
-template <concepts::SuitableForSubmit Fn, concepts::Scheduler S>
-void Submit(S &scheduler, Fn fn) {
-  auto task = ::std::make_unique<detail::Task<Fn>>(::std::forward<Fn>(fn));
+template <concepts::Scheduler S, typename Fn>
+void Submit(S &scheduler, Fn &&fn) {
+	using Task = detail::Task<::std::remove_cvref_t<Fn>>;
+  auto task = ::std::make_unique<Task>(::std::forward<Fn>(fn));
   scheduler.Submit(task.get());
   task.release();
 }
 
-template <concepts::SuitableForSubmit Fn, concepts::SafeScheduler S>
-void Submit(S &scheduler, Fn fn) {
-  auto const task = ::new detail::Task<Fn>(::std::forward<Fn>(fn));
+template <concepts::SafeScheduler S, typename Fn>
+void Submit(S &scheduler, Fn &&fn) {
+  auto const task = ::new detail::Task(::std::forward<Fn>(fn));
   scheduler.Submit(task);
 }
 
