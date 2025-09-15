@@ -15,7 +15,7 @@
 
 #include "context/context.hpp"
 
-#include "exe/fiber/core/routine.hpp"
+#include "exe/fiber/core/body.hpp"
 
 #include "util/memory/view.hpp"
 
@@ -24,12 +24,12 @@ namespace exe::fiber {
 // Basis for suspended execution of fiber
 class Coroutine : public ::context::ITrampoline {
 private:
-	FiberRoutine routine_;
+	Body routine_;
 	::context::ExecutionContext context_;
 	bool is_completed_ = false;
 
 public:
-	Coroutine(FiberRoutine &&routine, ::util::memory_view stack) noexcept
+	Coroutine(Body &&routine, ::util::memory_view stack) noexcept
 		: routine_(::std::move(routine))
 		, context_(stack, this)
 	{}

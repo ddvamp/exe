@@ -38,7 +38,7 @@ public:
 	// reference to currently active fiber
 	[[nodiscard]] static Fiber &self() noexcept;
 
-	Fiber(FiberRoutine &&, ::context::Stack &&, ISafeScheduler *) noexcept;
+	Fiber(Body &&, ::context::Stack &&, ISafeScheduler *) noexcept;
 
 	[[nodiscard]] FiberId getId() const noexcept
 	{
@@ -79,7 +79,7 @@ private:
 };
 
 // create an self-ownership fiber
-[[nodiscard]] Fiber *createFiber(FiberRoutine &&, ISafeScheduler *);
+[[nodiscard]] Fiber *createFiber(Body &&, ISafeScheduler *);
 
 } // namespace exe::fiber
 

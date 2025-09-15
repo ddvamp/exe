@@ -75,7 +75,7 @@ public:
 	return *current;
 }
 
-Fiber::Fiber(FiberRoutine &&routine, ::context::Stack &&stack,
+Fiber::Fiber(Body &&routine, ::context::Stack &&stack,
 	ISafeScheduler *scheduler) noexcept
 	: stack_(::std::move(stack))
 	, coroutine_(::std::move(routine), stack_.View())
@@ -154,7 +154,7 @@ void Fiber::stop() noexcept
 	coroutine_.suspend();
 }
 
-Fiber *createFiber(FiberRoutine &&routine, ISafeScheduler *scheduler)
+Fiber *createFiber(Body &&routine, ISafeScheduler *scheduler)
 {
 	return new Fiber{::std::move(routine), allocateStack(), scheduler};
 }
@@ -201,7 +201,7 @@ void teleportTo(ISafeScheduler &scheduler)
 
 } // namespace self
 
-void go(ISafeScheduler &scheduler, FiberRoutine &&routine)
+void go(ISafeScheduler &scheduler, Body &&routine)
 {
 	UTIL_ASSERT(routine, "empty routine for fiber");
 
@@ -210,7 +210,7 @@ void go(ISafeScheduler &scheduler, FiberRoutine &&routine)
 	fiber->schedule();
 }
 
-void go(FiberRoutine &&routine)
+void go(Body &&routine)
 {
 	go(self::getScheduler(), ::std::move(routine));
 }

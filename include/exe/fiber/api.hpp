@@ -14,7 +14,7 @@
 #include "exe/runtime/task/scheduler.hpp"
 #include "exe/fiber/core/awaiter.hpp"
 #include "exe/fiber/core/id.hpp"
-#include "exe/fiber/core/routine.hpp"
+#include "exe/fiber/core/body.hpp"
 
 namespace exe::fiber {
 
@@ -23,12 +23,12 @@ using runtime::task::ISafeScheduler;
 // Start fiber on where
 //
 // Precondition: routine == true
-void go(ISafeScheduler &where, FiberRoutine &&routine);
+void go(ISafeScheduler &where, Body &&routine);
 
 // Start fiber on scheduler of current fiber
 //
 // Precondition: fiber context && routine == true
-void go(FiberRoutine &&routine);
+void go(Body &&routine);
 
 // precondition: fiber context
 namespace self {
