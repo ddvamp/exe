@@ -69,7 +69,7 @@ class [[nodiscard]] page_allocation {
 
   // Throws: std::bad_alloc if the storage cannot be obtained or
 	// 				 zero pages are requested
-  static page_allocation allocate_pages(::std::size_t const count);
+  static page_allocation allocate_pages(::std::size_t count);
 
   // Precondition: page_count != 0 &&
   //               protected memory in the range [begin_, begin_ + size_)
