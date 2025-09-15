@@ -1,6 +1,6 @@
 //
-//
-//
+// coroutine.hpp
+// ~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,61 +11,52 @@
 #ifndef DDVAMP_EXE_FIBER_CORE_COROUTINE_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_CORE_COROUTINE_HPP_INCLUDED_ 1
 
-#include <utility>
+#include <exe/fiber/core/body.hpp>
 
-#include "context/context.hpp"
-
-#include "exe/fiber/core/body.hpp"
-
-#include "util/memory/view.hpp"
+#include <context/context.hpp>
+#include <context/trampoline.hpp>
+#include <util/memory/view.hpp>
 
 namespace exe::fiber {
 
-// Basis for suspended execution of fiber
+/* Basis for suspended execution of fibers */
+
 class Coroutine : public ::context::ITrampoline {
-private:
-	Body routine_;
-	::context::ExecutionContext context_;
-	bool is_completed_ = false;
+ public:
+  enum class Status {
+    kInactive,
+    kActive,
+    kCompleted,
 
-public:
-	Coroutine(Body &&routine, ::util::memory_view stack) noexcept
-		: routine_(::std::move(routine))
-		, context_(stack, this)
-	{}
+		kSize
+  };
 
-	[[nodiscard]] bool isCompleted() const noexcept
-	{
-		return is_completed_;
-	}
+	using enum Status;
 
-	/* external call functions */
+ private:
+  Body body_;
+  ::context::ExecutionContext context_;
+  Status status_ = kInactive;
 
-	void resume() noexcept
-	{
-		context_.SwitchToSaved();
-	}
+ public:
+  Coroutine(Body &&body, ::util::memory_view stack) noexcept;
 
-	/* internal call functions */
+  [[nodiscard]] bool IsDone() const noexcept;
 
-	void suspend() noexcept
-	{
-		context_.SwitchToSaved();
-	}
+  /* External call functions */
 
-	[[noreturn]] void cancel() noexcept
-	{
-		is_completed_ = true;
-		context_.ExitToSaved();
-	}
+  void Resume() noexcept;
 
-private:
-	[[noreturn]] void DoRun() noexcept override
-	{
-		routine_();
+  /* Internal call functions */
 
-		cancel();
-	}
+  void Suspend() noexcept;
+
+  [[noreturn]] void Cancel() noexcept;
+
+ private:
+  [[noreturn]] void DoRun() noexcept override;
+
+  void ChangeStatus(Status from, Status to) noexcept;
 };
 
 } // namespace exe::fiber

@@ -114,7 +114,7 @@ void Fiber::releaseResources() noexcept
 void Fiber::step() noexcept
 {
 	auto const prev = ::std::exchange(current, this);
-	coroutine_.resume();
+	coroutine_.Resume();
 	current = prev;
 }
 
@@ -122,7 +122,7 @@ Fiber *Fiber::doRun() noexcept
 {
 	step();
 
-	if (coroutine_.isCompleted()) [[unlikely]] {
+	if (coroutine_.IsDone()) [[unlikely]] {
 		destroySelf();
 		return nullptr;
 	}
@@ -151,7 +151,7 @@ void Fiber::destroySelf() noexcept
 
 void Fiber::stop() noexcept
 {
-	coroutine_.suspend();
+	coroutine_.Suspend();
 }
 
 Fiber *createFiber(Body &&routine, ISafeScheduler *scheduler)
