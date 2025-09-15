@@ -1,6 +1,6 @@
 //
-//
-//
+// strand.cpp
+// ~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,251 +8,25 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#include <atomic>
-#include <new>
-#include <utility>
-
-#include "exe/runtime/strand.hpp"
-
-#include "util/debug/assert.hpp"
-#include "util/refer/ref_count.hpp"
+#include <exe/runtime/strand.hpp>
+#include <exe/runtime/task/scheduler.hpp>
+#include <exe/runtime/task/task.hpp>
+#include <internal/strand.hpp>
 
 namespace exe::runtime {
 
-class alignas (::std::hardware_destructive_interference_size) Strand::Impl
-	: private task::TaskBase
-	, public ::util::ref_count<Impl> {
-private:
-	struct DummyTask : TaskBase {
-		DummyTask() noexcept
-		{
-			link(this);
-		}
+Strand::~Strand() = default;
 
-		void Run() noexcept override
-		{
-			// do nothing
-		}
-	};
+Strand::Strand(ISafeScheduler &underlying) : impl_(Impl::Create(underlying)) {}
 
-private:
-	ISafeScheduler &where_;
-	DummyTask dummy_;
-	TaskBase *head_ = &dummy_;
-	::std::atomic<TaskBase *> tail_ = &dummy_;
-
-public:
-	[[nodiscard]] static Impl *create(ISafeScheduler &where)
-	{
-		return ::new Impl(where);
-	}
-
-	void destroy_self() const noexcept
-	{
-		delete this;
-	}
-
-public:
-	explicit Impl(ISafeScheduler &where) noexcept
-		: where_(where)
-	{
-		static_assert(
-			sizeof(Impl) <= ::std::hardware_destructive_interference_size,
-			"Size has exceeded the cache line."
-			"Think about separating the fields."
-		);
-	}
-
-	[[nodiscard]] ISafeScheduler &getScheduler() const noexcept
-	{
-		return where_;
-	}
-
-	void submit(TaskBase *task) noexcept;
-
-private:
-	void Run() noexcept override;
-
-	void runSelf() noexcept;
-
-	void afterAcquire(TaskBase *task) noexcept;
-
-	void submitSelf() noexcept;
-
-	bool isActualTask(TaskBase *task) const noexcept;
-
-	static TaskBase *loadNext(TaskBase *task) noexcept;
-
-	TaskBase *putTask(TaskBase *task) noexcept;
-
-	bool tryAcquire() noexcept;
-
-	bool tryPutDummy(TaskBase *expected) noexcept;
-
-	TaskBase *tryTakeNextTask(TaskBase *task) noexcept;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-Strand::Strand(ISafeScheduler &where)
-	: impl_(Impl::create(where))
-{}
-
-Strand::~Strand() noexcept = default;
-
-/* virtual */ void Strand::Submit(task::TaskBase *task) noexcept
-{
-	UTIL_ASSERT(task, "nullptr instead of task");
-
-	impl_->submit(task);
+/* virtual */ void Strand::Submit(task::TaskBase *task) noexcept {
+  static_assert(noexcept(impl_->Submit(task)),
+                "Implementation must be noexcept");
+  impl_->Submit(task);
 }
 
-task::ISafeScheduler &Strand::getScheduler() const noexcept
-{
-	return impl_->getScheduler();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Strand::Impl::submit(TaskBase *task) noexcept
-{
-	if (tryAcquire()) {
-		afterAcquire(task);
-		return;
-	}
-
-	task->link(nullptr);
-
-	auto prev = putTask(task);
-	if (!prev) [[likely]] {
-		return;
-	}
-
-	if (isActualTask(prev)) [[likely]] {
-		submitSelf();
-		return;
-	}
-
-	dummy_.link(nullptr);
-
-	if (tryPutDummy(task)) {
-		afterAcquire(task);
-		return;
-	}
-
-	if (tryTakeNextTask(task)) {
-		submitSelf();
-	}
-}
-
-/* virtual */ void Strand::Impl::Run() noexcept
-{
-	runSelf();
-	dec_ref();
-}
-
-void Strand::Impl::runSelf() noexcept
-{
-	auto curr = head_;
-	auto next = curr->next_.load(::std::memory_order_relaxed);
-
-	if (isActualTask(next)) [[unlikely]] {
-		goto run_task;
-	}
-
-dummy_next:
-	curr->Run();
-
-	if ((curr = tryTakeNextTask(&dummy_))) {
-		dummy_.link(nullptr);
-		goto take_next;
-	}
-
-	return;
-
-run_task:
-	::std::exchange(curr, next)->Run();
-
-take_next:
-	if ((next = loadNext(curr))) {
-		goto run_task;
-	}
-
-	if (tryPutDummy(curr)) {
-		goto dummy_next;
-	}
-
-	if ((next = tryTakeNextTask(curr))) {
-		goto run_task;
-	}
-}
-
-void Strand::Impl::afterAcquire(TaskBase *task) noexcept
-{
-	head_ = task;
-	task->link(&dummy_);
-
-	submitSelf();
-}
-
-void Strand::Impl::submitSelf() noexcept
-{
-	inc_ref();
-	where_.Submit(this);
-}
-
-bool Strand::Impl::isActualTask(TaskBase *task) const noexcept
-{
-	return task != &dummy_;
-}
-
-/* static */ task::TaskBase *Strand::Impl::loadNext(task::TaskBase *task) noexcept
-{
-	return task->next_.load(::std::memory_order_acquire);
-}
-
-task::TaskBase *Strand::Impl::putTask(task::TaskBase *task) noexcept
-{
-	return
-		tail_.exchange(task, ::std::memory_order_acq_rel)->
-		next_.exchange(task, ::std::memory_order_acq_rel);
-}
-
-bool Strand::Impl::tryAcquire() noexcept
-{
-	auto expected = static_cast<TaskBase *>(&dummy_);
-
-	return dummy_.next_.load(::std::memory_order_relaxed) == expected &&
-		dummy_.next_.compare_exchange_weak(
-			expected,
-			nullptr,
-			::std::memory_order_acquire,
-			::std::memory_order_relaxed
-		);
-}
-
-bool Strand::Impl::tryPutDummy(TaskBase *expected) noexcept
-{
-	return tail_.compare_exchange_strong(
-		expected,
-		&dummy_,
-		::std::memory_order_release,
-		::std::memory_order_relaxed
-	);
-}
-
-task::TaskBase *Strand::Impl::tryTakeNextTask(task::TaskBase *task) noexcept
-{
-	auto next = static_cast<TaskBase *>(nullptr);
-
-	task->next_.compare_exchange_strong(
-		next,
-		head_ = task,
-		::std::memory_order_release,
-		::std::memory_order_acquire
-	);
-
-	return next;
+task::ISafeScheduler &Strand::GetUnderlying() const noexcept {
+  return impl_->GetUnderlying();
 }
 
 } // namespace exe::runtime

@@ -44,7 +44,7 @@ target_sources(exe PRIVATE ${exe_sources})
 target_include_directories(
   exe
   PUBLIC include/
-  PRIVATE src/util/
+  PRIVATE src/util/ src/exe/
 )
 
 target_compile_features(exe PUBLIC cxx_std_23)
