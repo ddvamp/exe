@@ -1,6 +1,6 @@
 //
-//
-//
+// thread_pool.hpp
+// ~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,77 +8,72 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_EXECUTORS_TP_THREAD_POOL_HPP_INCLUDED_
-#define DDVAMP_EXE_EXECUTORS_TP_THREAD_POOL_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_RUNTIME_TP_THREAD_POOL_HPP_INCLUDED_
+#define DDVAMP_EXE_RUNTIME_TP_THREAD_POOL_HPP_INCLUDED_ 1
+
+#include <exe/runtime/task/scheduler.hpp>
+#include <exe/runtime/task/task.hpp>
+#include <exe/runtime/tp/queue.hpp>
 
 #include <cstddef>
 #include <thread>
 #include <vector>
 
-#include "concurrency/mpmc_unbounded_blocking_queue.hpp"
-#include "concurrency/wait_point.hpp"
-
-#include "exe/runtime/task/scheduler.hpp"
-
 namespace exe::runtime::tp {
 
-struct defer_start_t {
-	explicit defer_start_t() = default;
+struct Launch {
+  explicit Launch() = default;
 };
 
-inline constexpr defer_start_t defer_start{};
+inline constexpr Launch launch{};
 
-class ThreadPool : public task::IScheduler {
-private:
-	::std::vector<::std::thread> workers_;
-	::std::size_t worker_count_;
-	::concurrency::MPMCUnboundedBlockingQueue<task::TaskBase *> tasks_;
-	::concurrency::WaitPoint task_count_;
 
-#ifndef UTIL_DISABLE_DEBUG
-	enum class State {
-		CREATED,
-		STARTED,
-		STOPPED,
-	};
+class ThreadPool final : public task::IScheduler {
+ private:
+  enum class State {
+    kCreated,
+    kStarted,
+    kStopped
+  };
 
-	State state_ = State::CREATED;
-#endif
+  using enum State;
 
-public:
-	~ThreadPool();
+  ::std::vector<::std::thread> workers_;
+  ::std::size_t const worker_count_;
+  Queue tasks_;
+  State state_ = kCreated;
 
-	ThreadPool(ThreadPool const &) = delete;
-	void operator= (ThreadPool const &) = delete;
+ public:
+  ~ThreadPool();
 
-	ThreadPool(ThreadPool &&) = delete;
-	void operator= (ThreadPool &&) = delete;
+  ThreadPool(ThreadPool const &) = delete;
+  void operator= (ThreadPool const &) = delete;
 
-public:
-	explicit ThreadPool(::std::size_t workers);
+  ThreadPool(ThreadPool &&) = delete;
+  void operator= (ThreadPool &&) = delete;
 
-	// requires explicit start of threads
-	ThreadPool(::std::size_t workers, defer_start_t);
+ public:
+  explicit ThreadPool(::std::size_t workers);
 
-	static ThreadPool *current() noexcept;
+  // Creates and immediately starts
+  ThreadPool(Launch, ::std::size_t workers);
 
-	void Submit(task::TaskBase *task) override;
+  [[nodiscard]] static ThreadPool *Current() noexcept;
 
-	// wait until the number of tasks drops to zero
-	void waitIdle();
+  // Initializes and starts worker threads
+  void Start();
 
-	// initializes and starts worker threads
-	void start();
+  void Submit(task::TaskBase *task) override;
 
-	// wait for all tasks to complete and join threads
-	void stop();
+  // Wait for all tasks to complete and join threads
+  void Stop() noexcept;
 
-private:
-	void workLoop();
+ private:
+  void WorkLoop() noexcept;
 
-	void joinWorkerThreads();
+  void JoinWorkerThreads();
 };
 
 } // namespace exe::runtime::tp
 
-#endif /* DDVAMP_EXE_EXECUTORS_TP_THREAD_POOL_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_RUNTIME_TP_THREAD_POOL_HPP_INCLUDED_ */
