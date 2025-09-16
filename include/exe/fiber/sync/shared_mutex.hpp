@@ -126,7 +126,7 @@ public:
 			// synchronization of writer_
 			UTIL_IGNORE(out_.load(::std::memory_order_acquire));
 
-			::std::move(writer_).schedule();
+			::std::move(writer_).Schedule();
 		}
 	}
 
@@ -138,7 +138,7 @@ private:
 		// synchronization of writer_
 		auto out = out_.fetch_add(0b01 - in_, ::std::memory_order_release);
 
-		return out == in_ ? ::std::move(writer_) : FiberHandle::invalid();
+		return out == in_ ? ::std::move(writer_) : FiberHandle::Invalid();
 	}
 };
 

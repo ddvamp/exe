@@ -145,7 +145,7 @@ public:
 		void schedule(bool success) noexcept
 		{
 			success_ = success;
-			::std::move(handle_).schedule();
+			::std::move(handle_).Schedule();
 		}
 
 		template <typename T>
@@ -222,7 +222,7 @@ public:
 	{
 		fiber_info_.handle_ = ::std::move(current);
 		lock_.unlock();
-		return FiberHandle::invalid();
+		return FiberHandle::Invalid();
 	}
 
 	[[nodiscard]] bool success() const noexcept

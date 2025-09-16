@@ -30,7 +30,7 @@ public:
 	[[nodiscard]] FiberHandle awaitSymmetricSuspend(FiberHandle &&h) override
 	{
 		awaitSuspend(::std::move(h));
-		return FiberHandle::invalid();
+		return FiberHandle::Invalid();
 	}
 };
 

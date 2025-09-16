@@ -1,6 +1,6 @@
 //
-//
-//
+// handle.hpp
+// ~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,60 +11,52 @@
 #ifndef DDVAMP_EXE_FIBER_CORE_HANDLE_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_CORE_HANDLE_HPP_INCLUDED_ 1
 
-#include "exe/fiber/core/fwd.hpp"
+#include <exe/fiber/core/fwd.hpp>
 
 namespace exe::fiber {
 
-// Class for managing fiber in awaiters
+/* Class for managing fiber in awaiters */
+
 class [[nodiscard]] FiberHandle {
-private:
-	friend class Fiber;
+  friend class Fiber;
 
-	Fiber *fiber_ = nullptr;
+ private:
+  Fiber *fiber_ = nullptr;
 
-public:
-	// precondition: isValid() == false
-	~FiberHandle();
+ public:
+  // Precondition: IsValid() == false
+  ~FiberHandle();
 
-	FiberHandle(FiberHandle const &) = delete;
-	void operator= (FiberHandle const &) = delete;
+  FiberHandle(FiberHandle const &) = delete;
+  FiberHandle(FiberHandle &&that) noexcept : fiber_(that.Release()) {}
 
-	FiberHandle(FiberHandle &&that) noexcept
-		: fiber_(that.release())
-	{}
-	// precondition: isValid() == false
-	FiberHandle &operator= (FiberHandle &&) noexcept;
+  // Precondition: IsValid() == false
+  FiberHandle &operator= (FiberHandle) noexcept;
 
-public:
-	FiberHandle() = default;
+ public:
+  FiberHandle() = default;
 
-	static FiberHandle invalid() noexcept
-	{
-		return FiberHandle{};
-	}
+  static FiberHandle Invalid() noexcept {
+    return FiberHandle();
+  }
 
-	[[nodiscard]] bool isValid() const noexcept
-	{
-		return fiber_;
-	}
+  [[nodiscard]] bool IsValid() const noexcept {
+    return fiber_;
+  }
 
-	// Schedule execution on scheduler set on fiber
-	//
-	// Precondition: isValid() == true
-	void schedule() && noexcept;
+  // Schedule execution on scheduler set on fiber
+  //
+  // Precondition: IsValid() == true
+  void Schedule() && noexcept;
 
-	// Execute fiber immediately
-	//
-	// Precondition: isValid() == true
-	void resume() && noexcept;
+	// Synonym for Schedule
+  void Resume() && noexcept;
 
-private:
-	explicit FiberHandle(Fiber *fiber) noexcept
-		: fiber_(fiber)
-	{}
+ private:
+  explicit FiberHandle(Fiber &fiber) noexcept : fiber_(&fiber) {}
 
-	Fiber *release() noexcept;
-	Fiber *releaseChecked() noexcept;
+  Fiber *Release() noexcept;
+  Fiber *ReleaseChecked() noexcept;
 };
 
 } // namespace exe::fiber

@@ -154,8 +154,8 @@ public:
 
 		auto next = unlockImpl();
 
-		if (next.isValid()) {
-			::std::move(next).schedule();
+		if (next.IsValid()) {
+			::std::move(next).Schedule();
 		}
 	}
 
@@ -165,13 +165,13 @@ private:
 		auto owner = putFiber(node);
 
 		if (!owner) [[likely]] {
-			return FiberHandle::invalid();
+			return FiberHandle::Invalid();
 		}
 
 		if (isActualFiber(owner)) [[unlikely]] {
 			setNext(node);
-			extractFiber(owner).schedule();
-			return FiberHandle::invalid();
+			extractFiber(owner).Schedule();
+			return FiberHandle::Invalid();
 		}
 
 		dummy_.link(nullptr);
@@ -191,7 +191,7 @@ private:
 			return takeFiber(owner); // ~ putFiber
 		}
 
-		return FiberHandle::invalid();
+		return FiberHandle::Invalid();
 	}
 
 	FiberHandle takeFiber(Node *owner) noexcept
@@ -216,7 +216,7 @@ private:
 			return extractFiber(owner);
 		}
 
-		return FiberHandle::invalid();
+		return FiberHandle::Invalid();
 	}
 
 	bool isActualFiber(Node *node) const noexcept

@@ -31,7 +31,7 @@ class YieldAwaiter : public ISuspendingAwaiter {
 public:
 	void awaitSuspend(FiberHandle &&h) noexcept override
 	{
-		::std::move(h).schedule();
+		::std::move(h).Schedule();
 	}
 };
 
@@ -54,7 +54,7 @@ public:
 		// prevents race condition
 		auto cleanup = ::util::defer{
 			[&from]() noexcept {
-				::std::move(from).schedule();
+				::std::move(from).Schedule();
 			}
 		};
 
@@ -131,9 +131,9 @@ Fiber *Fiber::doRun() noexcept
 
 	UTIL_ASSUME(awaiter, "nullptr instead of awaiter");
 
-	auto next = awaiter->awaitSymmetricSuspend(FiberHandle{this});
+	auto next = awaiter->awaitSymmetricSuspend(FiberHandle(*this));
 
-	return next.release();
+	return next.Release();
 }
 
 /* virtual */ void Fiber::Run() noexcept

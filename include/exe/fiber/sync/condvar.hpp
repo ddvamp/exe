@@ -54,7 +54,7 @@ private:
 
 			cv_->waitImpl(&info_);
 
-			return FiberHandle::invalid();
+			return FiberHandle::Invalid();
 		}
 	};
 

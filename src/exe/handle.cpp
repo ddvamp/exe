@@ -1,6 +1,6 @@
 //
-//
-//
+// handle.cpp
+// ~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,49 +8,39 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
+#include <exe/fiber/core/fiber.hpp>
+#include <exe/fiber/core/handle.hpp>
+
+#include <util/debug/assert.hpp>
+
 #include <utility>
-
-#include "exe/fiber/core/fiber.hpp"
-#include "exe/fiber/core/handle.hpp"
-
-#include "util/debug.hpp"
 
 namespace exe::fiber {
 
-FiberHandle::~FiberHandle()
-{
-	UTIL_ASSERT(!isValid(), "fiber is lost");
+FiberHandle::~FiberHandle() {
+  UTIL_ASSERT(!IsValid(), "Fiber is lost");
 }
 
-FiberHandle &FiberHandle::operator= (FiberHandle &&that) noexcept
-{
-	UTIL_ASSERT(!isValid(), "fiber is lost");
-
-	fiber_ = that.release();
-
-	return *this;
+FiberHandle &FiberHandle::operator= (FiberHandle that) noexcept {
+  ::std::swap(fiber_, that.fiber_);
+  return *this;
 }
 
-void FiberHandle::schedule() && noexcept
-{
-	releaseChecked()->schedule();
+void FiberHandle::Schedule() && noexcept {
+  ReleaseChecked()->schedule();
 }
 
-void FiberHandle::resume() && noexcept
-{
-	releaseChecked()->resume();
+void FiberHandle::Resume() && noexcept {
+	::std::move(*this).Schedule();
 }
 
-Fiber *FiberHandle::release() noexcept
-{
-	return ::std::exchange(fiber_, nullptr);
+Fiber *FiberHandle::Release() noexcept {
+  return ::std::exchange(fiber_, nullptr);
 }
 
-Fiber *FiberHandle::releaseChecked() noexcept
-{
-	UTIL_ASSERT(isValid(), "fiber is missing");
-
-	return release();
+Fiber *FiberHandle::ReleaseChecked() noexcept {
+  UTIL_ASSERT(IsValid(), "Fiber is missing, but expected");
+  return Release();
 }
 
 } // namespace exe::fiber
