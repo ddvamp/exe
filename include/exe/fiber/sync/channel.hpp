@@ -212,12 +212,7 @@ public:
 		queue.push(&fiber_info_);
 	}
 
-	void awaitSuspend(FiberHandle &&) noexcept override
-	{
-		// nothing
-	}
-
-	[[nodiscard]] FiberHandle awaitSymmetricSuspend(
+	[[nodiscard]] FiberHandle AwaitSymmetricSuspend(
 		FiberHandle &&current) noexcept override
 	{
 		fiber_info_.handle_ = ::std::move(current);

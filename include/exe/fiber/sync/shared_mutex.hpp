@@ -35,12 +35,7 @@ class SharedMutex {
 			: m_(m)
 		{}
 
-		void awaitSuspend(FiberHandle &&) noexcept override
-		{
-			// nothing
-		}
-
-		[[nodiscard]] FiberHandle awaitSymmetricSuspend(
+		[[nodiscard]] FiberHandle AwaitSymmetricSuspend(
 			FiberHandle &&current) noexcept override
 		{
 			return m_->setWriter(::std::move(current));

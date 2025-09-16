@@ -1,6 +1,6 @@
 //
-//
-//
+// awaiter.hpp
+// ~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,27 +11,17 @@
 #ifndef DDVAMP_EXE_FIBER_CORE_AWAITER_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_CORE_AWAITER_HPP_INCLUDED_ 1
 
-#include <utility>
-
-#include "exe/fiber/core/handle.hpp"
+#include <exe/fiber/core/handle.hpp>
 
 namespace exe::fiber {
 
-class IAwaiter {
-public:
-	virtual ~IAwaiter() = default;
+struct IAwaiter {
+ protected:
+  // Lifetime cannot be controlled via IAwaiter *
+  ~IAwaiter() = default;
 
-	virtual void awaitSuspend(FiberHandle &&) = 0;
-	[[nodiscard]] virtual FiberHandle awaitSymmetricSuspend(FiberHandle &&) = 0;
-};
-
-class ISuspendingAwaiter : public IAwaiter {
-public:
-	[[nodiscard]] FiberHandle awaitSymmetricSuspend(FiberHandle &&h) override
-	{
-		awaitSuspend(::std::move(h));
-		return FiberHandle::Invalid();
-	}
+ public:
+  virtual FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept = 0;
 };
 
 } // namespace exe::fiber

@@ -44,12 +44,7 @@ private:
 			: m_(m)
 		{}
 
-		void awaitSuspend(FiberHandle &&) noexcept override
-		{
-			// nothing
-		}
-
-		[[nodiscard]] FiberHandle awaitSymmetricSuspend(
+		[[nodiscard]] FiberHandle AwaitSymmetricSuspend(
 			FiberHandle &&current) noexcept override
 		{
 			info_.handle_ = ::std::move(current);

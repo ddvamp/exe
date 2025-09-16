@@ -27,11 +27,12 @@ thread_local Fiber *current = nullptr;
 	return current;
 }
 
-class YieldAwaiter : public ISuspendingAwaiter {
+class YieldAwaiter : public IAwaiter {
 public:
-	void awaitSuspend(FiberHandle &&h) noexcept override
+	FiberHandle AwaitSymmetricSuspend(FiberHandle &&h) noexcept override
 	{
 		::std::move(h).Schedule();
+		return FiberHandle::Invalid();
 	}
 };
 
@@ -44,12 +45,7 @@ public:
 		: target_(target)
 	{}
 
-	void awaitSuspend(FiberHandle &&) noexcept override
-	{
-		// nothing
-	}
-
-	[[nodiscard]] FiberHandle awaitSymmetricSuspend(FiberHandle &&from) override
+	[[nodiscard]] FiberHandle AwaitSymmetricSuspend(FiberHandle &&from) noexcept override
 	{
 		// prevents race condition
 		auto cleanup = ::util::defer{
@@ -131,7 +127,7 @@ Fiber *Fiber::doRun() noexcept
 
 	UTIL_ASSUME(awaiter, "nullptr instead of awaiter");
 
-	auto next = awaiter->awaitSymmetricSuspend(FiberHandle(*this));
+	auto next = awaiter->AwaitSymmetricSuspend(FiberHandle(*this));
 
 	return next.Release();
 }
