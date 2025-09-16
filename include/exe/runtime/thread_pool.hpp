@@ -15,7 +15,7 @@
 
 namespace exe::runtime {
 
-using tp::ThreadPool;
+using ThreadPool = tp::ThreadPool;
 
 } // namespace exe::runtime
 
