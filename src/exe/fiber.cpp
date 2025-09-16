@@ -122,7 +122,7 @@ Fiber *Fiber::doRun() noexcept
 {
 	step();
 
-	if (coroutine_.IsDone()) [[unlikely]] {
+	if (coroutine_.IsCompleted()) [[unlikely]] {
 		destroySelf();
 		return nullptr;
 	}

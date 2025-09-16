@@ -46,7 +46,7 @@ Coroutine::Coroutine(Body &&body, ::util::memory_view stack) noexcept
     : body_(::std::move(body))
     , context_(stack, this) {}
 
-bool Coroutine::IsDone() const noexcept {
+bool Coroutine::IsCompleted() const noexcept {
   return status_ == kCompleted;
 }
 
@@ -60,14 +60,14 @@ void Coroutine::Suspend() noexcept {
   context_.SwitchToSaved();
 }
 
-void Coroutine::Cancel() noexcept {
+void Coroutine::Complete() noexcept {
   ChangeStatus(kActive, kCompleted);
   context_.ExitToSaved();
 }
 
 /* virtual */ void Coroutine::DoRun() noexcept {
   ::std::move(body_)();
-  Cancel();
+  Complete();
 }
 
 void Coroutine::ChangeStatus([[maybe_unused]] Status const from,

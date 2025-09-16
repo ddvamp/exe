@@ -26,9 +26,7 @@ class Coroutine : public ::context::ITrampoline {
   enum class Status {
     kInactive,
     kActive,
-    kCompleted,
-
-		kSize
+    kCompleted
   };
 
 	using enum Status;
@@ -41,7 +39,7 @@ class Coroutine : public ::context::ITrampoline {
  public:
   Coroutine(Body &&body, ::util::memory_view stack) noexcept;
 
-  [[nodiscard]] bool IsDone() const noexcept;
+  [[nodiscard]] bool IsCompleted() const noexcept;
 
   /* External call functions */
 
@@ -51,7 +49,7 @@ class Coroutine : public ::context::ITrampoline {
 
   void Suspend() noexcept;
 
-  [[noreturn]] void Cancel() noexcept;
+  [[noreturn]] void Complete() noexcept;
 
  private:
   [[noreturn]] void DoRun() noexcept override;
