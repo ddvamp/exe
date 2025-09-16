@@ -1,6 +1,6 @@
 //
-//
-//
+// stack.hpp
+// ~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,15 +11,15 @@
 #ifndef DDVAMP_EXE_FIBER_CORE_STACK_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_CORE_STACK_HPP_INCLUDED_ 1
 
-#include "context/stack.hpp"
+#include <context/stack.hpp>
 
 namespace exe::fiber {
 
 using Stack = ::context::Stack;
 
-[[nodiscard]] Stack allocateStack();
+Stack AllocateStack();
 
-void deallocateStack(Stack &&stack) noexcept;
+void DeallocateStack(Stack &&stack) noexcept;
 
 } // namespace exe::fiber
 

@@ -104,7 +104,7 @@ void Fiber::teleportTo(ISafeScheduler *scheduler) noexcept
 
 void Fiber::releaseResources() noexcept
 {
-	deallocateStack(::std::move(stack_));
+	DeallocateStack(::std::move(stack_));
 }
 
 void Fiber::step() noexcept
@@ -152,7 +152,7 @@ void Fiber::stop() noexcept
 
 Fiber *createFiber(Body &&routine, ISafeScheduler *scheduler)
 {
-	return new Fiber{::std::move(routine), allocateStack(), scheduler};
+	return new Fiber{::std::move(routine), AllocateStack(), scheduler};
 }
 
 
