@@ -52,7 +52,7 @@ class Queue {
 
     {
       ::std::lock_guard lock(m_);
-      tasks_.push(&task);
+      tasks_.push(task);
       waiters = (waiters_count_ != 0);
     }
 
@@ -68,7 +68,7 @@ class Queue {
 
     while (true) {
       if (!tasks_.empty()) [[likely]] {
-        return tasks_.pop();
+        return &tasks_.pop();
       }
 
       if (is_closed_) [[unlikely]] {

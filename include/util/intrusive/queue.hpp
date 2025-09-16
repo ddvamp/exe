@@ -13,6 +13,7 @@
 
 #include <util/debug/assert.hpp>
 
+#include <memory>
 #include <utility>
 
 namespace util {
@@ -39,22 +40,22 @@ class intrusive_queue {
     return !head_;
   }
 
-  constexpr void push(T *elem) noexcept {
-		UTIL_ASSERT(elem, "nullptr instead of node");
+  constexpr void push(T &elem) noexcept {
+    auto const ptr = ::std::addressof(elem);
 
-    elem->link(nullptr);
+		ptr->link(nullptr);
 
-    if (empty()) {
-      head_ = tail_ = elem;
+    if (empty()) [[unlikely]] {
+      head_ = tail_ = ptr;
     } else {
-      ::std::exchange(tail_, elem)->link(elem);
+      ::std::exchange(tail_, ptr)->link(ptr);
     }
   }
 
-  [[nodiscard]] constexpr T *pop() noexcept {
+  [[nodiscard]] constexpr T &pop() noexcept {
 		UTIL_ASSERT(!empty(), "Queue is empty");
 
-    return ::std::exchange(head_, head_->next());
+    return *::std::exchange(head_, head_->next());
   }
 };
 

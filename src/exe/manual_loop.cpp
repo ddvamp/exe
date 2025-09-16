@@ -25,13 +25,13 @@ ManualLoop::~ManualLoop() {
 
 /* virtual */ void ManualLoop::Submit(task::TaskBase *task) noexcept {
   UTIL_ASSERT(task, "nullptr instead of the task");
-  tasks_.push(task);
+  tasks_.push(*task);
 }
 
 ::std::size_t ManualLoop::RunAtMost(::std::size_t const limit) noexcept {
   auto remains = limit;
   while (::util::all_of(!IsEmpty(), remains != 0)) {
-    tasks_.pop()->Run();
+    tasks_.pop().Run();
     --remains;
   }
   return limit - remains;

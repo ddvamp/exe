@@ -13,6 +13,7 @@
 
 #include <util/debug/assert.hpp>
 
+#include <memory>
 #include <utility>
 
 namespace util {
@@ -38,16 +39,16 @@ class intrusive_stack {
     return !top_;
   }
 
-  constexpr void push(T *elem) noexcept {
-		UTIL_ASSERT(elem, "nullptr instead of node");
+  constexpr void push(T &elem) noexcept {
+    auto const ptr = ::std::addressof(elem);
 
-    elem->link(::std::exchange(top_, elem));
+    ptr->link(::std::exchange(top_, ptr));
   }
 
-  [[nodiscard]] constexpr T *pop() noexcept {
+  [[nodiscard]] constexpr T &pop() noexcept {
 		UTIL_ASSERT(!empty(), "Stack is empty");
 
-    return ::std::exchange(top_, top_->next());
+    return *::std::exchange(top_, top_->next());
   }
 };
 
