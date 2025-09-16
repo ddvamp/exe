@@ -19,7 +19,7 @@
 
 namespace context {
 
-// Execution context = machine context (registers state) + exceptions context
+/* Execution context = machine context (registers state) + exceptions context */
 class ExecutionContext {
  private:
   MachineContext machine_ctx_;

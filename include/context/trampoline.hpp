@@ -15,7 +15,7 @@
 
 namespace context {
 
-// Entry point for context
+/* Entry point for context */
 class ITrampoline {
  public:
   virtual ~ITrampoline() = default;

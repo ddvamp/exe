@@ -24,7 +24,7 @@ namespace util {
 
 namespace {
 
-// https://lxadm.com/why-are-page-sizes-always-powers-of-2/
+/* https://lxadm.com/why-are-page-sizes-always-powers-of-2/ */
 ::std::size_t get_page_size() noexcept {
   return static_cast<::std::size_t>(::sysconf(_SC_PAGE_SIZE));
 }

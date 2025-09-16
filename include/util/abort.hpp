@@ -16,7 +16,7 @@
 
 namespace util {
 
-// Abnormal program termination with passing an error message and location
+/* Abnormal program termination with passing an error message and location */
 [[noreturn]] void abort(::std::string_view const message,
                         ::std::source_location const location =
                             ::std::source_location::current()) noexcept;

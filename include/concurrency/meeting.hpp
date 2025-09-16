@@ -18,10 +18,10 @@
 
 namespace concurrency {
 
-/** Synchronization primitive for determining the last participant
+/**
+ *  Synchronization primitive for determining the last participant
  *  and synchronizing it with all the previous ones
  */
-
 class Meeting {
  private:
   using Count = ::std::uint64_t;

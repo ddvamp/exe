@@ -29,7 +29,6 @@ concept suitable_for_defer =
     ::std::is_void_v<::std::invoke_result_t<T &&>>;
 
 /* RAII class for performing an action at the end of a scope */
-
 template <suitable_for_defer T>
 class [[nodiscard]] defer final {
  private:
@@ -69,10 +68,10 @@ struct default_guard_policy {
 
 static_assert(scope_guard_policy<default_guard_policy>);
 
-/** RAII class for performing an action at the end of a scope
+/**
+ *  RAII class for performing an action at the end of a scope
  *  if it is active and the policy is met
  */
-
 template <suitable_for_defer T,
 					scope_guard_policy Policy = default_guard_policy>
 class [[nodiscard]] scope_guard final : private Policy {
@@ -116,7 +115,6 @@ class [[nodiscard]] scope_guard final : private Policy {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Guards that are triggered only if there is or is not an exception */
-
 class success_guard_policy {
  private:
 	int uncaught_on_creating_ = ::std::uncaught_exceptions();
@@ -150,7 +148,6 @@ using scope_failure = scope_guard<T, failure_guard_policy>;
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Type deduction helper */
-
 template <typename Policy>
 struct guard_with_policy {
 	template <typename T>

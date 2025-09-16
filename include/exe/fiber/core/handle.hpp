@@ -16,7 +16,6 @@
 namespace exe::fiber {
 
 /* Class for managing fiber in awaiters */
-
 class [[nodiscard]] FiberHandle {
   friend class Fiber;
 

@@ -11,7 +11,7 @@
 #ifndef DDVAMP_UTIL_DEBUG_UNREACHABLE_HPP_INCLUDED_
 #define DDVAMP_UTIL_DEBUG_UNREACHABLE_HPP_INCLUDED_ 1
 
-// To disable, use -DUTIL_DISABLE_DEBUG
+/* To disable, use -DUTIL_DISABLE_DEBUG */
 
 #include <source_location>
 #include <string_view>
@@ -26,7 +26,7 @@ namespace util::detail {
 
 } // namespace util::detail
 
-// Debug unreachable with passing an error message and location
+/* Debug unreachable with passing an error message and location */
 #ifdef UTIL_UNREACHABLE
 # error "UTIL_UNREACHABLE macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG

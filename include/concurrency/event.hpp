@@ -17,14 +17,14 @@
 
 namespace concurrency {
 
-/** Synchronization primitive for waiting for a event and
+/**
+ *  Synchronization primitive for waiting for a event and
  *  sharing data through it
  *
  *  The user must ensure that the exit from the last of Wait or Fire call
  *  happens before the primitive is destroyed. For details see
  *  https://open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2616r4.html
  */
-
 class Event {
  private:
 	::std::atomic_flag is_ready_;

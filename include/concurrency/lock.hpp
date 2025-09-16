@@ -35,8 +35,10 @@ void Unlock(void *m) {
   static_cast<T *>(m)->unlock();
 }
 
-// About comparison of void*
-// https://quuxplusone.github.io/blog/2019/01/20/std-less-nightmare/
+/**
+ *  About comparison of void*
+ *  https://quuxplusone.github.io/blog/2019/01/20/std-less-nightmare/
+ */
 struct AnyMutex {
   void *m_;
   void (*lock_)(void *);
@@ -95,12 +97,12 @@ inline constexpr bool is_basic_lockable_v = requires (Lock &lock) {
 
 } // namespace detail
 
-/** To capture locks in a consistent order
+/**
+ *  To capture locks in a consistent order
  *
  *  Each lock must meet the Cpp17BasicLockable requirement and be atomic.
  *  Atomic means that lock itself must respect this order (use Lock function)
  */
-
 template <typename ...Locks>
 void Lock(Locks &...locks)
     requires (::util::is_all_of_v<(sizeof...(Locks) > 1),

@@ -20,10 +20,10 @@
 
 namespace exe::runtime {
 
-/** A scheduler decorator that aborts the program when
+/**
+ *  A scheduler decorator that aborts the program when
  *  an exception is thrown when scheduling a task
  */
-
 template <task::concepts::UnsafeScheduler S>
 class SafeScheduler final : public task::ISafeScheduler {
  private:

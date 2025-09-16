@@ -19,7 +19,6 @@
 namespace exe::runtime {
 
 /* Executes task immediately at place */
-
 class Inline : public task::ISafeScheduler {
  public:
   void Submit(task::TaskBase *task) noexcept override {

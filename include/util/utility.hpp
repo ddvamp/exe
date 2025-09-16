@@ -19,7 +19,6 @@
 namespace util {
 
 /* Type placeholder, void replacement */
-
 struct unit_t {};
 
 inline constexpr unit_t unit{};
@@ -27,12 +26,12 @@ inline constexpr unit_t unit{};
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- *	@brief		Convert an rvalue to an lvalue.
- *	@param t	A thing of arbitrary type.
- *	@return		The parameter explicitly converted to an lvalue-reference.
+ *  @brief    Convert an rvalue to an lvalue.
+ *  @param t  A thing of arbitrary type.
+ *  @return   The parameter explicitly converted to an lvalue-reference.
  *
- *	This function can be used to convert an prvalue to an lvalue.
- *	In this case temporary materialization occurs.
+ *  This function can be used to convert an prvalue to an lvalue.
+ *  In this case temporary materialization occurs.
  */
 template <typename T>
 [[nodiscard]] inline constexpr T &temporary(T &&t) noexcept
@@ -43,7 +42,6 @@ template <typename T>
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Simple utility for combining lambdas */
-
 template <typename ...Ts>
 struct overloaded : Ts... {
 	using Ts::operator()...;
@@ -79,10 +77,10 @@ template <typename ...Ts>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Similar to https://en.cppreference.com/w/cpp/memory/voidify.html
+/**
+ *  Similar to https://en.cppreference.com/w/cpp/memory/voidify.html
  *  but forcibly removes cv-qualification
  */
-
 template <typename T>
 [[nodiscard]] inline constexpr void *voidify(T &obj) noexcept {
   return const_cast<void *>(

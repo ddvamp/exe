@@ -28,7 +28,8 @@ struct Enforce {
 
 inline constexpr Enforce enforce{};
 
-/** Synchronization primitive for waiting for the completion of tasks,
+/**
+ *  Synchronization primitive for waiting for the completion of tasks,
  *  which are expressed as a 31-bit counter. Formally, the wait ends when
  *  the counter drops to zero (with various reservations)
  *

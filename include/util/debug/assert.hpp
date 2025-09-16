@@ -11,7 +11,7 @@
 #ifndef DDVAMP_UTIL_DEBUG_ASSERT_HPP_INCLUDED_
 #define DDVAMP_UTIL_DEBUG_ASSERT_HPP_INCLUDED_ 1
 
-// To disable, use -DUTIL_DISABLE_DEBUG
+/* To disable, use -DUTIL_DISABLE_DEBUG */
 
 #include <util/macro.hpp>
 
@@ -28,7 +28,7 @@ namespace util::detail {
 } // namespace util::detail
 
 
-// Runtime check with passing an error message and location
+/* Runtime check with passing an error message and location */
 #ifdef UTIL_CHECK
 # error "UTIL_CHECK macro could not be defined because it is already defined somewhere else"
 #else
@@ -41,7 +41,7 @@ namespace util::detail {
       } while (false)
 #endif
 
-// Debug assert with passing an error message and location
+/* Debug assert with passing an error message and location */
 #ifdef UTIL_ASSERT
 # error "UTIL_ASSERT macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG
@@ -50,7 +50,7 @@ namespace util::detail {
 #	define UTIL_ASSERT(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
 #endif
 
-// Similar to UTIL_ASSERT, but anyway calculates expr
+/* Similar to UTIL_ASSERT, but anyway calculates expr */
 #ifdef UTIL_VERIFY
 # error "UTIL_VERIFY macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG

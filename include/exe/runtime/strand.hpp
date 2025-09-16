@@ -18,13 +18,13 @@
 
 namespace exe::runtime {
 
-/** A scheduler decorator that allows to serialize asynchronous critical sections
+/**
+ *  A scheduler decorator that allows to serialize asynchronous critical sections
  *  without using explicit locks. Instead of "moving the lock" between threads,
  *  it moves critical sections, thereby allowing the data to be in cache
  *  all the time. Sending critical sections is wait-free except for launching
  *  new critical sections of the strand itself
  */
-
 class Strand final : public task::ISafeScheduler {
  private:
   class Impl;

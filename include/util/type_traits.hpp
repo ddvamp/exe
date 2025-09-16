@@ -11,13 +11,13 @@
 #ifndef DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_
 #define DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_ 1
 
+#include <cstddef>
 #include <type_traits> // IWYU pragma: export
 #include <utility>
 
 namespace util {
 
 /* Checks whether the type is cv-qualified */
-
 template <typename>
 inline constexpr bool is_qualified_v = false;
 
@@ -95,7 +95,6 @@ struct negation : ::std::bool_constant<negation_v<Trait>> {};
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Checks whether all types are the same */
-
 template <typename ...>
 inline constexpr bool is_all_same_v = true;
 

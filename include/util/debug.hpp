@@ -11,9 +11,10 @@
 #ifndef DDVAMP_UTIL_DEBUG_HPP_INCLUDED_
 #define DDVAMP_UTIL_DEBUG_HPP_INCLUDED_ 1
 
-// Debug utilities
-//
-// To disable, use -DUTIL_DISABLE_DEBUG
+/**
+ *  Debug utilities
+ *  To disable, use -DUTIL_DISABLE_DEBUG
+ */
 
 #include <util/debug/assert.hpp>      // IWYU pragma: export
 #include <util/debug/assume.hpp>      // IWYU pragma: export

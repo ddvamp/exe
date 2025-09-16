@@ -11,11 +11,11 @@
 #ifndef DDVAMP_UTIL_DEBUG_RUN_HPP_INCLUDED_
 #define DDVAMP_UTIL_DEBUG_RUN_HPP_INCLUDED_ 1
 
-// To disable, use -DUTIL_DISABLE_DEBUG
+/* To disable, use -DUTIL_DISABLE_DEBUG */
 
 #include <util/macro.hpp>
 
-// Run function during debug
+/* Run function during debug */
 #ifdef UTIL_DEBUG_RUN
 # error "UTIL_DEBUG_RUN macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG

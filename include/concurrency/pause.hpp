@@ -22,7 +22,7 @@
 
 namespace concurrency {
 
-// Spin loop hint
+/* Spin loop hint */
 inline void Pause() noexcept {
 #ifdef DDVAMP_PAUSE_OPTION_GNU_
 #	undef DDVAMP_PAUSE_OPTION_GNU_

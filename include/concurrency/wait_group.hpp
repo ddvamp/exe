@@ -21,7 +21,8 @@
 
 namespace concurrency {
 
-/** Synchronization primitive for waiting for the completion of tasks,
+/**
+ *  Synchronization primitive for waiting for the completion of tasks,
  *  which are expressed as a 32-bit counter. Formally, the wait ends when
  *  the counter drops to zero. It can be used multiple times, but
  *  waiting sessions must happen before one another

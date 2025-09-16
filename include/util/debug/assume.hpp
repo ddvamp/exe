@@ -11,7 +11,7 @@
 #ifndef DDVAMP_UTIL_DEBUG_ASSUME_HPP_INCLUDED_
 #define DDVAMP_UTIL_DEBUG_ASSUME_HPP_INCLUDED_ 1
 
-// To disable, use -DUTIL_DISABLE_DEBUG
+/* To disable, use -DUTIL_DISABLE_DEBUG */
 
 #include <source_location>
 #include <string_view>
@@ -25,7 +25,7 @@ namespace util::detail {
 
 } // namespace util::detail
 
-// Debug assume with passing an error message and location
+/* Debug assume with passing an error message and location */
 #ifdef UTIL_ASSUME
 # error "UTIL_ASSUME macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG

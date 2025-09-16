@@ -21,7 +21,6 @@
 namespace exe::runtime {
 
 /* Single-thread task queue */
-
 class ManualLoop final : public task::ISafeScheduler {
  private:
   ::util::intrusive_queue<task::TaskBase> tasks_;

@@ -13,6 +13,7 @@
 
 #include <util/debug/assert.hpp>
 #include <util/memory/page_allocation.hpp>
+#include <util/memory/view.hpp>
 
 #include <cstddef>
 #include <utility>

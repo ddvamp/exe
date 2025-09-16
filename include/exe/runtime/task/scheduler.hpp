@@ -27,7 +27,6 @@ struct IScheduler {
 };
 
 /* Safe means nothrow task scheduling */
-
 struct ISafeScheduler : IScheduler {
  protected:
   // Lifetime cannot be controlled via ISafeScheduler *
@@ -37,6 +36,7 @@ struct ISafeScheduler : IScheduler {
   void Submit(TaskBase *) noexcept override = 0;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 
 namespace concepts {
 

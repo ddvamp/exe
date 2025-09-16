@@ -20,7 +20,6 @@
 namespace exe::fiber {
 
 /* Basis for suspended execution of fibers */
-
 class Coroutine : public ::context::ITrampoline {
  public:
   enum class Status {
