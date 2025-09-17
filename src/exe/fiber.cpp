@@ -1,6 +1,6 @@
 //
-//
-//
+// fiber.cpp
+// ~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,13 +8,20 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
+#include <exe/fiber/api.hpp>
+#include <exe/fiber/core/awaiter.hpp>
+#include <exe/fiber/core/body.hpp>
+#include <exe/fiber/core/fiber.hpp>
+#include <exe/fiber/core/handle.hpp>
+#include <exe/fiber/core/id.hpp>
+#include <exe/fiber/core/scheduler.hpp>
+#include <exe/fiber/core/stack.hpp>
+
+#include <util/abort.hpp>
+#include <util/debug.hpp>
+
+#include <atomic>
 #include <utility>
-
-#include "exe/fiber/core/fiber.hpp"
-
-#include "util/abort.hpp"
-#include "util/debug.hpp"
-#include "util/defer.hpp"
 
 namespace exe::fiber {
 
@@ -22,193 +29,174 @@ namespace {
 
 thread_local Fiber *current = nullptr;
 
-[[nodiscard]] bool amIFiber() noexcept
-{
-	return current;
-}
+struct ContextGuard {
+  Fiber *from;
 
-class YieldAwaiter : public IAwaiter {
-public:
-	FiberHandle AwaitSymmetricSuspend(FiberHandle &&h) noexcept override
-	{
-		::std::move(h).Schedule();
-		return FiberHandle::Invalid();
-	}
+  ContextGuard(Fiber *to, Fiber *from) noexcept : from(from) {
+    current = to;
+  }
+
+  ~ContextGuard() {
+    current = from;
+  }
 };
 
-class SwitchAwaiter : public IAwaiter {
-private:
-	FiberHandle &target_;
+[[nodiscard]] bool AmIFiber() noexcept {
+  return current;
+}
 
-public:
-	explicit SwitchAwaiter(FiberHandle &target) noexcept
-		: target_(target)
-	{}
+struct YieldAwaiter final : IAwaiter {
+  FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
+    ::std::move(self).Schedule();
+    return FiberHandle::Invalid();
+  }
+};
 
-	[[nodiscard]] FiberHandle AwaitSymmetricSuspend(FiberHandle &&from) noexcept override
-	{
-		// prevents race condition
-		auto cleanup = ::util::defer{
-			[&from]() noexcept {
-				::std::move(from).Schedule();
-			}
-		};
+struct SwitchAwaiter final : IAwaiter {
+  FiberHandle &target_;
 
-		return ::std::move(target_);
-	}
+  explicit SwitchAwaiter(FiberHandle &&target) noexcept : target_(target) {}
+
+  FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
+    // Prevents race condition
+    auto target = ::std::move(target_);
+    ::std::move(self).Schedule();
+    return ::std::move(target);
+  }
 };
 
 } // namespace
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-
-/* static */ Fiber &Fiber::self() noexcept
-{
-	UTIL_ASSERT(amIFiber(), "not in the fiber context");
-
-	return *current;
+/* static */ Fiber *Fiber::Create(Body &&body, Scheduler &scheduler) {
+  return ::new Fiber(::std::move(body), AllocateStack(), scheduler);
 }
 
-Fiber::Fiber(Body &&routine, ::context::Stack &&stack,
-	ISafeScheduler *scheduler) noexcept
-	: stack_(::std::move(stack))
-	, coroutine_(::std::move(routine), stack_.View())
-	, scheduler_(scheduler)
-{}
-
-void Fiber::schedule() noexcept
-{
-	scheduler_->Submit(this);
+/* static */ Fiber &Fiber::Self() noexcept {
+  UTIL_ASSERT(AmIFiber(), "Not in the fiber context");
+  return *current;
 }
 
-void Fiber::resume() noexcept
-{
-	Run();
+void Fiber::Schedule() noexcept {
+  scheduler_.get().Submit(this);
 }
 
-void Fiber::suspend(IAwaiter *awaiter) noexcept
-{
-	awaiter_ = awaiter;
-
-	stop();
+void Fiber::Resume() noexcept {
+  Run();
 }
 
-void Fiber::teleportTo(ISafeScheduler *scheduler) noexcept
-{
-	scheduler_ = scheduler;
-
-	self::yield();
+void Fiber::Suspend(IAwaiter &awaiter) noexcept {
+  awaiter_ = &awaiter;
+  Stop();
 }
 
-void Fiber::releaseResources() noexcept
-{
-	DeallocateStack(::std::move(stack_));
+void Fiber::TeleportTo(Scheduler &scheduler) noexcept {
+  scheduler_ = scheduler;
+  self::Yield();
 }
 
-void Fiber::step() noexcept
-{
-	auto const prev = ::std::exchange(current, this);
-	coroutine_.Resume();
-	current = prev;
+Fiber::Fiber(Body &&body, Stack &&stack, Scheduler &scheduler) noexcept
+    : stack_(::std::move(stack))
+    , coroutine_(::std::move(body), stack_.View())
+    , scheduler_(scheduler) {}
+
+/* virtual */ void Fiber::Run() noexcept {
+  ContextGuard guard(nullptr, current);
+  auto fiber = this;
+  while ((fiber = fiber->DoRun()));
 }
 
-Fiber *Fiber::doRun() noexcept
-{
-	step();
+Fiber *Fiber::DoRun() noexcept {
+  if (auto awaiter = Step()) [[likely]] {
+    return awaiter->AwaitSymmetricSuspend(FiberHandle(*this)).Release();
+  }
 
-	if (coroutine_.IsCompleted()) [[unlikely]] {
-		destroySelf();
-		return nullptr;
-	}
-
-	auto awaiter = ::std::exchange(awaiter_, nullptr);
-
-	UTIL_ASSUME(awaiter, "nullptr instead of awaiter");
-
-	auto next = awaiter->AwaitSymmetricSuspend(FiberHandle(*this));
-
-	return next.Release();
+  DestroySelf();
+  return nullptr;
 }
 
-/* virtual */ void Fiber::Run() noexcept
-{
-	auto next = this;
+IAwaiter *Fiber::Step() noexcept {
+  ContextGuard guard(this, nullptr);
 
-	while ((next = next->doRun()));
+  coroutine_.Resume();
+	UTIL_ASSERT(coroutine_.IsCompleted() == !awaiter_,
+              "Internal error! Awaiter is either lost or "
+              "provided for a completed fiber");
+
+	return ::std::exchange(awaiter_, nullptr);
 }
 
-void Fiber::destroySelf() noexcept
-{
-	releaseResources();
-	delete this;
+void Fiber::Stop() noexcept {
+  coroutine_.Suspend();
 }
 
-void Fiber::stop() noexcept
-{
-	coroutine_.Suspend();
+void Fiber::DestroySelf() noexcept {
+  ReleaseResources();
+  delete this;
 }
 
-Fiber *createFiber(Body &&routine, ISafeScheduler *scheduler)
-{
-	return new Fiber{::std::move(routine), AllocateStack(), scheduler};
+void Fiber::ReleaseResources() noexcept {
+  DeallocateStack(::std::move(stack_));
 }
 
+/* static */ FiberId Fiber::GetNextId() noexcept {
+  return next_id_.fetch_add(1, ::std::memory_order_relaxed);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-
 
 /* API */
 
 namespace self {
 
-FiberId getId() noexcept
-{
-	return Fiber::self().getId();
+FiberId GetId() noexcept {
+  return Fiber::Self().GetId();
 }
 
-ISafeScheduler &getScheduler() noexcept
-{
-	return *Fiber::self().getScheduler();
+Scheduler &GetScheduler() noexcept {
+  return Fiber::Self().GetScheduler();
 }
 
-void suspend(IAwaiter &awaiter) noexcept
-{
-	Fiber::self().suspend(&awaiter);
+void Suspend(IAwaiter &awaiter) noexcept {
+  Fiber::Self().Suspend(awaiter);
 }
 
-void yield() noexcept
-{
-	YieldAwaiter awaiter;
-	suspend(awaiter);
+void Yield() noexcept {
+  YieldAwaiter awaiter;
+  Suspend(awaiter);
 }
 
-void switchTo(FiberHandle &&next) noexcept
-{
-	SwitchAwaiter awaiter{next};
-	suspend(awaiter);
+void SwitchTo(FiberHandle &&next) noexcept {
+  SwitchAwaiter awaiter(::std::move(next));
+  Suspend(awaiter);
 }
 
-void teleportTo(ISafeScheduler &scheduler)
-{
-	Fiber::self().teleportTo(&scheduler);
+void TeleportTo(Scheduler &scheduler) noexcept {
+  Fiber::Self().TeleportTo(scheduler);
 }
 
 } // namespace self
 
-void go(ISafeScheduler &scheduler, Body &&routine)
-{
-	UTIL_ASSERT(routine, "empty routine for fiber");
+////////////////////////////////////////////////////////////////////////////////
 
-	auto fiber = createFiber(::std::move(routine), &scheduler);
-
-	fiber->schedule();
+void Go(Scheduler &scheduler, Body &&body) {
+  UTIL_ASSERT(body, "Empty body for fiber");
+  Fiber::Create(::std::move(body), scheduler)->Schedule();
 }
 
-void go(Body &&routine)
-{
-	go(self::getScheduler(), ::std::move(routine));
+void Go(Body &&body) {
+  Go(self::GetScheduler(), ::std::move(body));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NoSwitchContextGuard::NoSwitchContextGuard() noexcept : self(current) {
+  current = nullptr;
+}
+
+NoSwitchContextGuard::~NoSwitchContextGuard() {
+  current = self;
 }
 
 } // namespace exe::fiber

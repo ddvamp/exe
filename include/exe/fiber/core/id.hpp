@@ -1,6 +1,6 @@
 //
-//
-//
+// id.hpp
+// ~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -17,7 +17,7 @@ namespace exe::fiber {
 
 using FiberId = ::std::uint64_t;
 
-inline static constexpr auto kInvalidFiberId = FiberId(0);
+inline constexpr FiberId kInvalidFiberId = -1;
 
 } // namespace exe::fiber
 

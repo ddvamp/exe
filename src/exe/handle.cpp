@@ -27,7 +27,7 @@ FiberHandle &FiberHandle::operator= (FiberHandle that) noexcept {
 }
 
 void FiberHandle::Schedule() && noexcept {
-  ReleaseChecked()->schedule();
+  ReleaseChecked()->Schedule();
 }
 
 void FiberHandle::Resume() && noexcept {

@@ -1,6 +1,6 @@
 //
-//
-//
+// fiber.hpp
+// ~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,75 +11,73 @@
 #ifndef DDVAMP_EXE_FIBER_CORE_FIBER_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_CORE_FIBER_HPP_INCLUDED_ 1
 
-#include <atomic>
+#include <exe/fiber/core/awaiter.hpp>
+#include <exe/fiber/core/body.hpp>
+#include <exe/fiber/core/coroutine.hpp>
+#include <exe/fiber/core/id.hpp>
+#include <exe/fiber/core/scheduler.hpp>
+#include <exe/fiber/core/stack.hpp>
+#include <exe/runtime/task/task.hpp>
 
-#include "exe/runtime/task/scheduler.hpp"
-#include "exe/runtime/task/task.hpp"
-#include "exe/fiber/api.hpp"
-#include "exe/fiber/core/awaiter.hpp"
-#include "exe/fiber/core/coroutine.hpp"
-#include "exe/fiber/core/id.hpp"
-#include "exe/fiber/core/stack.hpp"
+#include <atomic>
+#include <functional>
 
 namespace exe::fiber {
 
-// Fiber = stackful coroutine + scheduling + scheduler
-class [[nodiscard]] Fiber : public runtime::task::TaskBase {
-private:
-	::context::Stack stack_;
-	Coroutine coroutine_;
-	ISafeScheduler *scheduler_;
-	IAwaiter *awaiter_ = nullptr;
-	FiberId const id_ = getNextId();
+/* Fiber = stackful coroutine + scheduler */
+class [[nodiscard]] Fiber final : private runtime::task::TaskBase {
+ private:
+  Stack stack_;
+  Coroutine coroutine_;
+  ::std::reference_wrapper<Scheduler> scheduler_;
+  IAwaiter *awaiter_ = nullptr;
+  FiberId const id_ = GetNextId();
 
-	inline static ::std::atomic<FiberId> next_id_ = kInvalidFiberId + 1;
+  inline static ::std::atomic<FiberId> next_id_ = kInvalidFiberId + 1;
 
-public:
-	// reference to currently active fiber
-	[[nodiscard]] static Fiber &self() noexcept;
+  // To guarantee the expected implementation
+  static_assert(::std::atomic<FiberId>::is_always_lock_free);
 
-	Fiber(Body &&, ::context::Stack &&, ISafeScheduler *) noexcept;
+ public:
+  // Create an self-ownership fiber
+  [[nodiscard]] static Fiber *Create(Body &&, Scheduler &);
 
-	[[nodiscard]] FiberId getId() const noexcept
-	{
-		return id_;
-	}
+  // Reference to currently active fiber
+  [[nodiscard]] static Fiber &Self() noexcept;
 
-	[[nodiscard]] ISafeScheduler *getScheduler() const noexcept
-	{
-		return scheduler_;
-	}
+  [[nodiscard]] FiberId GetId() const noexcept {
+    return id_;
+  }
 
-	// schedule execution on scheduler set on fiber
-	void schedule() noexcept;
+  [[nodiscard]] Scheduler &GetScheduler() const noexcept {
+    return scheduler_.get();
+  }
 
-	// execute fiber immediately
-	void resume() noexcept;
+  // Schedule execution on scheduler set on fiber
+  void Schedule() noexcept;
 
-	void suspend(IAwaiter *) noexcept;
+  // Execute fiber immediately
+  void Resume() noexcept;
 
-	// reschedule current fiber on scheduler
-	void teleportTo(ISafeScheduler *) noexcept;
+  void Suspend(IAwaiter &) noexcept;
 
-	// ITask
-	void Run() noexcept override;
+  // Reschedule current fiber on scheduler
+  void TeleportTo(Scheduler &) noexcept;
 
-private:
-	[[nodiscard]] Fiber *doRun() noexcept;
+ private:
+  Fiber(Body &&, Stack &&, Scheduler &) noexcept;
 
-	void step() noexcept;
-	void stop() noexcept;
-	void destroySelf() noexcept;
-	void releaseResources() noexcept;
+  // TaskBase
+  void Run() noexcept override;
+  [[nodiscard]] Fiber *DoRun() noexcept;
 
-	static FiberId getNextId() noexcept
-	{
-		return next_id_.fetch_add(1, ::std::memory_order_relaxed);
-	}
+  [[nodiscard]] IAwaiter *Step() noexcept;
+  void Stop() noexcept;
+  void DestroySelf() noexcept;
+  void ReleaseResources() noexcept;
+
+  [[nodiscard]] static FiberId GetNextId() noexcept;
 };
-
-// create an self-ownership fiber
-[[nodiscard]] Fiber *createFiber(Body &&, ISafeScheduler *);
 
 } // namespace exe::fiber
 

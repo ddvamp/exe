@@ -1,6 +1,6 @@
 //
-//
-//
+// api.hpp
+// ~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,47 +11,73 @@
 #ifndef DDVAMP_EXE_FIBER_API_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_API_HPP_INCLUDED_ 1
 
-#include "exe/runtime/task/scheduler.hpp"
-#include "exe/fiber/core/awaiter.hpp"
-#include "exe/fiber/core/id.hpp"
-#include "exe/fiber/core/body.hpp"
+#include <exe/fiber/core/awaiter.hpp>
+#include <exe/fiber/core/body.hpp>
+#include <exe/fiber/core/fwd.hpp>
+#include <exe/fiber/core/handle.hpp>
+#include <exe/fiber/core/id.hpp>
+#include <exe/fiber/core/scheduler.hpp>
 
 namespace exe::fiber {
 
-using runtime::task::ISafeScheduler;
+/**
+ *  Start fiber on where
+ *
+ *  Precondition: body == true
+ */
+void Go(Scheduler &where, Body &&body);
 
-// Start fiber on where
-//
-// Precondition: routine == true
-void go(ISafeScheduler &where, Body &&routine);
+/**
+ *  Start fiber on scheduler of current fiber
+ *
+ *  Precondition: body == true && in fiber context
+ */
+void Go(Body &&body);
 
-// Start fiber on scheduler of current fiber
-//
-// Precondition: fiber context && routine == true
-void go(Body &&routine);
+////////////////////////////////////////////////////////////////////////////////
 
-// precondition: fiber context
+/* Precondition: in fiber context */
+
 namespace self {
 
-[[nodiscard]] FiberId getId() noexcept;
+[[nodiscard]] FiberId GetId() noexcept;
 
-[[nodiscard]] ISafeScheduler &getScheduler() noexcept;
+[[nodiscard]] Scheduler &GetScheduler() noexcept;
 
-// For synchronization primitives
-// Do not use directly
-void suspend(IAwaiter &) noexcept;
+/* For synchronization primitives. Do not use directly */
+void Suspend(IAwaiter &) noexcept;
 
-// reschedule current fiber
-void yield() noexcept;
+/* Reschedule current fiber */
+void Yield() noexcept;
 
-// reschedule current fiber and activate next one if it is valid
-// otherwise, the call is equivalent to yield
-void switchTo(FiberHandle &&next) noexcept;
+/**
+ *  Reschedule current fiber and activate next one if it is valid
+ *  otherwise, the call is equivalent to yield
+ */
+void SwitchTo(FiberHandle &&next) noexcept;
 
-// reschedule current fiber on scheduler
-void teleportTo(ISafeScheduler &scheduler);
+/* Reschedule current fiber on scheduler */
+void TeleportTo(Scheduler &scheduler) noexcept;
 
 } // namespace self
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Prevents context switching until the end of the scope */
+class NoSwitchContextGuard {
+ private:
+	Fiber *self;
+
+ public:
+	NoSwitchContextGuard() noexcept;
+	~NoSwitchContextGuard();
+
+	NoSwitchContextGuard(NoSwitchContextGuard const &) = delete;
+	void operator= (NoSwitchContextGuard const &) = delete;
+
+	NoSwitchContextGuard(NoSwitchContextGuard &&) = delete;
+	void operator= (NoSwitchContextGuard &&) = delete;
+};
 
 } // namespace exe::fiber
 
