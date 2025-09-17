@@ -1,6 +1,6 @@
 //
-//
-//
+// condvar.hpp
+// ~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,160 +11,93 @@
 #ifndef DDVAMP_EXE_FIBER_SYNC_CONDVAR_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_SYNC_CONDVAR_HPP_INCLUDED_ 1
 
-#include <cstdint>
-#include <utility>
+#include <exe/fiber/api.hpp>
+#include <exe/fiber/core/awaiter.hpp>
+#include <exe/fiber/core/handle.hpp>
+#include <exe/fiber/sync/mutex.hpp>
 
-#include "exe/fiber/api.hpp"
-#include "exe/fiber/core/awaiter.hpp"
-#include "exe/fiber/sync/mutex.hpp"
+#include <utility>
 
 namespace exe::fiber {
 
-class CondVar {
-private:
-	using FiberInfo = Mutex::FiberInfo;
+class Condvar {
+ private:
+  struct Waiter final : IAwaiter, Mutex::FiberInfo {
+    Condvar &cv;
 
-	using Node = Mutex::Node;
+    explicit Waiter(Condvar &cv) noexcept : cv(cv) {}
 
-	struct Waiters {
-		Node *head_ = nullptr;
-		Node *tail_ = nullptr;
-		::std::uint64_t count_ = 0;
-	};
+    FiberHandle AwaitSymmetricSuspend(FiberHandle &&self) noexcept override {
+      handle = ::std::move(self);
+      cv.WaitImpl(this);
+      return FiberHandle::Invalid();
+    }
+  };
 
-	class WaitAwaiter : public IAwaiter {
-	private:
-		FiberInfo info_;
-		CondVar *cv_;
+  using Node = Waiter::Node;
 
-	public:
-		explicit WaitAwaiter(CondVar *cv) noexcept
-			: cv_(cv)
-		{}
+  Mutex &m_;
+  Node *head_ = nullptr;
+  Node *tail_;
 
-		[[nodiscard]] FiberHandle AwaitSymmetricSuspend(
-			FiberHandle &&current) noexcept override
-		{
-			info_.handle_ = ::std::move(current);
+ public:
+  ~Condvar() = default;
 
-			cv_->waitImpl(&info_);
+  Condvar(Condvar const &) = delete;
+  void operator= (Condvar const &) = delete;
 
-			return FiberHandle::Invalid();
-		}
-	};
+  Condvar(Condvar &&) = delete;
+  void operator= (Condvar &&) = delete;
 
-	Mutex &mutex_;
-	Waiters waiters_;
+ public:
+  constexpr explicit Condvar(Mutex &m) noexcept : m_(m) {}
 
-public:
-	~CondVar() = default;
+  /* ATTENTION: All methods below require a locked m_! */
 
-	CondVar(CondVar const &) = delete;
-	void operator= (CondVar const &) = delete;
+  void Wait() noexcept {
+    Waiter awaiter(*this);
+    self::Suspend(awaiter);
+  }
 
-	CondVar(CondVar &&) = delete;
-	void operator= (CondVar &&) = delete;
+  template <typename Predicate>
+  void Wait(Predicate &&stop_waiting) noexcept {
+    while (!stop_waiting()) {
+      Wait();
+    }
+  }
 
-public:
-	explicit CondVar(Mutex &mutex) noexcept
-		: mutex_(mutex)
-	{}
+  void NotifyOne() noexcept {
+    NotifyImpl(false);
+  }
 
-	/* ATTENTION: All methods below require a locked mutex_! */
+  void NotifyAll() noexcept {
+    NotifyImpl(true);
+  }
 
-	void wait() noexcept
-	{
-		UTIL_DEBUG_RUN(mutex_.checkOwner);
+ private:
+  void WaitImpl(Mutex::FiberInfo *self) noexcept {
+    if (head_) {
+      tail_->Link(self);
+      tail_ = self;
+    } else {
+      tail_ = head_ = self;
+    }
 
-		WaitAwaiter awaiter{this};
-		self::suspend(awaiter);
-	}
+    m_.Unlock();
+  }
 
-	template <typename Predicate>
-	void wait(Predicate &&stop_waiting) noexcept
-	{
-		UTIL_DEBUG_RUN(mutex_.checkOwner);
+  void NotifyImpl(bool const all) noexcept {
+    if (!head_) [[unlikely]] {
+      return;
+    }
 
-		while (!stop_waiting()) {
-			wait();
-		}
-	}
+    auto const head = head_;
+    auto const tail = all ? tail_ : head_;
+    head_ = tail->Next();
 
-	::std::uint64_t notify_one() noexcept
-	{
-		return notifyImpl(1);
-	}
-
-	::std::uint64_t notify_all() noexcept
-	{
-		return notifyImpl(0ull - 1);
-	}
-
-	::std::uint64_t notify_n(::std::uint64_t count) noexcept
-	{
-		return count != 0 ? notifyImpl(count) : 0;
-	}
-
-private:
-	void addWaiter(FiberInfo *waiter) noexcept
-	{
-		if (waiters_.count_ != 0) {
-			waiters_.tail_->next_.store(waiter, ::std::memory_order_relaxed);
-		} else {
-			waiters_.head_ = waiter;
-		}
-
-		waiters_.tail_ = waiter;
-
-		++waiters_.count_;
-	}
-
-	void waitImpl(FiberInfo *info) noexcept
-	{
-		addWaiter(info);
-
-		mutex_.unlock();
-	}
-
-	[[nodiscard]] Waiters takeWaiters(::std::uint64_t count) noexcept
-	{
-		if (waiters_.count_ <= count) {
-			return ::std::exchange(waiters_, {});
-		}
-
-		auto head = waiters_.head_;
-		auto tail = waiters_.head_;
-		auto cnt = count;
-
-		while (--count != 0) {
-			tail = tail->next_.load(::std::memory_order_relaxed);
-		}
-
-		waiters_.head_ = tail->next_.load(::std::memory_order_relaxed);
-		waiters_.count_ -= cnt;
-
-		tail->next_.store(nullptr, ::std::memory_order_relaxed);
-
-		return {head, tail, cnt};
-	}
-
-	[[nodiscard]] ::std::uint64_t notifyImpl(::std::uint64_t count) noexcept
-	{
-		UTIL_DEBUG_RUN(mutex_.checkOwner);
-
-		if (waiters_.count_ == 0) {
-			return 0;
-		}
-
-		auto awakeneds = takeWaiters(count);
-
-		auto node =
-			mutex_.tail_.exchange(awakeneds.tail_, ::std::memory_order_acq_rel);
-
-		node->next_.store(awakeneds.head_, ::std::memory_order_relaxed);
-
-		return awakeneds.count_;
-	}
+    tail->Link(m_.head_);
+    m_.head_ = head;
+  }
 };
 
 } // namespace exe::fiber
