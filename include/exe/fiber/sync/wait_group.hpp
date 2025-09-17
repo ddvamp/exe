@@ -1,6 +1,6 @@
 //
-//
-//
+// wait_group.hpp
+// ~~~~~~~~~~~~~~
 //
 // Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -11,90 +11,85 @@
 #ifndef DDVAMP_EXE_FIBER_SYNC_WAIT_GROUP_HPP_INCLUDED_
 #define DDVAMP_EXE_FIBER_SYNC_WAIT_GROUP_HPP_INCLUDED_ 1
 
+#include <exe/fiber/sync/event.hpp>
+
+#include <util/macro.hpp>
+#include <util/debug/assert.hpp>
+
 #include <atomic>
 #include <cstdint>
 
-#include "exe/fiber/sync/event.hpp"
-
-#include "util/debug.hpp"
-#include "util/macro.hpp"
-
 namespace exe::fiber {
 
-
-// Synchronization primitive for waiting for the completion of tasks,
-// which are expressed as a 64-bit counter
-// Formally, the wait ends when the counter drops to zero
-//
-// The add call should happens before the corresponding done call, otherwise
-// the behavior is undefined
-//
-// The add calls should happens before the wait calls
-//
-// WaitGroup can be reused. In this case, all current wait calls should
-// end (happens) before subsequent add calls
+/**
+ *  Synchronization primitive for waiting for the completion of tasks,
+ *  which are expressed as a 64-bit counter. Formally, the wait ends when
+ *  the counter drops to zero
+ *  The Add() calls should happens before the corresponding Done() and
+ *  Wait() calls, otherwise the behavior is undefined
+ *  WaitGroup can be reused. In this case, all current Wait() calls should
+ *  ends (happens) before subsequent Add() calls
+ */
 class WaitGroup {
-private:
-	using counter_t = ::std::uint64_t;
+ private:
+  using Count = ::std::uint64_t;
 
-	::std::atomic<counter_t> count_ = 0;
-	Event counter_is_zero_;
+  ::std::atomic<Count> count_;
+  Event count_is_zero_;
 
-public:
-	~WaitGroup() = default;
+  // To guarantee the expected implementation
+  static_assert(::std::atomic<Count>::is_always_lock_free);
 
-	WaitGroup(WaitGroup const &) = delete;
-	void operator= (WaitGroup const &) = delete;
+ public:
+  ~WaitGroup() {
+    UTIL_ASSERT(count_.load(::std::memory_order_relaxed) == 0,
+                 "WaitGroup is destroyed during waiting session");
+  }
 
-	WaitGroup(WaitGroup &&) = delete;
-	void operator= (WaitGroup &&) = delete;
+  WaitGroup(WaitGroup const &) = delete;
+  void operator= (WaitGroup const &) = delete;
 
-public:
-	WaitGroup() = default;
+  WaitGroup(WaitGroup &&) = delete;
+  void operator= (WaitGroup &&) = delete;
 
-	// increases the counter by delta
-	void add(counter_t const delta = 1) noexcept
-	{
-		[[maybe_unused]] auto const count
-			= count_.fetch_add(delta, ::std::memory_order_relaxed);
+ public:
+  explicit WaitGroup(Count const init = 0) noexcept : count_(init) {}
 
-		UTIL_ASSERT(
-			count < count + delta,
-			"increment must be non-zero and not overflow the counter"
-		);
-	}
+  // In case of an instance reuse
+  void Reset(Count const init = 0) noexcept {
+    count_.store(init, ::std::memory_order_relaxed);
+    count_is_zero_.Reset();
+  }
 
-	// reduces the counter by delta, performs synchronization, and
-	// if the counter drops to zero, unblocks all threads currently waiting for
-	void done(counter_t const delta = 1) noexcept
-	{
-		auto const count = count_.fetch_sub(delta, ::std::memory_order_release);
+  // Increases the counter by delta
+  void Add(Count const delta = 1) noexcept {
+    [[maybe_unused]] auto const old_count =
+        count_.fetch_add(delta, ::std::memory_order_relaxed);
+    UTIL_ASSERT(old_count < old_count + delta,
+                "Increment must be non-zero and not overflow the counter");
+  }
 
-		UTIL_ASSERT(
-			count - delta < count,
-			"decrement must be non-zero and not underflow the counter"
-		);
+  // Reduces the counter by delta, performs synchronization, and
+  // if the counter drops to zero, unblocks all fibers currently waiting for
+  void Done(Count const delta = 1) noexcept {
+    auto const old_count = count_.fetch_sub(delta, ::std::memory_order_release);
+    UTIL_ASSERT(old_count - delta < old_count,
+                "Decrement must be non-zero and not underflow the counter");
+    if (old_count != delta) [[likely]] {
+      // Fast path
+      return;
+    }
 
-		if (count == delta) {
-			counter_is_zero_.notify();
-		}
-	}
+    // Synchronization
+    UTIL_IGNORE(count_.load(::std::memory_order_acquire));
+    count_is_zero_.Fire();
+  }
 
-	// blocks the current thread until the counter drops to zero, and
-	// synchronizes with threads that performed synchronization when calling done
-	void wait() noexcept
-	{
-		counter_is_zero_.wait();
-
-		// synchronization
-		UTIL_IGNORE(count_.load(::std::memory_order_acquire));
-	}
-
-	// in case of instance reuse
-	void clear() noexcept
-	{
-		counter_is_zero_.clear();
-	}
+  // Blocks the current fiber until the counter drops to zero, and
+  // synchronizes with fibers that performed synchronization when calling Done()
+  void Wait() noexcept {
+    count_is_zero_.Wait();
+  }
 };
 
 } // namespace exe::fiber
