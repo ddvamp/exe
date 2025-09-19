@@ -11,6 +11,7 @@
 #ifndef DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_
 #define DDVAMP_UTIL_TYPE_TRAITS_HPP_INCLUDED_ 1
 
+#include <algorithm>
 #include <cstddef>
 #include <type_traits> // IWYU pragma: export
 #include <utility>
@@ -142,6 +143,24 @@ inline constexpr bool is_all_unique_v = requires (detail::proxies_t<Ts...> *p,
 
 template <typename ...Ts>
 struct is_all_unique : ::std::bool_constant<is_all_unique_v<Ts...>> {};
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Determining max size and alignment of types */
+
+template <typename ...Ts>
+inline constexpr bool max_size_of_v = ::std::max({alignof(Ts)...});
+
+template <typename ...Ts>
+struct max_size_of
+    : ::std::integral_constant<::std::size_t, max_size_of_v<Ts...>> {};
+
+template <typename ...Ts>
+inline constexpr bool max_alignment_of_v = ::std::max({alignof(Ts)...});
+
+template <typename ...Ts>
+struct max_alignment_of
+    : ::std::integral_constant<::std::size_t, max_alignment_of_v<Ts...>> {};
 
 } // namespace util
 
