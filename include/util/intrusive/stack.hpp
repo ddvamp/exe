@@ -29,8 +29,12 @@ class intrusive_stack {
   intrusive_stack(intrusive_stack const &) = delete;
   void operator= (intrusive_stack const &) = delete;
 
-  intrusive_stack(intrusive_stack &&) = delete;
-  void operator= (intrusive_stack &&) = delete;
+  constexpr intrusive_stack(intrusive_stack &&that) noexcept
+      : top_(::std::exchange(that.top_, nullptr)) {}
+
+  constexpr intrusive_stack &operator= (intrusive_stack &&that) noexcept {
+    top_ = ::std::exchange(that.top_, nullptr);
+  }
 
  public:
   constexpr intrusive_stack() noexcept = default;
@@ -50,7 +54,16 @@ class intrusive_stack {
 
     return *::std::exchange(top_, top_->next());
   }
+
+  constexpr void swap(intrusive_stack &that) noexcept {
+    ::std::swap(top_, that.top_);
+  }
 };
+
+template <typename T>
+constexpr void swap(intrusive_stack<T> &lhs, intrusive_stack<T> &rhs) noexcept {
+  lhs.swap(rhs);
+}
 
 } // namespace util
 

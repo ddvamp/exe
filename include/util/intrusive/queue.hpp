@@ -22,7 +22,7 @@ template <typename T>
 class intrusive_queue {
  private:
   T *head_ = nullptr;
-  T *tail_;
+  T *tail_ = nullptr;
 
  public:
   constexpr ~intrusive_queue() = default;
@@ -30,8 +30,14 @@ class intrusive_queue {
   intrusive_queue(intrusive_queue const &) = delete;
   void operator= (intrusive_queue const &) = delete;
 
-  intrusive_queue(intrusive_queue &&) = delete;
-  void operator= (intrusive_queue &&) = delete;
+  constexpr intrusive_queue(intrusive_queue &&that) noexcept
+      : head_(::std::exchange(that.head_, nullptr))
+      , tail_(::std::exchange(that.tail_, nullptr)) {}
+
+  constexpr intrusive_queue &operator= (intrusive_queue &&that) noexcept {
+    head_ = ::std::exchange(that.head_, nullptr);
+    tail_ = ::std::exchange(that.tail_, nullptr);
+  }
 
  public:
   constexpr intrusive_queue() noexcept = default;
@@ -55,9 +61,21 @@ class intrusive_queue {
   [[nodiscard]] constexpr T &pop() noexcept {
 		UTIL_ASSERT(!empty(), "Queue is empty");
 
-    return *::std::exchange(head_, head_->next());
+    auto const ptr = ::std::exchange(head_, head_->next());
+    tail_ = (head_ ? tail_ : nullptr);
+    return *ptr;
+  }
+
+  constexpr void swap(intrusive_queue &that) noexcept {
+    ::std::swap(head_, that.head_);
+    ::std::swap(tail_, that.tail_);
   }
 };
+
+template <typename T>
+constexpr void swap(intrusive_queue<T> &lhs, intrusive_queue<T> &rhs) noexcept {
+  lhs.swap(rhs);
+}
 
 } // namespace util
 
