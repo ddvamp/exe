@@ -65,7 +65,7 @@ class storage {
       noexcept (::std::is_nothrow_destructible_v<T>)
       requires (::std::is_destructible_v<T>) {
     if constexpr (!::std::is_trivially_destructible_v<T>) {
-      object_.~T();
+      ::std::ranges::destroy_at(ptr());
     }
   }
 
@@ -73,7 +73,7 @@ class storage {
   constexpr T &emplace(Ts &&...ts)
       noexcept (::std::is_nothrow_constructible_v<T, Ts &&...>)
       requires (::std::is_constructible_v<T, Ts &&...>) {
-    return *::std::construct_at(ptr(), ::std::forward<Ts>(ts)...);
+    return *::std::ranges::construct_at(ptr(), ::std::forward<Ts>(ts)...);
   }
 
   template <typename U, typename ...Ts>
@@ -82,14 +82,15 @@ class storage {
                     T, ::std::initializer_list<U> &, Ts &&...>)
       requires (::std::is_constructible_v<
                     T, ::std::initializer_list<U> &, Ts &&...>) {
-    return *::std::construct_at(ptr(), ilist, ::std::forward<Ts>(ts)...);
+    return *::std::ranges::construct_at(ptr(), ilist,
+                                        ::std::forward<Ts>(ts)...);
   }
 
   template <typename U = T>
   constexpr storage &operator= (U &&u)
       noexcept (::std::is_nothrow_constructible_v<T, U &&>)
       requires (::std::is_constructible_v<T, U &&>) {
-    ::std::construct_at(ptr(), ::std::forward<U>(u));
+    ::std::ranges::construct_at(ptr(), ::std::forward<U>(u));
     return *this;
   }
 };
