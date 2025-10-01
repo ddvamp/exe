@@ -25,8 +25,10 @@ set(
   src/context/machine_context.cpp
   src/context/machine_context_sysv_elf.S
 
+  src/exe/coroutine.cpp
   src/exe/fiber.cpp
   src/exe/handle.cpp
+  src/exe/manual_loop.cpp
   src/exe/stack.cpp
   src/exe/strand.cpp
   src/exe/thread_pool.cpp
@@ -47,7 +49,7 @@ target_include_directories(
   PRIVATE src/util/ src/exe/
 )
 
-target_compile_features(exe PUBLIC cxx_std_23)
+target_compile_features(exe PUBLIC cxx_std_26)
 
 enable_testing()
 add_subdirectory(tests)
