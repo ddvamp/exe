@@ -37,6 +37,7 @@ class intrusive_queue {
   constexpr intrusive_queue &operator= (intrusive_queue &&that) noexcept {
     head_ = ::std::exchange(that.head_, nullptr);
     tail_ = ::std::exchange(that.tail_, nullptr);
+    return *this;
   }
 
  public:

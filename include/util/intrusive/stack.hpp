@@ -34,6 +34,7 @@ class intrusive_stack {
 
   constexpr intrusive_stack &operator= (intrusive_stack &&that) noexcept {
     top_ = ::std::exchange(that.top_, nullptr);
+    return *this;
   }
 
  public:
