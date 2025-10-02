@@ -14,7 +14,7 @@
 #include <exe/fiber/api.hpp>
 #include <exe/fiber/core/awaiter.hpp>
 #include <exe/fiber/core/handle.hpp>
-#include <exe/fiber/sync/channel2.hpp>
+#include <exe/fiber/sync/channel.hpp>
 
 #include <concurrency/rendezvous.hpp>
 #include <util/utility.hpp>
