@@ -64,6 +64,11 @@ class SelectorBase {
 	::concurrency::Rendezvous rendezvous_;
 
  public:
+  [[nodiscard]] static ::std::uint64_t GetMiddle(::std::uint64_t n) noexcept {
+		static thread_local SelectorShuffler generator(::std::random_device{}());
+		return generator.NextBounded(n);
+	}
+
 	FiberHandle SetFiber(FiberHandle &&self) noexcept {
 		handle_ = ::std::move(self);
 		return rendezvous_.Arrive() ? ::std::move(handle_) : FiberHandle::Invalid();
@@ -84,11 +89,6 @@ class SelectorBase {
 		if (rendezvous_.Arrive()) {
 			::std::move(handle_).Schedule();
 		}
-	}
-
-  [[nodiscard]] static ::std::uint64_t GetMiddle(::std::uint64_t n) noexcept {
-		static thread_local SelectorShuffler generator(::std::random_device{}());
-		return generator.NextBounded(n);
 	}
 };
 
@@ -279,6 +279,48 @@ class Selector final : private SelectorBase {
 };
 
 } // namespace detail
+
+template <SelectClause ...Clauses>
+[[nodiscard]] SelectResult<Clauses...> TrySelect(Clauses ...clauses) noexcept {
+	SelectResult<Clauses...> result;
+
+	auto send = [&result]<::std::size_t Idx>(
+			detail::SendClause<typename Clauses...[Idx]::ValueType> clause) noexcept {
+		if (clause.chan.Send(clause.value, false)) {
+			result.template emplace<Idx + 1>(::util::unit_t{});
+			return true;
+		}
+		return false;
+	};
+	auto receive = [&result]<::std::size_t Idx>(
+			detail::ReceiveClause<typename Clauses...[Idx]::ValueType> clause) noexcept {
+		if (auto value_opt = clause.chan.Receive(false)) {
+			result.template emplace<Idx + 1>(::std::move(*value_opt));
+			return true;
+		}
+		return false;
+	};
+
+	::util::overloaded func(send, receive);
+
+	auto const middle = detail::SelectorBase::GetMiddle(sizeof...(Clauses));
+
+	auto [...callers] = [func, clauses..., middle]<::std::size_t ...Ids>(
+			::std::index_sequence<Ids...>) noexcept {
+		return ::std::tuple([func, clauses, active = (Ids >= middle)]
+												() mutable noexcept {
+			if (::std::exchange(active, !active)) {
+				return func.template operator()<Ids>(clauses);
+			}
+
+			return false;
+		}...);
+	}(::std::index_sequence_for<Clauses...>{});
+
+	(... || callers()) || (... || callers());
+
+	return result;
+}
 
 template <SelectClause ...Clauses>
 [[nodiscard]] SelectResult<Clauses...> Select(Clauses ...clauses) noexcept {

@@ -227,7 +227,7 @@ class ChannelState {
       : buffer_(storage, buffer_size) {}
 
  public:
-  bool Send(T &&value) noexcept {
+  bool Send(T &value, bool block) noexcept {
     auto token = lock_.GetToken();
     token.Lock();
 
@@ -237,6 +237,11 @@ class ChannelState {
     }
 
     if (buffer_.IsFull()) [[unlikely]] {
+			if (!block) [[unlikely]] {
+				token.Unlock();
+				return false;
+			}
+
       SendAwaiter awaiter(value, token);
 			waitq_.push_back(awaiter);
       self::Suspend(awaiter); // token.Unlock()
@@ -249,7 +254,7 @@ class ChannelState {
 		return true;
 	}
 
-	[[nodiscard]] ::std::optional<T> Receive() noexcept {
+	[[nodiscard]] ::std::optional<T> Receive(bool block) noexcept {
 		::std::optional<T> result;
 
     auto token = lock_.GetToken();
@@ -261,6 +266,11 @@ class ChannelState {
     }
 
     if (buffer_.IsEmpty()) [[unlikely]] {
+      if (!block) [[unlikely]] {
+				token.Unlock();
+				return result;
+			}
+
       ReceiveAwaiter awaiter(result, token);
 			waitq_.push_back(awaiter);
       self::Suspend(awaiter); // token.Unlock()
@@ -449,12 +459,20 @@ class Channel {
  public:
 	explicit Channel(::std::size_t size) : impl_(Impl::Create(size)) {}
 
-	bool Send(T value) noexcept {
-		return impl_->Send(::std::move(value));
+	bool TrySend(T &value) noexcept {
+		return impl_->Send(value, false);
+	}
+
+	[[nodiscard]] ::std::optional<T> TryReceive() noexcept {
+		return impl_->Receive(false);
+	}
+
+	bool Send(T &value) noexcept {
+		return impl_->Send(value, true);
 	}
 
 	[[nodiscard]] ::std::optional<T> Receive() noexcept {
-		return impl_->Receive();
+		return impl_->Receive(true);
 	}
 
 	void Close() noexcept {
