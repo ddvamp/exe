@@ -18,17 +18,16 @@
 
 #include <util/debug/assert.hpp>
 
-#include <chrono>
 #include <format>
 #include <iostream>
 #include <thread>
 
-int main() {
+int test_channel() {
   exe::runtime::ThreadPool pool(4);
   exe::runtime::SafeScheduler sched(pool);
   concurrency::WaitGroup wg;
 
-  constexpr auto kStep = 120;
+  constexpr auto kStep = 10;
 
   pool.Start();
 
@@ -94,4 +93,8 @@ int main() {
   pool.Stop();
 
   return 0;
+}
+
+int main() {
+  test_channel();
 }

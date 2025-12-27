@@ -51,7 +51,7 @@ class Timer : exe::runtime::Operation {
   }
 };
 
-void epoll_example() {
+void test_reactor() {
   exe::runtime::Reactor reactor;
   reactor.Init(128);
 
@@ -68,5 +68,5 @@ void epoll_example() {
 }
 
 int main() {
-  epoll_example();
+  test_reactor();
 }

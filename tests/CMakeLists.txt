@@ -10,12 +10,27 @@
 
 cmake_minimum_required(VERSION 4.1)
 
-add_executable(exe_tests)
-target_sources(exe_tests PRIVATE dummy_test.cpp t_reactor.cpp)
+function(add_test_user test_name)
+  set(test test_${test_name})
 
-target_link_libraries(exe_tests PRIVATE exe)
+  add_executable(${test})
+  target_sources(${test} PRIVATE t_${test_name}.cpp)
 
-add_test(NAME exe_tests COMMAND exe_tests)
+  target_link_libraries(${test} PRIVATE exe)
 
-# ctest -L exe;tests
-set_tests_properties(exe_tests PROPERTIES LABELS "exe;tests")
+  add_test(NAME ${test} COMMAND ${test})
+
+  # ctest -L exe/tests/[test_name]
+  set_tests_properties(${test} PROPERTIES LABELS "exe;tests;${test}")
+endfunction()
+
+set(
+  tests
+
+  channel
+  reactor
+)
+
+foreach(test ${tests})
+  add_test_user(${test})
+endforeach()

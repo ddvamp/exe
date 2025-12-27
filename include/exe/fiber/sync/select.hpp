@@ -307,7 +307,9 @@ template <SelectClause ...Clauses>
 
 	auto [...callers] = [func, clauses..., middle]<::std::size_t ...Ids>(
 			::std::index_sequence<Ids...>) noexcept {
-		return ::std::tuple([func, clauses, active = (Ids >= middle)]
+		// clauses = clauses
+		// See https://github.com/llvm/llvm-project/issues/161002
+		return ::std::tuple([func, clauses = clauses, active = (Ids >= middle)]
 												() mutable noexcept {
 			if (::std::exchange(active, !active)) {
 				return func.template operator()<Ids>(clauses);
