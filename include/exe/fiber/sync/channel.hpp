@@ -410,7 +410,7 @@ class ChannelImpl final : public ChannelState<T>,
 	void destroy_self() const noexcept {
 		constexpr auto align = ::util::max_alignment_of_v<Impl, T>;
 		this->~Impl();
-		Deallocate<align>(::util::voidify(*this));
+		Deallocate<align>(::util::voidify(this));
 	}
 };
 

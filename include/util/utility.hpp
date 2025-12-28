@@ -81,10 +81,15 @@ template <typename ...Ts>
  *  Similar to https://en.cppreference.com/w/cpp/memory/voidify.html
  *  but forcibly removes cv-qualification
  */
+
 template <typename T>
-[[nodiscard]] inline constexpr void *voidify(T &obj) noexcept {
-  return const_cast<void *>(
-      static_cast<void const volatile *>(::std::addressof(obj)));
+[[nodiscard("Pure")]] inline constexpr void *voidify(T *obj) noexcept {
+  return const_cast<void *>(static_cast<void const volatile *>(obj));
+}
+
+template <typename T>
+[[nodiscard("Pure")]] inline constexpr void *voidify(T &obj) noexcept {
+  return voidify(::std::addressof(obj));
 }
 
 template <typename T>
