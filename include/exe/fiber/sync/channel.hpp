@@ -58,7 +58,6 @@ class ChannelBuffer {
   using Storage = ::util::storage<T>;
 
   Storage *const buffer_; // [TODO]: start_lifetime_as_array
-  ::std::size_t const capacity_;
 	::std::size_t const index_mask_;
 	::std::size_t send_ = 0;
 	::std::size_t recv_ = 0;
@@ -84,7 +83,6 @@ class ChannelBuffer {
  public:
 	ChannelBuffer(void *storage, ::std::size_t capacity) noexcept
       : buffer_(::new (storage) Storage[capacity])
-			, capacity_(capacity)
       , index_mask_(capacity - 1) {}
 
 	void Push(T &value) noexcept {
@@ -99,24 +97,24 @@ class ChannelBuffer {
 		++recv_;
 	}
 
-	[[nodiscard]] T &Front() noexcept {
+	[[nodiscard("Pure")]] T &Front() noexcept {
 		return buffer_[GetRecvIdx()].ref();
 	}
 
-	[[nodiscard]] bool IsEmpty() const noexcept {
+	[[nodiscard("Pure")]] bool IsEmpty() const noexcept {
 		return send_ == recv_;
 	}
 
-	[[nodiscard]] bool IsFull() const noexcept {
-		return send_ - recv_ == capacity_;
+	[[nodiscard("Pure")]] bool IsFull() const noexcept {
+		return send_ - recv_ == index_mask_ + 1;
 	}
 
  private:
-	[[nodiscard]] ::std::size_t GetSendIdx() const noexcept {
+	[[nodiscard("Pure")]] ::std::size_t GetSendIdx() const noexcept {
 		return send_ & index_mask_;
 	}
 
-	[[nodiscard]] ::std::size_t GetRecvIdx() const noexcept {
+	[[nodiscard("Pure")]] ::std::size_t GetRecvIdx() const noexcept {
 		return recv_ & index_mask_;
 	}
 };
@@ -385,14 +383,21 @@ class ChannelImpl final : public ChannelState<T>,
 	using ChannelState<T>::ChannelState;
 
  public:
+  /**
+	 * The channel state and the buffer for the elements are placed in
+	 * the single allocation side by side. To do this, it needs to determine
+	 * the correct size and alignment
+	 */
 	[[nodiscard]] static Impl *Create(::std::size_t requested) {
 		constexpr auto align = ::util::max_alignment_of_v<Impl, T>;
 		constexpr ::std::size_t max_size_t = -1;
+		// sizeof(Impl) + align - 1 must be <= max_size_t
 		static_assert(align <= max_size_t - sizeof(Impl) + 1,
 									"Too strict alignment of T");
 
 		constexpr auto impl_bytes = (sizeof(Impl) + align - 1) / align * align;
 		auto const size = ::std::bit_ceil(requested);
+		// impl_bytes + size * sizeof(T) must be <= max_size_t
 		if (size > (max_size_t - impl_bytes) / sizeof(T)) [[unlikely]] {
 			throw ::std::bad_array_new_length();
 		}
