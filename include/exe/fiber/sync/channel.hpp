@@ -55,18 +55,20 @@ inline void Deallocate(void *ptr) noexcept {
 template <typename T>
 class ChannelBuffer {
  private:
-  ::util::storage<T> *const buffer_; // [TODO]: start_lifetime_as_array
+  using Storage = ::util::storage<T>;
+
+  Storage *const buffer_; // [TODO]: start_lifetime_as_array
   ::std::size_t const capacity_;
 	::std::size_t const index_mask_;
 	::std::size_t send_ = 0;
 	::std::size_t recv_ = 0;
 
-	static_assert(sizeof(::util::storage<T>) == sizeof(T));
-	static_assert(alignof(::util::storage<T>) == alignof(T));
+	static_assert(sizeof(Storage) == sizeof(T));
+	static_assert(alignof(Storage) == alignof(T));
 
  public:
   ~ChannelBuffer() noexcept {
-    if constexpr (!::std::is_trivially_destructible_v<T>) {
+    if constexpr (Storage::is_reset_needed_v) {
       while (!IsEmpty()) {
         Pop();
       }
@@ -81,7 +83,7 @@ class ChannelBuffer {
 
  public:
 	ChannelBuffer(void *storage, ::std::size_t capacity) noexcept
-      : buffer_(::new (storage) ::util::storage<T>[capacity])
+      : buffer_(::new (storage) Storage[capacity])
 			, capacity_(capacity)
       , index_mask_(capacity - 1) {}
 
@@ -91,7 +93,7 @@ class ChannelBuffer {
 	}
 
 	void Pop() noexcept {
-		if constexpr (!::std::is_trivially_destructible_v<T>) {
+		if constexpr (Storage::is_reset_needed_v) {
 			buffer_[GetRecvIdx()].reset();
 		}
 		++recv_;
@@ -372,7 +374,7 @@ template <typename T>
 concept SuitableForChannel =
 		::std::is_object_v<T> && !::util::is_qualified_v<T> &&
 		::std::is_nothrow_destructible_v<T> &&
-    ::std::is_nothrow_move_constructible_v<T>; // !std::is_array_v<T>
+    ::std::is_nothrow_move_constructible_v<T>; // implies !std::is_array_v<T>
 
 template <SuitableForChannel T>
 class ChannelImpl final : public ChannelState<T>,

@@ -45,26 +45,29 @@ class storage {
  public:
   constexpr storage() noexcept {}
 
-  [[nodiscard]] constexpr auto *ptr(this auto &&self) noexcept {
+  [[nodiscard("Pure")]] constexpr auto *ptr(this auto &&self) noexcept {
     return ::std::addressof(self.object_);
   }
 
-  [[nodiscard]] constexpr auto *operator-> (this auto &&self) noexcept {
+  [[nodiscard("Pure")]] constexpr auto *operator-> (this auto &&self) noexcept {
     return ::std::addressof(self.object_);
   }
 
-  [[nodiscard]] constexpr auto &&ref(this auto &&self) noexcept {
+  [[nodiscard("Pure")]] constexpr auto &&ref(this auto &&self) noexcept {
     return ::std::forward<decltype(self)>(self).object_;
   }
 
-  [[nodiscard]] constexpr auto &&operator* (this auto &&self) noexcept {
+  [[nodiscard("Pure")]] constexpr auto &&operator* (this auto &&self) noexcept {
     return ::std::forward<decltype(self)>(self).object_;
   }
+
+  inline static constexpr bool is_reset_needed_v =
+      !::std::is_trivially_destructible_v<T>;
 
   constexpr void reset()
       noexcept (::std::is_nothrow_destructible_v<T>)
       requires (::std::is_destructible_v<T>) {
-    if constexpr (!::std::is_trivially_destructible_v<T>) {
+    if constexpr (is_reset_needed_v) {
       ::std::ranges::destroy_at(ptr());
     }
   }
