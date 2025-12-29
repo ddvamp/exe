@@ -25,6 +25,7 @@
 
 #include <bit>
 #include <cstddef>
+#include <mutex>
 #include <new>
 #include <optional>
 
@@ -131,17 +132,17 @@ class ChannelAwaiter : public IAwaiter {
  protected:
   FiberHandle handle_;
 
-  using Token = ::concurrency::QSpinlock::Token;
+  using Lock = ::std::unique_lock<::concurrency::QSpinlock::Token>;
 
  private:
-	Token &token_;
+	Lock &lock_;
 
  public:
-	explicit ChannelAwaiter(Token &token) noexcept : token_(token) {}
+	explicit ChannelAwaiter(Lock &lock) noexcept : lock_(lock) {}
 
 	FiberHandle AwaitSymmetricSuspend(FiberHandle &&current) noexcept override {
 		handle_ = ::std::move(current);
-		token_.Unlock();
+		lock_.unlock();
 		return FiberHandle::Invalid();
 	}
 };
@@ -178,11 +179,11 @@ class ChannelState {
 		bool is_sent_;
 
 	 public:
-		SendAwaiter(T &value, Token &token) noexcept
-				: ChannelAwaiter(token)
+		SendAwaiter(T &value, Lock &lock) noexcept
+				: ChannelAwaiter(lock)
 				, value_(value) {}
 
-		[[nodiscard]] bool IsSent() const noexcept {
+		[[nodiscard("Pure")]] bool IsSent() const noexcept {
 			return is_sent_;
 		}
 
@@ -208,8 +209,8 @@ class ChannelState {
 		::std::optional<T> &value_;
 
 	 public:
-		ReceiveAwaiter(::std::optional<T> &value, Token &token) noexcept
-				: ChannelAwaiter(token)
+		ReceiveAwaiter(::std::optional<T> &value, Lock &lock) noexcept
+				: ChannelAwaiter(lock)
 				, value_(value) {}
 
 		[[nodiscard]] bool TryReceive(T &value) noexcept override {
@@ -241,20 +242,18 @@ class ChannelState {
  public:
   bool Send(T &value, bool nonblock) noexcept {
     auto token = lock_.GetToken();
-    token.Lock();
+		::std::unique_lock lock(token);
 
     if (is_closed_) [[unlikely]] {
-      token.Unlock();
       return false;
     }
 
     if (buffer_.IsFull()) [[unlikely]] {
 			if (nonblock) [[unlikely]] {
-				token.Unlock();
 				return false;
 			}
 
-      SendAwaiter awaiter(value, token);
+      SendAwaiter awaiter(value, lock);
 			waitq_.push_back(awaiter);
       self::Suspend(awaiter); // token.Unlock()
       return awaiter.IsSent();
@@ -262,7 +261,6 @@ class ChannelState {
 
 		BufferPush(value);
 
-		token.Unlock();
 		return true;
 	}
 
@@ -270,20 +268,18 @@ class ChannelState {
 		::std::optional<T> result;
 
     auto token = lock_.GetToken();
-    token.Lock();
+		::std::unique_lock lock(token);
 
     if (is_closed_) [[unlikely]] {
-      token.Unlock();
       return result;
     }
 
     if (buffer_.IsEmpty()) [[unlikely]] {
       if (nonblock) [[unlikely]] {
-				token.Unlock();
 				return result;
 			}
 
-      ReceiveAwaiter awaiter(result, token);
+      ReceiveAwaiter awaiter(result, lock);
 			waitq_.push_back(awaiter);
       self::Suspend(awaiter); // token.Unlock()
       return result;
@@ -292,7 +288,6 @@ class ChannelState {
     result.emplace(::std::move(buffer_.Front()));
     BufferPop();
 
-    token.Unlock();
 		return result;
 	}
 
