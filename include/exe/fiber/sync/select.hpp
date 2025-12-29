@@ -17,6 +17,7 @@
 #include <exe/fiber/sync/channel.hpp>
 
 #include <concurrency/rendezvous.hpp>
+#include <util/macro.hpp>
 #include <util/utility.hpp>
 
 #include <atomic>
@@ -77,6 +78,10 @@ class SelectorBase {
  protected:
   explicit SelectorBase(::std::size_t active) noexcept : active_(active) {}
 
+	[[nodiscard]] bool IsReady() const noexcept {
+		return rendezvous_.IsReady();
+	}
+
 	[[nodiscard]] bool FirstUse() noexcept {
 		return first_.exchange(false, ::std::memory_order_relaxed);
 	}
@@ -122,8 +127,9 @@ class Selector final : private SelectorBase {
 	SelectResult<Clauses...> Select(Clauses ...clauses) {
 		auto [...waiters] = MakeWaiters(clauses..., GetMiddle(sizeof...(Clauses)));
 
-		auto const ready = (... || waiters()) || (... || waiters());
-		if (!ready) [[unlikely]] {
+		UTIL_IGNORE((... || waiters()) || (... || waiters()));
+
+		if (!IsReady()) [[likely]] {
 			SelectorAwaiter awaiter(*this);
 			self::Suspend(awaiter);
 		}
@@ -319,7 +325,7 @@ template <SelectClause ...Clauses>
 		}...);
 	}(::std::index_sequence_for<Clauses...>{});
 
-	(... || callers()) || (... || callers());
+	UTIL_IGNORE((... || callers()) || (... || callers()));
 
 	return result;
 }
