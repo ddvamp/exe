@@ -78,7 +78,7 @@ class SelectorBase {
  protected:
   explicit SelectorBase(::std::size_t active) noexcept : active_(active) {}
 
-	[[nodiscard]] bool IsReady() const noexcept {
+	[[nodiscard("Pure")]] bool IsReady() const noexcept {
 		return rendezvous_.IsReady();
 	}
 
@@ -90,7 +90,7 @@ class SelectorBase {
 		return active_.fetch_sub(1, ::std::memory_order_relaxed) == 1;
 	}
 
-	void Arrive() noexcept {
+	void TrySchedule() noexcept {
 		if (rendezvous_.Arrive()) {
 			::std::move(handle_).Schedule();
 		}
@@ -143,7 +143,7 @@ class Selector final : private SelectorBase {
 	template <::std::size_t Idx>
 	void SetResult(Clause<Idx>::ResultType &&value) noexcept {
 		result_.template emplace<Idx + 1>(::std::move(value));
-		Arrive();
+		TrySchedule();
 	}
 
 	template <::std::size_t Idx>
@@ -169,9 +169,9 @@ class Selector final : private SelectorBase {
 		return false;
 	}
 
-	void Close() noexcept {
+	void Leave() noexcept {
 		if (LastLeave()) [[unlikely]] {
-			Arrive();
+			TrySchedule();
 		}
 	}
 
@@ -191,7 +191,8 @@ class Selector final : private SelectorBase {
 				, active_(active) {}
 
 		[[nodiscard]] bool operator() () noexcept {
-			if (!::std::exchange(active_, !active_)) {
+			active_ = !active_;
+			if (!active_) {
 				return false;
 			}
 
@@ -201,13 +202,11 @@ class Selector final : private SelectorBase {
 		}
 
 		void Unlink() noexcept {
-			if (!linked_) {
-				return;
-			}
-
-			auto guard = clause_.chan.Lock();
-			if (this->linked()) {
-				this->unlink();
+			if (linked_) {
+				auto guard = clause_.chan.Lock();
+				if (this->linked()) {
+					this->unlink();
+				}
 			}
 		}
 
@@ -215,8 +214,8 @@ class Selector final : private SelectorBase {
 			return selector_.TrySend<Idx>(clause_.value);
 		}
 
-		void Close() noexcept override {
-			selector_.Close();
+		void Cancel() noexcept override {
+			selector_.Leave();
 		}
 	};
 
@@ -235,7 +234,8 @@ class Selector final : private SelectorBase {
 				, active_(active) {}
 
 		[[nodiscard]] bool operator() () noexcept {
-			if (!::std::exchange(active_, !active_)) {
+			active_ = !active_;
+			if (!active_) {
 				return false;
 			}
 
@@ -245,13 +245,11 @@ class Selector final : private SelectorBase {
 		}
 
 		void Unlink() {
-			if (!linked_) {
-				return;
-			}
-
-			auto guard = clause_.chan.Lock();
-			if (this->next_) {
-				this->unlink();
+			if (linked_) {
+				auto guard = clause_.chan.Lock();
+				if (this->next_) {
+					this->unlink();
+				}
 			}
 		}
 
@@ -259,8 +257,8 @@ class Selector final : private SelectorBase {
 			return selector_.TryReceive<Idx>(value);
 		}
 
-		void Close() noexcept override {
-			selector_.Close();
+		void Cancel() noexcept override {
+			selector_.Leave();
 		}
 	};
 
@@ -279,7 +277,7 @@ class Selector final : private SelectorBase {
   auto MakeWaiters(Clauses ...clauses, ::std::size_t middle) noexcept {
 		return [this, middle, clauses...]<::std::size_t ...Ids>(
 				::std::index_sequence<Ids...>) noexcept {
-			return ::std::tuple(MakeWaiter<Ids>(clauses, Ids >= middle)...);
+			return ::std::tuple(MakeWaiter<Ids>(clauses, Ids < middle)...);
 		}(::std::index_sequence_for<Clauses...>{});
 	}
 };
@@ -290,7 +288,7 @@ template <SelectClause ...Clauses>
 [[nodiscard]] SelectResult<Clauses...> TrySelect(Clauses ...clauses) noexcept {
 	SelectResult<Clauses...> result;
 
-	auto send = [&result]<::std::size_t Idx>(
+	auto const send = [&result]<::std::size_t Idx>(
 			detail::SendClause<typename Clauses...[Idx]::ValueType> clause) noexcept {
 		if (clause.chan.Send(clause.value, true)) {
 			result.template emplace<Idx + 1>(::util::unit_t{});
@@ -298,7 +296,7 @@ template <SelectClause ...Clauses>
 		}
 		return false;
 	};
-	auto receive = [&result]<::std::size_t Idx>(
+	auto const receive = [&result]<::std::size_t Idx>(
 			detail::ReceiveClause<typename Clauses...[Idx]::ValueType> clause) noexcept {
 		if (auto value_opt = clause.chan.Receive(true)) {
 			result.template emplace<Idx + 1>(::std::move(*value_opt));
@@ -315,13 +313,10 @@ template <SelectClause ...Clauses>
 			::std::index_sequence<Ids...>) noexcept {
 		// clauses = clauses
 		// See https://github.com/llvm/llvm-project/issues/161002
-		return ::std::tuple([func, clauses = clauses, active = (Ids >= middle)]
+		return ::std::tuple([func, clauses = clauses, active = (Ids < middle)]
 												() mutable noexcept {
-			if (::std::exchange(active, !active)) {
-				return func.template operator()<Ids>(clauses);
-			}
-
-			return false;
+			active = !active;
+			return active ? func.template operator()<Ids>(clauses) : false;
 		}...);
 	}(::std::index_sequence_for<Clauses...>{});
 

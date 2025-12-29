@@ -125,7 +125,7 @@ struct ChannelWaiter : ::util::intrusive_list_node {
   ~ChannelWaiter() = default;
 
  public:
-  virtual void Close() noexcept = 0;
+  virtual void Cancel() noexcept = 0;
 };
 
 class ChannelAwaiter : public IAwaiter {
@@ -193,7 +193,7 @@ class ChannelState {
 			return result;
 		}
 
-		void Close() noexcept override {
+		void Cancel() noexcept override {
 			Schedule(false);
 		}
 
@@ -219,7 +219,7 @@ class ChannelState {
 			return true;
 		}
 
-		void Close() noexcept override {
+		void Cancel() noexcept override {
 			Schedule();
 		}
 
@@ -297,7 +297,7 @@ class ChannelState {
     is_closed_ = true;
 
     while (!waitq_.empty()) {
-			Pop<ChannelWaiter>().Close();
+			Pop<ChannelWaiter>().Cancel();
     }
 	}
 
@@ -307,7 +307,7 @@ class ChannelState {
 		auto guard = Lock();
 
 		if (is_closed_) [[unlikely]] {
-			sender.Close();
+			sender.Cancel();
 			return ChannelOpStatus::kClose;
 		}
 
@@ -327,7 +327,7 @@ class ChannelState {
 		auto guard = Lock();
 
 		if (is_closed_) [[unlikely]] {
-			receiver.Close();
+			receiver.Cancel();
 			return ChannelOpStatus::kClose;
 		}
 
