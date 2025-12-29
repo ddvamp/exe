@@ -120,6 +120,10 @@ class ChannelBuffer {
 };
 
 struct ChannelWaiter : ::util::intrusive_list_node {
+ protected:
+  ~ChannelWaiter() = default;
+
+ public:
   virtual void Close() noexcept = 0;
 };
 
@@ -152,11 +156,19 @@ template <typename T>
 class ChannelState {
  public:
 	struct Sender : ChannelWaiter {
-		[[nodiscard]] virtual ::std::optional<T> TrySend() noexcept = 0;
+	 protected:
+  	~Sender() = default;
+
+   public:
+  	[[nodiscard]] virtual ::std::optional<T> TrySend() noexcept = 0;
 	};
 
 	struct Receiver : ChannelWaiter {
-		[[nodiscard]] virtual bool TryReceive(T &) noexcept = 0;
+	 protected:
+  	~Receiver() = default;
+
+   public:
+  	[[nodiscard]] virtual bool TryReceive(T &) noexcept = 0;
 	};
 
  private:
@@ -227,7 +239,7 @@ class ChannelState {
       : buffer_(storage, buffer_size) {}
 
  public:
-  bool Send(T &value, bool block) noexcept {
+  bool Send(T &value, bool nonblock) noexcept {
     auto token = lock_.GetToken();
     token.Lock();
 
@@ -237,7 +249,7 @@ class ChannelState {
     }
 
     if (buffer_.IsFull()) [[unlikely]] {
-			if (!block) [[unlikely]] {
+			if (nonblock) [[unlikely]] {
 				token.Unlock();
 				return false;
 			}
@@ -254,7 +266,7 @@ class ChannelState {
 		return true;
 	}
 
-	[[nodiscard]] ::std::optional<T> Receive(bool block) noexcept {
+	[[nodiscard]] ::std::optional<T> Receive(bool nonblock) noexcept {
 		::std::optional<T> result;
 
     auto token = lock_.GetToken();
@@ -266,7 +278,7 @@ class ChannelState {
     }
 
     if (buffer_.IsEmpty()) [[unlikely]] {
-      if (!block) [[unlikely]] {
+      if (nonblock) [[unlikely]] {
 				token.Unlock();
 				return result;
 			}
@@ -285,7 +297,7 @@ class ChannelState {
 	}
 
 	void Close() noexcept {
-    auto guard = lock_.MakeGuard();
+    auto guard = Lock();
 
     is_closed_ = true;
 
@@ -297,7 +309,7 @@ class ChannelState {
 	// For Select
 
 	[[nodiscard]] ChannelOpStatus Send(Sender &sender) noexcept {
-		auto guard = lock_.MakeGuard();
+		auto guard = Lock();
 
 		if (is_closed_) [[unlikely]] {
 			sender.Close();
@@ -317,7 +329,7 @@ class ChannelState {
 	}
 
 	[[nodiscard]] ChannelOpStatus Receive(Receiver &receiver) noexcept {
-		auto guard = lock_.MakeGuard();
+		auto guard = Lock();
 
 		if (is_closed_) [[unlikely]] {
 			receiver.Close();
@@ -467,19 +479,19 @@ class Channel {
 	explicit Channel(::std::size_t size) : impl_(Impl::Create(size)) {}
 
 	bool TrySend(T &value) noexcept {
-		return impl_->Send(value, false);
-	}
-
-	[[nodiscard]] ::std::optional<T> TryReceive() noexcept {
-		return impl_->Receive(false);
-	}
-
-	bool Send(T &value) noexcept {
 		return impl_->Send(value, true);
 	}
 
-	[[nodiscard]] ::std::optional<T> Receive() noexcept {
+	[[nodiscard]] ::std::optional<T> TryReceive() noexcept {
 		return impl_->Receive(true);
+	}
+
+	bool Send(T &value) noexcept {
+		return impl_->Send(value, false);
+	}
+
+	[[nodiscard]] ::std::optional<T> Receive() noexcept {
+		return impl_->Receive(false);
 	}
 
 	void Close() noexcept {

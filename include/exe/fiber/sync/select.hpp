@@ -286,7 +286,7 @@ template <SelectClause ...Clauses>
 
 	auto send = [&result]<::std::size_t Idx>(
 			detail::SendClause<typename Clauses...[Idx]::ValueType> clause) noexcept {
-		if (clause.chan.Send(clause.value, false)) {
+		if (clause.chan.Send(clause.value, true)) {
 			result.template emplace<Idx + 1>(::util::unit_t{});
 			return true;
 		}
@@ -294,7 +294,7 @@ template <SelectClause ...Clauses>
 	};
 	auto receive = [&result]<::std::size_t Idx>(
 			detail::ReceiveClause<typename Clauses...[Idx]::ValueType> clause) noexcept {
-		if (auto value_opt = clause.chan.Receive(false)) {
+		if (auto value_opt = clause.chan.Receive(true)) {
 			result.template emplace<Idx + 1>(::std::move(*value_opt));
 			return true;
 		}
