@@ -22,12 +22,12 @@ struct self_tag {};
 
 template <typename T>
 struct node_selector {
-	using type = T;
+  using type = T;
 };
 
 template <>
 struct node_selector<self_tag> {
-	using type = intrusive_forward_list_node<self_tag>;
+  using type = intrusive_forward_list_node<self_tag>;
 };
 
 } // namespace detail

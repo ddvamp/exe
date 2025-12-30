@@ -27,29 +27,29 @@ namespace concurrency {
  */
 class Event {
  private:
-	::std::atomic_flag is_ready_;
+  ::std::atomic_flag is_ready_;
 
  public:
-	[[nodiscard]] bool IsReady() const noexcept {
-		return is_ready_.test(::std::memory_order_acquire);
-	}
+  [[nodiscard]] bool IsReady() const noexcept {
+    return is_ready_.test(::std::memory_order_acquire);
+  }
 
-	// It may end before the end of the Fire call
-	void Wait() const noexcept {
-		is_ready_.wait(false, ::std::memory_order_acquire);
-	}
+  // It may end before the end of the Fire call
+  void Wait() const noexcept {
+    is_ready_.wait(false, ::std::memory_order_acquire);
+  }
 
-	void Fire() noexcept {
-		UTIL_VERIFY(!is_ready_.test_and_set(::std::memory_order_release),
-								"Event was fired a second time");
+  void Fire() noexcept {
+    UTIL_VERIFY(!is_ready_.test_and_set(::std::memory_order_release),
+                "Event was fired a second time");
 
-		is_ready_.notify_all();
-	}
+    is_ready_.notify_all();
+  }
 
-	// In case of instance reuse
-	void Reset() noexcept {
-		is_ready_.clear(::std::memory_order_relaxed);
-	}
+  // In case of instance reuse
+  void Reset() noexcept {
+    is_ready_.clear(::std::memory_order_relaxed);
+  }
 };
 
 } // namespace concurrency

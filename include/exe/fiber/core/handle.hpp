@@ -48,7 +48,7 @@ class [[nodiscard]] FiberHandle {
   // Precondition: IsValid() == true
   void Schedule() && noexcept;
 
-	// Synonym for Schedule
+  // Synonym for Schedule
   void Resume() && noexcept;
 
  private:

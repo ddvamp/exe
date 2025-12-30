@@ -35,8 +35,8 @@ inline constexpr unit_t unit{};
  */
 template <typename T>
 [[nodiscard]] inline constexpr T &temporary(T &&t) noexcept
-	requires (!::std::is_lvalue_reference_v<T>) {
-	return static_cast<T &>(t);
+  requires (!::std::is_lvalue_reference_v<T>) {
+  return static_cast<T &>(t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ template <typename T>
 /* Simple utility for combining lambdas */
 template <typename ...Ts>
 struct overloaded : Ts... {
-	using Ts::operator()...;
+  using Ts::operator()...;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

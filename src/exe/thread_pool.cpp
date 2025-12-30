@@ -57,20 +57,20 @@ void ThreadPool::Start() {
 
   auto cnt = worker_count_;
   workers_.reserve(cnt);
-	try {
-		do {
-			workers_.emplace_back(&ThreadPool::WorkLoop, this);
-		} while (--cnt != 0);
-	} catch (...) {
-		UTIL_ABORT("Unexpected exception when starting ThreadPool");
-	}
+  try {
+    do {
+      workers_.emplace_back(&ThreadPool::WorkLoop, this);
+    } while (--cnt != 0);
+  } catch (...) {
+    UTIL_ABORT("Unexpected exception when starting ThreadPool");
+  }
 
   state_ = kStarted;
 }
 
 /* virtual */ void ThreadPool::Submit(task::TaskBase *task) {
   UTIL_ASSERT(state_ == kStarted, "Using a non-working thread pool");
-	UTIL_ASSERT(task, "nullptr instead of task");
+  UTIL_ASSERT(task, "nullptr instead of task");
   tasks_.Push(*task);
 }
 

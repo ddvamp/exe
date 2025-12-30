@@ -66,17 +66,17 @@ void TeleportTo(Scheduler &scheduler) noexcept;
 /* Prevents context switching until the end of the scope */
 class NoSwitchContextGuard {
  private:
-	Fiber *self;
+  Fiber *self;
 
  public:
-	NoSwitchContextGuard() noexcept;
-	~NoSwitchContextGuard();
+  NoSwitchContextGuard() noexcept;
+  ~NoSwitchContextGuard();
 
-	NoSwitchContextGuard(NoSwitchContextGuard const &) = delete;
-	void operator= (NoSwitchContextGuard const &) = delete;
+  NoSwitchContextGuard(NoSwitchContextGuard const &) = delete;
+  void operator= (NoSwitchContextGuard const &) = delete;
 
-	NoSwitchContextGuard(NoSwitchContextGuard &&) = delete;
-	void operator= (NoSwitchContextGuard &&) = delete;
+  NoSwitchContextGuard(NoSwitchContextGuard &&) = delete;
+  void operator= (NoSwitchContextGuard &&) = delete;
 };
 
 } // namespace exe::fiber

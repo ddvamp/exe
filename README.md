@@ -28,45 +28,45 @@
 ## Structure
 
 - ***[scheduler](https://github.com/ddvamp/exe/tree/main/exe/runtime)***
-	- inline (выполняет задачи на месте)
-	- blocking static threadpool
-	- [ ] fast work-stealing threadpool
-	- strand ([сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
+  - inline (выполняет задачи на месте)
+  - blocking static threadpool
+  - [ ] fast work-stealing threadpool
+  - strand ([сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
 - ***[fiber](https://github.com/ddvamp/exe/tree/main/exe/fiber)***
     - API & implementation
-	- synchronization primitives
-		- mutex
-		- shared mutex
-		- condition variable
-		- wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
-		- wait point (обобщенная wait group)
-	- [ ] future support
+  - synchronization primitives
+    - mutex
+    - shared mutex
+    - condition variable
+    - wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
+    - wait point (обобщенная wait group)
+  - [ ] future support
 - ***[(go) channels for fiber](https://github.com/ddvamp/exe/blob/main/exe/fiber/sync/channel.hpp)*** (имплементация каналов из языка go)
-	- implementation
-	- [ ] select
+  - implementation
+  - [ ] select
 - ***[(functional) future](https://github.com/ddvamp/exe/tree/main/exe/future/fun)*** (фьючи в функциональном стиле)
-	- constructors (пораждают фьючи)
-		- contract (канал future-promise)
-		- value (создать готовое значение)
-		- just (создать готовое событие)
-		- failure (создать готовую ошибку)
-		- submit (отправить вычисление в scheduler и получить его будущий результат)
-	- combinators (преобразуют одни фьючи в другие)
-		- seq
-			- via (установить, где будет значение будет потреблено)
-			- inLine (использовать значение на месте)
-			- map (преобразовать будущее значение)
-			- flatten (получить фьючу, которая сама представлена будущим значением)
-			- flatMap (map + flatten)
-			- andThen (асинхронный try)
-			- orElse (асинхронный catch)
-		- par
-			- first (получить первое значение или последнюю ошибку)
-			- all (получить все значения или первую ошибку)
-	- terminators (поглощают фьючи)
-		- apply (установить способ использования будущего значения)
-		- get (синхронно дождаться будущего значения)
-		- detach (сбросить будущее значение)
+  - constructors (пораждают фьючи)
+    - contract (канал future-promise)
+    - value (создать готовое значение)
+    - just (создать готовое событие)
+    - failure (создать готовую ошибку)
+    - submit (отправить вычисление в scheduler и получить его будущий результат)
+  - combinators (преобразуют одни фьючи в другие)
+    - seq
+      - via (установить, где будет значение будет потреблено)
+      - inLine (использовать значение на месте)
+      - map (преобразовать будущее значение)
+      - flatten (получить фьючу, которая сама представлена будущим значением)
+      - flatMap (map + flatten)
+      - andThen (асинхронный try)
+      - orElse (асинхронный catch)
+    - par
+      - first (получить первое значение или последнюю ошибку)
+      - all (получить все значения или первую ошибку)
+  - terminators (поглощают фьючи)
+    - apply (установить способ использования будущего значения)
+    - get (синхронно дождаться будущего значения)
+    - detach (сбросить будущее значение)
 
 ## Requirements
 

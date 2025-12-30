@@ -26,7 +26,7 @@ namespace detail {
 
 template <typename T>
 concept SuitableForTask =
-		::std::is_object_v<T> && !::util::is_qualified_v<T> &&
+    ::std::is_object_v<T> && !::util::is_qualified_v<T> &&
     ::std::is_nothrow_destructible_v<T> &&
     ::std::is_nothrow_invocable_v<T &&> &&
     ::std::is_void_v<::std::invoke_result_t<T &&>>;
@@ -57,7 +57,7 @@ class Task final : public TaskBase {
 
 template <concepts::Scheduler S, typename Fn>
 void Submit(S &scheduler, Fn &&fn) {
-	using Task = detail::Task<::std::remove_cvref_t<Fn>>;
+  using Task = detail::Task<::std::remove_cvref_t<Fn>>;
   auto task = ::std::make_unique<Task>(::std::forward<Fn>(fn));
   scheduler.Submit(task.get());
   task.release();

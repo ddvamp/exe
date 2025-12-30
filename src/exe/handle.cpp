@@ -31,7 +31,7 @@ void FiberHandle::Schedule() && noexcept {
 }
 
 void FiberHandle::Resume() && noexcept {
-	::std::move(*this).Schedule();
+  ::std::move(*this).Schedule();
 }
 
 Fiber *FiberHandle::Release() noexcept {

@@ -26,12 +26,12 @@ struct SelfTag {};
 
 template <typename T>
 struct NodeSelector {
-	using type = T;
+  using type = T;
 };
 
 template <>
 struct NodeSelector<SelfTag> {
-	using type = IntrusiveForwardListNode<SelfTag>;
+  using type = IntrusiveForwardListNode<SelfTag>;
 };
 
 } // namespace detail
@@ -53,15 +53,15 @@ struct IntrusiveForwardListNode {
     next_.store(next, ::std::memory_order_relaxed);
   }
 
-	/* util/intrusive support */
+  /* util/intrusive support */
 
-	[[nodiscard]] Node* next() const noexcept {
-		return Next();
-	}
+  [[nodiscard]] Node* next() const noexcept {
+    return Next();
+  }
 
-	void link(Node *next) noexcept {
-		Link(next);
-	}
+  void link(Node *next) noexcept {
+    Link(next);
+  }
 };
 
 } // namespace concurrency

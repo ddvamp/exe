@@ -28,7 +28,7 @@ class Coroutine : public ::context::ITrampoline {
     kCompleted
   };
 
-	using enum Status;
+  using enum Status;
 
  private:
   Body body_;

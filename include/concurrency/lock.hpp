@@ -16,10 +16,10 @@
 #include <util/type_traits.hpp>
 #include <util/utility.hpp>
 
-#include <algorithm>	// std::ranges::sort
+#include <algorithm>  // std::ranges::sort
 #include <array>
-#include <memory> 		// std::addressof
-#include <mutex> 			// std::scoped_lock
+#include <memory>     // std::addressof
+#include <mutex>      // std::scoped_lock
 
 namespace concurrency {
 
@@ -78,7 +78,7 @@ void LockImpl(It const begin, It const end) {
       } while (it != begin);
     } catch (...) {
       UTIL_ABORT("An object of the type with Cpp17BasicLockable requirement, "
-                "threw an exception when calling the unlock method");
+                 "threw an exception when calling the unlock method");
     }
   });
 

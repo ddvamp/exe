@@ -49,7 +49,7 @@ class MPMCUnboundedBlockingQueue {
  public:
   MPMCUnboundedBlockingQueue() = default;
 
-	// Returns false if the queue is closed
+  // Returns false if the queue is closed
   template <typename ...Args>
   bool Push(Args &&...args) requires (::std::is_constructible_v<T, Args...>) {
     ::std::lock_guard lock(m_);

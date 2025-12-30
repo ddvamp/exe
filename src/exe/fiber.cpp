@@ -120,11 +120,11 @@ IAwaiter *Fiber::Step() noexcept {
   ContextGuard guard(this, nullptr);
 
   coroutine_.Resume();
-	UTIL_ASSERT(coroutine_.IsCompleted() == !awaiter_,
+  UTIL_ASSERT(coroutine_.IsCompleted() == !awaiter_,
               "Internal error! Awaiter is either lost or "
               "provided for a completed fiber");
 
-	return ::std::exchange(awaiter_, nullptr);
+  return ::std::exchange(awaiter_, nullptr);
 }
 
 void Fiber::Stop() noexcept {

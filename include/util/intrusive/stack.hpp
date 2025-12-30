@@ -51,7 +51,7 @@ class intrusive_stack {
   }
 
   [[nodiscard]] constexpr T &pop() noexcept {
-		UTIL_ASSERT(!empty(), "Stack is empty");
+    UTIL_ASSERT(!empty(), "Stack is empty");
 
     return *::std::exchange(top_, top_->next());
   }

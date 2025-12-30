@@ -12,9 +12,9 @@
 #include <util/memory/page_allocation.hpp>
 
 #if __has_include(<unistd.h>)
-#	include <internal/os/posix/page_allocation.hpp>
+# include <internal/os/posix/page_allocation.hpp>
 #else
-#	error "Not POSIX-compliant environment"
+# error "Not POSIX-compliant environment"
 #endif
 
 #include <cstddef>
@@ -50,7 +50,7 @@ namespace util {
 }
 
 // Precondition: page_count != 0 &&
-//							 protected memory in the range [begin_, begin_ + size_)
+//               protected memory in the range [begin_, begin_ + size_)
 void page_allocation::protect_pages(::std::size_t const page_offset,
                                     ::std::size_t const page_count) {
   UTIL_ASSERT(page_count != 0, "0 pages requested");

@@ -29,9 +29,9 @@ namespace util::detail {
 #ifdef UTIL_ASSUME
 # error "UTIL_ASSUME macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG
-#	define UTIL_ASSUME(expr, ...) [[assume(expr)]]
+# define UTIL_ASSUME(expr, ...) [[assume(expr)]]
 #else
-#	define UTIL_ASSUME(expr, ...)                         \
+# define UTIL_ASSUME(expr, ...)                         \
       do {                                              \
         if (expr) [[likely]] {                          \
           break;                                        \

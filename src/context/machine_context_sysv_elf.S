@@ -19,7 +19,7 @@
 
   .align  16
   .global SetupMachineContext
-  .type	  SetupMachineContext, @function
+  .type   SetupMachineContext, @function
 SetupMachineContext:
   # SetupMachineContext(%rdi: stack, %rsi: trampoline, %rdx: arg)
 
@@ -42,13 +42,13 @@ SetupMachineContext:
 
 #if USE_FPENV
   # set the floating-point environment (copy of current)
-  stmxcsr	-0x08(%rax) # set the MXCSR register state
-  fnstenv	-0x28(%rax) # set x87 FPU environment
-  fldenv	-0x28(%rax) # restore discarded x87 FPU state
+  stmxcsr -0x08(%rax) # set the MXCSR register state
+  fnstenv -0x28(%rax) # set x87 FPU environment
+  fldenv  -0x28(%rax) # restore discarded x87 FPU state
 #endif
 
   retq
-  .size	SetupMachineContext, .-SetupMachineContext
+  .size SetupMachineContext, .-SetupMachineContext
 
   .align  16
   .global SwitchMachineContext
@@ -57,17 +57,17 @@ SwitchMachineContext:
   # SwitchMachineContext(%rdi: from, %rsi: to)
 
   # save callee-saved registers
-  pushq	%r15
-  pushq	%r14
-  pushq	%r13
-  pushq	%r12
-  pushq	%rbx
-  pushq	%rbp
+  pushq %r15
+  pushq %r14
+  pushq %r13
+  pushq %r12
+  pushq %rbx
+  pushq %rbp
 
 #if USE_FPENV
   # save the floating-point environment
-  stmxcsr	-0x08(%rsp) # save the MXCSR register state
-  fnstenv	-0x28(%rsp) # save x87 FPU environment
+  stmxcsr -0x08(%rsp) # save the MXCSR register state
+  fnstenv -0x28(%rsp) # save x87 FPU environment
 #endif
 
   # switch stack (with aliasing prevention)

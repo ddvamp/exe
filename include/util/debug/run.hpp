@@ -19,7 +19,7 @@
 #ifdef UTIL_DEBUG_RUN
 # error "UTIL_DEBUG_RUN macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG
-#	define UTIL_DEBUG_RUN(func, ...) UTIL_NOTHING
+# define UTIL_DEBUG_RUN(func, ...) UTIL_NOTHING
 #else
 # define UTIL_DEBUG_RUN(func, ...) func(__VA_ARGS__)
 #endif

@@ -22,7 +22,7 @@ namespace util {
 
 template <typename T>
 concept suitable_for_defer =
-		::std::is_object_v<T> && !is_qualified_v<T> &&
+    ::std::is_object_v<T> && !is_qualified_v<T> &&
     ::std::is_nothrow_move_constructible_v<T> &&
     ::std::is_nothrow_destructible_v<T> &&
     ::std::is_invocable_v<T &&> &&
@@ -53,17 +53,17 @@ class [[nodiscard]] defer final {
 
 template <typename Policy>
 concept scope_guard_policy = requires (Policy const &p) {
-	requires ::std::is_class_v<Policy>;
-	requires ::std::is_nothrow_default_constructible_v<Policy>;
-	requires ::std::is_nothrow_destructible_v<Policy>;
+  requires ::std::is_class_v<Policy>;
+  requires ::std::is_nothrow_default_constructible_v<Policy>;
+  requires ::std::is_nothrow_destructible_v<Policy>;
 
-	{ p.check() } noexcept -> ::std::same_as<bool>;
+  { p.check() } noexcept -> ::std::same_as<bool>;
 };
 
 struct default_guard_policy {
-	[[nodiscard]] constexpr bool check() const noexcept {
-		return true;
-	}
+  [[nodiscard]] constexpr bool check() const noexcept {
+    return true;
+  }
 };
 
 static_assert(scope_guard_policy<default_guard_policy>);
@@ -73,43 +73,43 @@ static_assert(scope_guard_policy<default_guard_policy>);
  *  if it is active and the policy is met
  */
 template <suitable_for_defer T,
-					scope_guard_policy Policy = default_guard_policy>
+          scope_guard_policy Policy = default_guard_policy>
 class [[nodiscard]] scope_guard final : private Policy {
  private:
- 	UTIL_NO_UNIQUE_ADDRESS T action_;
-	bool active_;
+   UTIL_NO_UNIQUE_ADDRESS T action_;
+   bool active_;
 
  public:
-	constexpr ~scope_guard() noexcept (::std::is_nothrow_invocable_v<T &&>) {
-		if (should_be_activated()) {
-			::std::move(action_)();
-		}
-	}
+  constexpr ~scope_guard() noexcept (::std::is_nothrow_invocable_v<T &&>) {
+    if (should_be_activated()) {
+      ::std::move(action_)();
+    }
+  }
 
-	scope_guard(scope_guard const &) = delete;
-	void operator= (scope_guard const &) = delete;
+  scope_guard(scope_guard const &) = delete;
+  void operator= (scope_guard const &) = delete;
 
-	scope_guard(scope_guard &&) = delete;
-	void operator= (scope_guard &&) = delete;
-
- public:
-	constexpr explicit scope_guard(T action) noexcept
-			: Policy()
-			, action_(::std::move(action)) {}
+  scope_guard(scope_guard &&) = delete;
+  void operator= (scope_guard &&) = delete;
 
  public:
-	constexpr void enable() noexcept {
-		active_ = true;
-	}
+  constexpr explicit scope_guard(T action) noexcept
+      : Policy()
+      , action_(::std::move(action)) {}
 
-	constexpr void disable() noexcept {
-		active_ = false;
-	}
+ public:
+  constexpr void enable() noexcept {
+    active_ = true;
+  }
+
+  constexpr void disable() noexcept {
+    active_ = false;
+  }
 
  private:
-	[[nodiscard]] constexpr bool should_be_activated() const noexcept {
-		return active_ && Policy::check();
-	}
+  [[nodiscard]] constexpr bool should_be_activated() const noexcept {
+    return active_ && Policy::check();
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,12 +117,12 @@ class [[nodiscard]] scope_guard final : private Policy {
 /* Guards that are triggered only if there is or is not an exception */
 class success_guard_policy {
  private:
-	int uncaught_on_creating_ = ::std::uncaught_exceptions();
+  int uncaught_on_creating_ = ::std::uncaught_exceptions();
 
  public:
-	[[nodiscard]] bool check() const noexcept {
-		return ::std::uncaught_exceptions() <= uncaught_on_creating_;
-	}
+  [[nodiscard]] bool check() const noexcept {
+    return ::std::uncaught_exceptions() <= uncaught_on_creating_;
+  }
 };
 
 static_assert(scope_guard_policy<success_guard_policy>);
@@ -132,12 +132,12 @@ using scope_success = scope_guard<T, success_guard_policy>;
 
 class failure_guard_policy {
  private:
-	int uncaught_on_creating_ = ::std::uncaught_exceptions();
+  int uncaught_on_creating_ = ::std::uncaught_exceptions();
 
  public:
-	[[nodiscard]] bool check() const noexcept {
-		return ::std::uncaught_exceptions() > uncaught_on_creating_;
-	}
+  [[nodiscard]] bool check() const noexcept {
+    return ::std::uncaught_exceptions() > uncaught_on_creating_;
+  }
 };
 
 static_assert(scope_guard_policy<failure_guard_policy>);
@@ -150,8 +150,8 @@ using scope_failure = scope_guard<T, failure_guard_policy>;
 /* Type deduction helper */
 template <typename Policy>
 struct guard_with_policy {
-	template <typename T>
-	using type = scope_guard<T, Policy>;
+  template <typename T>
+  using type = scope_guard<T, Policy>;
 };
 
 } // namespace util

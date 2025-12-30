@@ -51,7 +51,7 @@ class ref_count {
     }
 
     UTIL_ASSERT(before != 0, "An attempt to lower a ref_count below zero");
-		UTIL_IGNORE(cnt_.load(::std::memory_order_acquire)); // Synchronize
+    UTIL_IGNORE(cnt_.load(::std::memory_order_acquire)); // Synchronize
     static_cast<Derived const *>(this)->destroy_self();
   }
 };

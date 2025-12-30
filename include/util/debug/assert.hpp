@@ -45,18 +45,18 @@ namespace util::detail {
 #ifdef UTIL_ASSERT
 # error "UTIL_ASSERT macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG
-#	define UTIL_ASSERT(expr, ...) UTIL_NOTHING
+# define UTIL_ASSERT(expr, ...) UTIL_NOTHING
 #else
-#	define UTIL_ASSERT(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
+# define UTIL_ASSERT(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
 #endif
 
 /* Similar to UTIL_ASSERT, but anyway calculates expr */
 #ifdef UTIL_VERIFY
 # error "UTIL_VERIFY macro could not be defined because it is already defined somewhere else"
 #elifdef UTIL_DISABLE_DEBUG
-#	define UTIL_VERIFY(expr, ...) UTIL_IGNORE(expr)
+# define UTIL_VERIFY(expr, ...) UTIL_IGNORE(expr)
 #else
-#	define UTIL_VERIFY(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
+# define UTIL_VERIFY(expr, ...) UTIL_CHECK(expr, __VA_ARGS__)
 #endif
 
 #endif /* DDVAMP_UTIL_DEBUG_ASSERT_HPP_INCLUDED_ */

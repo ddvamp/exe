@@ -32,11 +32,11 @@ class [[nodiscard]] page_allocation {
   void operator= (page_allocation const &) = delete;
 
   page_allocation(page_allocation &&that) noexcept {
-		swap(that);
-	}
+    swap(that);
+  }
 
   page_allocation &operator= (page_allocation &&that) noexcept {
-		auto(::std::move(that)).swap(*this);
+    auto(::std::move(that)).swap(*this);
     return *this;
   }
 
@@ -68,7 +68,7 @@ class [[nodiscard]] page_allocation {
       ::std::size_t const at_least) noexcept;
 
   // Throws: std::bad_alloc if the storage cannot be obtained or
-	// 				 zero pages are requested
+  //          zero pages are requested
   static page_allocation allocate_pages(::std::size_t count);
 
   // Precondition: page_count != 0 &&
@@ -76,10 +76,10 @@ class [[nodiscard]] page_allocation {
   void protect_pages(::std::size_t const page_offset,
                      ::std::size_t const page_count);
 
-	void swap(page_allocation &that) noexcept {
-		::std::swap(begin_, that.begin_);
-		::std::swap(size_, that.size_);
-	}
+  void swap(page_allocation &that) noexcept {
+    ::std::swap(begin_, that.begin_);
+    ::std::swap(size_, that.size_);
+  }
 
  private:
   page_allocation(::std::byte *begin, ::std::size_t size) noexcept
@@ -89,7 +89,7 @@ class [[nodiscard]] page_allocation {
 };
 
 inline void swap(page_allocation &lhs, page_allocation &rhs) noexcept {
-	lhs.swap(rhs);
+  lhs.swap(rhs);
 }
 
 } // namespace util

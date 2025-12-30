@@ -50,7 +50,7 @@ class intrusive_queue {
   constexpr void push(T &elem) noexcept {
     auto const ptr = ::std::addressof(elem);
 
-		ptr->link(nullptr);
+    ptr->link(nullptr);
 
     if (empty()) [[unlikely]] {
       head_ = tail_ = ptr;
@@ -60,7 +60,7 @@ class intrusive_queue {
   }
 
   [[nodiscard]] constexpr T &pop() noexcept {
-		UTIL_ASSERT(!empty(), "Queue is empty");
+    UTIL_ASSERT(!empty(), "Queue is empty");
 
     auto const ptr = ::std::exchange(head_, head_->next());
     tail_ = (head_ ? tail_ : nullptr);

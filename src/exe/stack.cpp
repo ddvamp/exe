@@ -50,12 +50,12 @@ class StackAllocator {
   StackAllocator() = default;
 
   Stack Allocate() {
-		{
-			auto guard = lock_.MakeGuard();
-			if (!nodes_.empty()) [[likely]] {
-				return ::std::move(nodes_.pop()).stack;
-			}
-		}
+    {
+      auto guard = lock_.MakeGuard();
+      if (!nodes_.empty()) [[likely]] {
+        return ::std::move(nodes_.pop()).stack;
+      }
+    }
 
     return AllocateNewStack();
   }
@@ -64,8 +64,8 @@ class StackAllocator {
     UTIL_ASSERT(stack.AllocationSize() != 0, "Stack in moved-from state");
 
     auto node = ::new (stack.Memory()) Node{.stack = ::std::move(stack)};
-		auto guard = lock_.MakeGuard();
-		nodes_.push(*node);
+    auto guard = lock_.MakeGuard();
+    nodes_.push(*node);
   }
 
  private:

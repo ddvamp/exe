@@ -22,9 +22,9 @@ namespace exe::runtime {
 class Inline : public task::ISafeScheduler {
  public:
   void Submit(task::TaskBase *task) noexcept override {
-  	UTIL_ASSERT(task, "nullptr instead of the task");
-  	task->Run();
-	}
+    UTIL_ASSERT(task, "nullptr instead of the task");
+    task->Run();
+  }
 };
 
 [[nodiscard]] inline Inline &GetInline() noexcept {
