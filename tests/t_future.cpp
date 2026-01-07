@@ -8,6 +8,8 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
+#include <exe/future/fun/future.hpp>
+
 #include <cstdlib>
 
 int TestFuture() {
