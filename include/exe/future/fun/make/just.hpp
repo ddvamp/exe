@@ -13,14 +13,16 @@
 
 #include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
-#include <util/utility.hpp>
+#include <exe/future/fun/type/unit.hpp>
+
+#include <utility>
 
 namespace exe::future {
 
-inline SemiFuture<::util::unit_t> Just() {
-  auto [f, p] = Contract<::util::unit_t>();
+inline SemiFuture<Unit> Just() {
+  auto [f, p] = Contract<Unit>();
 
-  ::std::move(p).SetValue({});
+  ::std::move(p).SetValue(Unit{});
 
   return ::std::move(f);
 }
