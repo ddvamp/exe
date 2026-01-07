@@ -1,8 +1,8 @@
 //
+// value.hpp
+// ~~~~~~~~~
 //
-//
-//
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -11,20 +11,20 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_MAKE_VALUE_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_MAKE_VALUE_HPP_INCLUDED_ 1
 
-#include <utility>
+#include <exe/future/fun/make/contract.hpp>
+#include <exe/future/fun/type/future_fwd.hpp>
 
-#include "exe/future/fun/make/contract/contract.hpp"
+#include <utility>
 
 namespace exe::future {
 
 template <typename T>
-auto value(T v)
-{
-	auto [future, promise] = Contract<T>();
+inline SemiFuture<T> Value(T v) {
+  auto [f, p] = Contract<T>();
 
-	::std::move(promise).setResult(::std::move(v));
+  ::std::move(p).SetValue(::std::move(v));
 
-	return ::std::move(future);
+  return ::std::move(f);
 }
 
 } // namespace exe::future

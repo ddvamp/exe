@@ -1,8 +1,8 @@
 //
+// shared_state.hpp
+// ~~~~~~~~~~~~~~~~
 //
-//
-//
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -11,173 +11,160 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_STATE_SHARED_STATE_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_STATE_SHARED_STATE_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/type/callback.hpp>
+#include <exe/future/fun/type/result.hpp>
+#include <exe/future/fun/type/scheduler.hpp>
+#include <exe/result/trait.hpp>
+#include <exe/runtime/task/task.hpp>
+
+#include <concurrency/rendezvous.hpp>
+#include <util/debug.hpp>
+#include <util/type_traits.hpp>
+
 #include <optional>
-#include <type_traits>
 #include <utility>
-
-#include "concurrency/rendezvous.hpp"
-
-#include "exe/runtime/task/scheduler.hpp"
-#include "exe/runtime/task/task.hpp"
-#include "exe/future/fun/state/callback.hpp"
-#include "exe/future/fun/traits/map.hpp"
-
-#include "exe/future/fun/result/result.hpp"
-
-#include "util/debug.hpp"
 
 namespace exe::future::detail {
 
-// Shared state for Future and Promise
-//
-// Allows you to pass result from Promise to Future
-// and callback in the opposite direction,
-// as well as to specify where callback will be called
-template <::util::suitable_for_result T>
-	requires (traits::is_nothrow_move_constructible_v<T>)
+template <typename T>
+concept SuitableForState =
+    ::std::is_object_v<T> &&
+    !::util::is_qualified_v<T> &&
+    ::std::is_nothrow_destructible_v<T> &&
+    ::std::is_nothrow_move_constructible_v<T> && // implies !std::is_array_v<T>
+    exe::result::SuitableValue<T>;
+
+/**
+ *  Shared state for Future and Promise
+ *
+ *  Allows you to pass result from Promise to Future and callback in
+ *  the opposite direction, as well as specify where callback will be called
+ */
+template <SuitableForState T>
 class SharedState : public runtime::task::TaskBase {
-public:
-	using Result = ::util::result<T>;
-	using Callback = future::Callback<T>;
+ private:
+  ::std::optional<Result<T>> result_;
+  ::std::optional<Callback<T>> callback_;
+  ::concurrency::Rendezvous rendezvous_;
+  Scheduler *scheduler_ = nullptr;
 
-private:
-	::std::optional<Result> result_;
-	::std::optional<Callback> callback_;
-	::concurrency::Rendezvous rendezvous_;
-	runtime::ISafeScheduler *scheduler_ = nullptr;
+ public:
+  [[nodiscard]] static SharedState *Create() {
+    return ::new SharedState();
+  }
 
-public:
-	[[nodiscard]] static SharedState *create()
-	{
-		return ::new SharedState();
-	}
+  static void Destroy(SharedState *state) noexcept {
+    state->DestroySelf();
+  }
 
-	static void destroy(SharedState *state) noexcept
-	{
-		state->destroySelf();
-	}
+  [[nodiscard("Pure")]] Scheduler *GetScheduler() const noexcept {
+    return scheduler_;
+  }
 
-	[[nodiscard]] runtime::ISafeScheduler &getScheduler() const noexcept
-	{
-		return *scheduler_;
-	}
+  void SetScheduler(Scheduler &where) noexcept {
+    scheduler_ = &where;
+  }
 
-	void setScheduler(runtime::ISafeScheduler &where) noexcept
-	{
-		scheduler_ = &where;
-	}
+  void SetResult(Result<T> &&result) noexcept {
+    result_.emplace(::std::move(result));
+    TrySchedule();
+  }
 
-	void setResult(Result &&result) noexcept
-	{
-		result_.emplace(::std::move(result));
-		notify();
-	}
+  void SetValue(T &&t) noexcept {
+    SetResult(result::Ok(::std::move(t)));
+  }
 
-	void setCallback(Callback &&callback) noexcept
-	{
-		callback_.emplace(::std::move(callback));
-		notify();
-	}
+  void SetError(Error &&e) noexcept {
+    SetResult(result::Err<T>(::std::move(e)));
+  }
 
-private:
-	SharedState() noexcept = default;
+  void SetCallback(Callback<T> &&callback) noexcept {
+    callback_.emplace(::std::move(callback));
+    TrySchedule();
+  }
 
-	void Run() noexcept override
-	{
-		(*callback_)(*::std::move(result_));
-		destroySelf();
-	}
+ private:
+  SharedState() noexcept = default;
 
-	void scheduleCallback() noexcept
-	{
-		scheduler_->submit(this);
-	}
+  // TaskBase
+  void Run() noexcept override {
+    (*::std::move(callback_))(*::std::move(result_));
+    DestroySelf();
+  }
 
-	void notify() noexcept
-	{
-		if (rendezvous_.Arrive()) {
-			scheduleCallback();
-		}
-	}
+  void TrySchedule() noexcept {
+    if (rendezvous_.Arrive()) {
+      scheduler_->Submit(this);
+    }
+  }
 
-	void destroySelf() noexcept
-	{
-		delete this;
-	}
+  void DestroySelf() noexcept {
+    delete this;
+  }
 };
 
 template <typename T>
 class HoldState {
-protected:
-	using value_type = T;
+ private:
+  using State = SharedState<T>;
 
-	using State = SharedState<value_type>;
-	using Result = State::Result;
-	using Callback = State::Callback;
+  State *state_;
 
-private:
-	State *state_;
+ protected:
+  ~HoldState() {
+    UTIL_ASSERT(!HasState(),
+                "HoldState is not used at the time of destruction");
+  }
 
-protected:
-#ifdef UTIL_DISABLE_DEBUG
+  HoldState(HoldState const &) = delete;
+  void operator= (HoldState const &) = delete;
 
-	~HoldState() = default;
+  HoldState(HoldState &&that) noexcept : state_(that.Release()) {}
+  void operator= (HoldState &&) = delete;
 
-#else
+ protected:
+  explicit HoldState(State *state) noexcept : state_(state) {}
 
-	~HoldState()
-	{
-		UTIL_CHECK(!hasState(), "destruction of unused HoldState");
-	}
+  [[nodiscard("Pure")]] bool HasState() const noexcept {
+    return state_;
+  }
 
-#endif
+  /* Unchecked */
 
-	HoldState(HoldState const &) = delete;
-	void operator= (HoldState const &) = delete;
+  [[nodiscard("Pure")]] State *GetState() noexcept {
+    return state_;
+  }
 
-	HoldState(HoldState &&that) noexcept
-		: HoldState(that.release())
-	{}
-	void operator= (HoldState &&) = delete;
+  [[nodiscard("Pure")]] State const *GetState() const noexcept {
+    return state_;
+  }
 
-protected:
-	explicit HoldState(State *state) noexcept
-		: state_(state)
-	{}
+  [[nodiscard]] State *Release() noexcept {
+    return ::std::exchange(state_, nullptr);
+  }
 
-	[[nodiscard]] bool hasState() const noexcept
-	{
-		return state_;
-	}
+  /* Checked */
 
-	[[nodiscard]] State &getState() noexcept
-	{
-		UTIL_DEBUG_RUN(checkState);
-		return *state_;
-	}
+  [[nodiscard("Pure")]] State *GetStateChecked() noexcept {
+    UTIL_DEBUG_RUN(CheckState);
+    return GetState();
+  }
 
-	[[nodiscard]] State const &getState() const noexcept
-	{
-		UTIL_DEBUG_RUN(checkState);
-		return *state_;
-	}
+  [[nodiscard("Pure")]] State const *GetStateChecked() const noexcept {
+    UTIL_DEBUG_RUN(CheckState);
+    return GetState();
+  }
 
-	[[nodiscard]] State *release() noexcept
-	{
-		UTIL_DEBUG_RUN(checkState);
-		return ::std::exchange(state_, nullptr);
-	}
+  [[nodiscard]] State *ReleaseChecked() noexcept {
+    UTIL_DEBUG_RUN(CheckState);
+    return Release();
+  }
 
-	void reset() noexcept
-	{
-		state_ = nullptr;
-	}
-
-private:
-	[[maybe_unused]] void checkState() const noexcept
-	{
-		UTIL_CHECK(hasState(), "HoldState does not hold shared state");
-	}
+ private:
+  [[maybe_unused]] void CheckState() const noexcept {
+    UTIL_ASSERT(HasState(),
+                "HoldState does not hold shared state when it is expected");
+  }
 };
 
 } // namespace exe::future::detail

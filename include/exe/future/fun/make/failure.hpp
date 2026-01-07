@@ -1,8 +1,8 @@
 //
+// failure.hpp
+// ~~~~~~~~~~~
 //
-//
-//
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -11,22 +11,21 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_MAKE_FAILURE_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_MAKE_FAILURE_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/make/contract.hpp>
+#include <exe/future/fun/type/future_fwd.hpp>
+#include <exe/future/fun/type/result.hpp>
+
 #include <utility>
-
-#include "exe/future/fun/make/contract/contract.hpp"
-
-#include "exe/future/fun/result/result.hpp"
 
 namespace exe::future {
 
 template <typename T>
-auto failure(::util::error error)
-{
-	auto [future, promise] = Contract<T>();
+inline SemiFuture<T> Failure(Error &&e) {
+  auto [f, p] = Contract<T>();
 
-	::std::move(promise).setError(::std::move(error));
+  ::std::move(p).SetError(::std::move(e));
 
-	return ::std::move(future);
+  return ::std::move(f);
 }
 
 } // namespace exe::future

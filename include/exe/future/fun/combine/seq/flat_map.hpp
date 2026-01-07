@@ -1,8 +1,8 @@
 //
+// flat_map.hpp
+// ~~~~~~~~~~~~
 //
-//
-//
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -11,99 +11,71 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_FLAT_MAP_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_FLAT_MAP_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/make/contract.hpp>
+#include <exe/future/fun/operator/operator.hpp>
+#include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
+#include <exe/future/fun/trait/value_of.hpp>
+#include <exe/future/fun/type/future_fwd.hpp>
+#include <exe/future/fun/type/result.hpp>
+#include <exe/runtime/inline.hpp>
+
+#include <concepts>
+#include <exception>
 #include <type_traits>
-
-#include "exe/future/fun/combine/seq/via.hpp"
-#include "exe/future/fun/make/contract/contract.hpp"
-#include "exe/future/fun/mutator/mutator.hpp"
-#include "exe/future/fun/syntax/pipe.hpp"
-#include "exe/future/fun/traits/map.hpp"
-
-#include "exe/future/fun/result/result.hpp"
-
-#include "exe/future/fun/utility.hpp"
+#include <utility>
 
 namespace exe::future {
 
 namespace pipe {
 
-template <typename Fn>
-class [[nodiscard]] FlatMap : public detail::Mutator {
-	template <concepts::Future F, concepts::Mutator M>
-	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
+template <::std::destructible Fn>
+class [[nodiscard]] FlatMap : public Operator {
+ private:
+  Fn fn_;
 
-private:
-	Fn &&fn_;
+ public:
+  explicit FlatMap(Fn fn) : fn_(::std::move(fn)) {}
 
-public:
-	template <typename>
-	inline static constexpr bool mutates_nothrow = false;
+  template <typename T>
+  Future<ValueOf<::std::invoke_result_t<Fn &&, T &&>>> Apply(Future<T> f) && {
+    using U = ValueOf<::std::invoke_result_t<Fn &&, T &&>>;
 
-	explicit FlatMap(Fn &&fn) noexcept
-		: fn_(::std::forward<Fn>(fn))
-	{}
+    auto [nf, p] = Contract<U>();
 
-private:
-	template <concepts::Future F>
-	auto mutate(F &&f)
-		requires (
-			has_scheduler_v<F> &&
-			traits::is_invocable_v<Fn &, typename F::value_type> &&
-			concepts::Future<
-				traits::invoke_result_t<Fn &, typename F::value_type>
-			>
-		)
-	{
-		using T = F::value_type;
-		using U = traits::invoke_result_t<Fn &, T>::value_type;
+    auto cb = [p = ::std::move(p), fn = ::std::move(fn_)]
+              (Result<T> &&res) mutable noexcept {
+      if (res.has_value()) {
+        auto cb = [p = ::std::move(p)](Result<U> &&res) mutable noexcept {
+          if (p.IsValid()) [[likely]] {
+            ::std::move(p).SetResult(::std::move(res));
+          }
+        };
 
-		auto contract = Contract<U>();
+        try {
+          auto f = SetScheduler(::std::move(fn)(*::std::move(res)),
+                                runtime::GetInline());
+          SetCallback<U>(::std::move(f), ::std::move(cb));
+        } catch (...) {
+          ::std::move(cb)(result::Err<U>(::std::current_exception()));
+        }
+      } else {
+        ::std::move(p).SetError(::std::move(res).error());
+      }
+    };
 
-		auto &where = getScheduler(f);
+    auto &where = GetScheduler(f);
 
-		setCallback(
-			::std::move(f),
-			future::makeCallback<T>(
-				::util::types_list<::util::deduce_type_t, Fn, Callback<U>>,
+    SetCallback<T>(::std::move(f), ::std::move(cb));
 
-				[](auto &res, auto &fn, auto &cb) noexcept {
-					auto map_res = ::util::map_safely([&]() noexcept (
-						traits::is_nothrow_invocable_v<Fn &, T>
-					) {
-						return ::std::move(res).transform(fn);
-					});
-
-					if (map_res.has_error()) {
-						cb(::std::move(map_res).error());
-					} else {
-						setCallback(*::std::move(map_res), ::std::move(cb));
-					}
-				},
-
-				::std::forward<Fn>(fn_),
-
-				::util::builder([&]() {
-					return future::makeCallback<U>(
-						[](auto &res, auto &p) noexcept {
-							::std::move(p).setResult(::std::move(res));
-						},
-						::std::move(contract).p
-					);
-				})
-			)
-		);
-
-		return ::std::move(contract).f | future::via(where);
-	}
+    return SetScheduler(::std::move(nf), where);
+  }
 };
 
 } // namespace pipe
 
 template <typename Fn>
-auto flatMap(Fn &&fn) noexcept
-	requires (::std::is_nothrow_destructible_v<::std::remove_cvref_t<Fn>>)
-{
-	return pipe::FlatMap<Fn>(::std::forward<Fn>(fn));
+inline pipe::FlatMap<Fn> FlatMap(Fn fn) {
+  return pipe::FlatMap(::std::move<Fn>(fn));
 }
 
 } // namespace exe::future

@@ -28,6 +28,7 @@ set(
   tests
 
   channel
+  future
   reactor
 )
 

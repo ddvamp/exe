@@ -1,8 +1,8 @@
 //
+// get.hpp
+// ~~~~~~~
 //
-//
-//
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -11,67 +11,68 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_TERMINATE_GET_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_TERMINATE_GET_HPP_INCLUDED_ 1
 
+#include <concurrency/pause.hpp>
+#include <exe/future/fun/operator/operator.hpp>
+#include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
+#include <exe/future/fun/type/future.hpp>
+#include <exe/future/fun/type/result.hpp>
+#include <exe/runtime/inline.hpp>
+
 #include <atomic>
+#include <exception>
 #include <optional>
 #include <utility>
-
-#include "exe/future/fun/combine/seq/inline.hpp"
-#include "exe/future/fun/mutator/mutator.hpp"
-#include "exe/future/fun/syntax/pipe.hpp"
-
-#include "exe/future/fun/result/result.hpp"
 
 namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Get : public detail::Mutator {
-	template <concepts::Future F, concepts::Mutator M>
-	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
+class [[nodiscard]] Get : public Operator {
+ private:
+  enum class Phase {
+    Init,
+    Notified,
+    Done
+  };
+  using enum Phase;
 
-public:
-	template <typename>
-	inline static constexpr bool mutates_nothrow = false;
+  // To guarantee the expected implementation
+  static_assert(::std::atomic<Phase>::is_always_lock_free);
 
-	Get() = default;
+ public:
+  template <typename T>
+  [[nodiscard]] T Apply(SemiFuture<T> f) && {
+    ::std::optional<Result<T>> result;
 
-private:
-	template <concepts::Future F>
-	auto mutate(F &&f)
-	{
-		using T = F::value_type;
+    ::std::atomic<Phase> phase = Init;
 
-		::std::optional<::util::result<T>> result;
+    auto cb = [&](Result<T> &&res) noexcept {
+      result.emplace(::std::move(res));
 
-		// [TODO]: Write future::Event or concurrency::StrongEvent
-		::std::atomic_flag f1 = false;
-		::std::atomic_flag f2 = false;
+      phase.store(Notified, ::std::memory_order_relaxed);
+      phase.notify_all();
+      phase.store(Done, ::std::memory_order_release);
+    };
 
-		setCallback(
-			makeHolder(f) | future::inLineIfNeeded(),
-			[&](auto &&res) noexcept {
-				result.emplace(::std::move(res));
+    SetCallback<T>(SetScheduler(::std::move(f), runtime::GetInline()), cb);
 
-				f1.test_and_set(::std::memory_order_relaxed);
-				f1.notify_all();
-				f2.test_and_set(::std::memory_order_release);
-			}
-		);
+    phase.wait(Init, ::std::memory_order_relaxed);
+    while (phase.load(::std::memory_order_acquire) != Done) {
+      ::concurrency::Pause();
+    }
 
-		f1.wait(false, ::std::memory_order_relaxed);
-		while (!f2.test(::std::memory_order_acquire)) {
-			// Relax();
-		}
+    if (result->has_value()) {
+      return **::std::move(result);
+    }
 
-		return *::std::move(result);
-	}
+    ::std::rethrow_exception(::std::move(result)->error());
+  }
 };
 
 } // namespace pipe
 
-inline auto get() noexcept
-{
-	return pipe::Get();
+inline pipe::Get Get() noexcept {
+  return pipe::Get();
 }
 
 } // namespace exe::future

@@ -1,0 +1,43 @@
+//
+// result.hpp
+// ~~~~~~~~~~
+//
+// Copyright (C) 2026 Artyom Kolpakov <ddvamp007@gmail.com>
+//
+// Licensed under GNU GPL-3.0-or-later.
+// See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
+
+#ifndef DDVAMP_EXE_FUTURE_FUN_TYPE_RESULT_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_FUN_TYPE_RESULT_HPP_INCLUDED_ 1
+
+#include <exe/result/result.hpp>
+
+#include <exception>
+#include <expected>
+#include <utility>
+
+namespace exe::future {
+
+using Error = ::std::exception_ptr;
+
+template <typename Value>
+using Result = exe::Result<Value, Error>;
+
+namespace result {
+
+template <typename V>
+[[nodiscard]] inline Result<V> Ok(V v) {
+  return Result<V>(::std::move(v));
+}
+
+template <typename V>
+[[nodiscard]] inline Result<V> Err(Error e) {
+  return Result<V>(::std::unexpect_t{}, ::std::move(e));
+}
+
+} // namespace result
+
+} // namespace exe::future
+
+#endif /* DDVAMP_EXE_FUTURE_FUN_TYPE_RESULT_HPP_INCLUDED_ */

@@ -1,8 +1,8 @@
 //
+// inline.hpp
+// ~~~~~~~~~~
 //
-//
-//
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -11,73 +11,29 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_INLINE_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_INLINE_HPP_INCLUDED_ 1
 
-#include <utility>
+#include <exe/future/fun/operator/operator.hpp>
+#include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
+#include <exe/future/fun/type/future_fwd.hpp>
+#include <exe/runtime/inline.hpp>
 
-#include "exe/runtime/inline.hpp"
-#include "exe/future/fun/combine/seq/via.hpp"
-#include "exe/future/fun/mutator/mutator.hpp"
-#include "exe/future/fun/syntax/pipe.hpp"
+#include <utility>
 
 namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] InLine : public detail::Mutator {
-	template <concepts::Future F, concepts::Mutator M>
-	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
-
-public:
-	template <typename>
-	inline static constexpr bool mutates_nothrow = true;
-
-	InLine() = default;
-
-private:
-	template <concepts::Future F>
-	auto mutate(F f) noexcept
-	{
-		return ::std::move(f) | future::via(runtime::getInlineScheduler());
-	}
+class [[nodiscard]] Inline : public Operator {
+ public:
+  template <typename T>
+  Future<T> Apply(SemiFuture<T> f) && noexcept {
+    return SetScheduler(::std::move(f), runtime::GetInline());
+  }
 };
 
 } // namespace pipe
 
-inline auto inLine() noexcept
-{
-	return pipe::InLine();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-namespace pipe {
-
-class [[nodiscard]] InLineIfNeeded : public detail::Mutator {
-	template <concepts::Future F, concepts::Mutator M>
-	friend auto operator| (F &&, M) noexcept (M::template mutates_nothrow<F>);
-
-public:
-	template <typename>
-	inline static constexpr bool mutates_nothrow = true;
-
-	InLineIfNeeded() = default;
-
-private:
-	template <concepts::Future F>
-	auto mutate(F f) noexcept
-	{
-		if constexpr (has_scheduler_v<F>) {
-			return ::std::move(f);
-		} else {
-			return ::std::move(f) | future::inLine();
-		}
-	}
-};
-
-} // namespace pipe
-
-inline auto inLineIfNeeded() noexcept
-{
-	return pipe::InLineIfNeeded();
+inline pipe::Inline Inline() noexcept {
+  return pipe::Inline();
 }
 
 } // namespace exe::future
