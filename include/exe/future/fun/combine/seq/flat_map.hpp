@@ -15,12 +15,12 @@
 #include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/trait/value_of.hpp>
+#include <exe/future/fun/type/error.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
 
 #include <concepts>
-#include <exception>
 #include <type_traits>
 #include <utility>
 
@@ -56,7 +56,7 @@ class [[nodiscard]] FlatMap : public Operator {
                                 runtime::GetInline());
           SetCallback<U>(::std::move(f), ::std::move(cb));
         } catch (...) {
-          ::std::move(cb)(result::Err<U>(::std::current_exception()));
+          ::std::move(cb)(result::Err<U>(CurrentError()));
         }
       } else {
         ::std::move(p).SetError(::std::move(res).error());

@@ -14,12 +14,12 @@
 #include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
+#include <exe/future/fun/type/error.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
 
 #include <concepts>
-#include <exception>
 #include <utility>
 
 namespace exe::future {
@@ -46,7 +46,7 @@ class [[nodiscard]] Recover : public Operator {
         try {
           ::std::move(p).SetValue(::std::move(fn)(::std::move(res).error()));
         } catch (...) {
-          ::std::move(p).SetError(::std::current_exception());
+          ::std::move(p).SetError(CurrentError());
         }
       }
     };

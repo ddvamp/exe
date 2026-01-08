@@ -14,6 +14,7 @@
 #include <exe/future/fun/concept/future_value.hpp>
 #include <exe/future/fun/make/contract_fwd.hpp>
 #include <exe/future/fun/state/shared_state.hpp>
+#include <exe/future/fun/type/error.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/result.hpp>
 
@@ -41,7 +42,7 @@ class Promise : protected detail::HoldState<T> {
   ~Promise() {
     if (IsValid()) [[unlikely]] {
       auto const state = this->Release();
-      state->SetError(::std::make_exception_ptr(BrokenPromise()));
+      state->SetError(MakeError(BrokenPromise()));
     }
   }
 

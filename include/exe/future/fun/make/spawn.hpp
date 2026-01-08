@@ -13,12 +13,12 @@
 
 #include <exe/future/fun/combine/seq/via.hpp>
 #include <exe/future/fun/make/contract.hpp>
+#include <exe/future/fun/type/error.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
 #include <exe/runtime/task/submit.hpp>
 
 #include <concepts>
-#include <exception>
 #include <type_traits>
 #include <utility>
 
@@ -32,7 +32,7 @@ Future<::std::invoke_result_t<Fn &&>> Spawn(Scheduler &where, Fn fn) {
     try {
       ::std::move(p).SetValue(::std::move(fn)());
     } catch (...) {
-      ::std::move(p).SetError(::std::current_exception());
+      ::std::move(p).SetError(CurrentError());
     }
   };
 

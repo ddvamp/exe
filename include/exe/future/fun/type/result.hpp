@@ -11,15 +11,13 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_TYPE_RESULT_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_TYPE_RESULT_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/type/error.hpp>
 #include <exe/result/result.hpp>
 
-#include <exception>
 #include <expected>
 #include <utility>
 
 namespace exe::future {
-
-using Error = ::std::exception_ptr;
 
 template <typename Value>
 using Result = exe::Result<Value, Error>;
@@ -32,7 +30,7 @@ template <typename V>
 }
 
 template <typename V>
-[[nodiscard]] inline Result<V> Err(Error e) {
+[[nodiscard]] inline Result<V> Err(Error &&e) {
   return Result<V>(::std::unexpect_t{}, ::std::move(e));
 }
 

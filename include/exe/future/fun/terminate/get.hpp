@@ -14,12 +14,12 @@
 #include <concurrency/pause.hpp>
 #include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
+#include <exe/future/fun/type/error.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
 
 #include <atomic>
-#include <exception>
 #include <optional>
 #include <utility>
 
@@ -65,7 +65,7 @@ class [[nodiscard]] Get : public Operator {
       return **::std::move(result);
     }
 
-    ::std::rethrow_exception(::std::move(result)->error());
+    ThrowError((*::std::move(result)).error());
   }
 };
 
