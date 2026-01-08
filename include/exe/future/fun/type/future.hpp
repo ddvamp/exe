@@ -40,6 +40,8 @@ class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
   using Base::Base;
 
  public:
+  using ValueType = T;
+
   ~SemiFuture() {
     if (this->HasState()) [[unlikely]] {
       auto const state = this->Release();
