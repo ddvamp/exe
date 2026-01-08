@@ -74,7 +74,7 @@ class [[nodiscard]] FlatMap : public Operator {
 
 template <typename Fn>
 inline pipe::FlatMap<Fn> FlatMap(Fn fn) {
-  return pipe::FlatMap(::std::move<Fn>(fn));
+  return pipe::FlatMap(::std::move(fn));
 }
 
 } // namespace exe::future

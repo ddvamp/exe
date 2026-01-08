@@ -16,6 +16,7 @@
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/future/fun/type/result.hpp>
+#include <exe/runtime/inline.hpp>
 
 #include <chrono>
 #include <utility>
@@ -48,7 +49,8 @@ class [[nodiscard]] After : public Operator {
       ::std::move(cb)();
     };
 
-    SetCallback(::std::move(f), ::std::move(cb));
+    SetCallback(SetScheduler(::std::move(f), runtime::GetInline()),
+                ::std::move(cb));
 
     return ::std::move(nf);
   }
