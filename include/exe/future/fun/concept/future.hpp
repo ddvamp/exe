@@ -18,18 +18,18 @@ namespace exe::future::concepts {
 namespace detail {
 
 template <typename>
-inline constexpr bool is_future_v = false;
+inline constexpr bool IsFutureImpl = false;
 
 template <typename T>
-inline constexpr bool is_future_v<SemiFuture<T>> = true;
+inline constexpr bool IsFutureImpl<SemiFuture<T>> = true;
 
 template <typename T>
-inline constexpr bool is_future_v<Future<T>> = true;
+inline constexpr bool IsFutureImpl<Future<T>> = true;
 
 } // namespace detail
 
 template <typename T>
-concept Future = detail::is_future_v<T>;
+concept Future = detail::IsFutureImpl<T>;
 
 } // namespace exe::future::concepts
 
