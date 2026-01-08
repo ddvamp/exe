@@ -26,8 +26,8 @@ class [[nodiscard]] Detach : public Operator {
  public:
   template <typename T>
   void Apply(SemiFuture<T> f) && noexcept {
-    return SetCallback<T>(SetScheduler(::std::move(f), runtime::GetInline()),
-                          Noop{});
+    return SetCallback(SetScheduler(::std::move(f), runtime::GetInline()),
+                       Noop{});
   }
 };
 

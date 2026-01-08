@@ -54,7 +54,7 @@ class [[nodiscard]] Get : public Operator {
       phase.store(Done, ::std::memory_order_release);
     };
 
-    SetCallback<T>(SetScheduler(::std::move(f), runtime::GetInline()), cb);
+    SetCallback(SetScheduler(::std::move(f), runtime::GetInline()), cb);
 
     phase.wait(Init, ::std::memory_order_relaxed);
     while (phase.load(::std::memory_order_acquire) != Done) {

@@ -86,11 +86,10 @@ class AllImpl : public Operator {
     auto const state = ::new State(::std::move(p), sizeof...(Fs));
 
     [&]<::std::size_t ...Idx>(::std::index_sequence<Idx...>) {
-      (..., SetCallback<ValueOf<Fs>>(
-          SetScheduler(::std::move(fs), runtime::GetInline()),
-          [state](Result<ValueOf<Fs>> &&res) noexcept {
-            state->template SetResult<Idx>(::std::move(res));
-          }));
+      (..., SetCallback(SetScheduler(::std::move(fs), runtime::GetInline()),
+                        [state](Result<ValueOf<Fs>> &&res) noexcept {
+                          state->template SetResult<Idx>(::std::move(res));
+                        }));
     }(::std::index_sequence_for<Fs...>{});
 
     return ::std::move(f);

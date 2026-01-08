@@ -52,9 +52,8 @@ class [[nodiscard]] FlatMap : public Operator {
         };
 
         try {
-          auto f = SetScheduler(::std::move(fn)(*::std::move(res)),
-                                runtime::GetInline());
-          SetCallback<U>(::std::move(f), ::std::move(cb));
+          SetCallback(SetScheduler(::std::move(fn)(*::std::move(res)),
+                                   runtime::GetInline()), ::std::move(cb));
         } catch (...) {
           ::std::move(cb)(result::Err<U>(CurrentError()));
         }
@@ -65,7 +64,7 @@ class [[nodiscard]] FlatMap : public Operator {
 
     auto &where = GetScheduler(f);
 
-    SetCallback<T>(::std::move(f), ::std::move(cb));
+    SetCallback(::std::move(f), ::std::move(cb));
 
     return SetScheduler(::std::move(nf), where);
   }

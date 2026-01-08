@@ -16,6 +16,7 @@
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
 
+#include <type_traits>
 #include <utility>
 
 namespace exe::future {
@@ -39,7 +40,8 @@ class Operator {
   }
 
   template <typename T>
-  [[nodiscard("Pure")]] static Scheduler &GetScheduler(Future<T> const &f) noexcept {
+  [[nodiscard("Pure")]] static Scheduler &GetScheduler(Future<T> const &f)
+      noexcept {
     return *f.GetStateChecked()->GetScheduler();
   }
 
@@ -51,7 +53,8 @@ class Operator {
   }
 
   template <typename T>
-  static void SetCallback(Future<T> f, Callback<T> &&cb) noexcept {
+  static void SetCallback(Future<T> f, ::std::type_identity_t<Callback<T>> &&cb)
+      noexcept {
     f.ReleaseChecked()->SetCallback(::std::move(cb));
   }
 };

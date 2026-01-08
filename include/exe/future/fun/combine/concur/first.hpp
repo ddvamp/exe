@@ -75,8 +75,8 @@ class FirstImpl : public Operator {
 
     auto const state = ::new State(::std::move(p), sizeof...(Fs));
 
-    (..., SetCallback<T>(SetScheduler(::std::move(fs), runtime::GetInline()),
-                         ::std::ref(*state)));
+    (..., SetCallback(SetScheduler(::std::move(fs), runtime::GetInline()),
+                      ::std::ref(*state)));
 
     return ::std::move(f);
   }

@@ -53,7 +53,7 @@ class [[nodiscard]] Map : public Operator {
 
     auto &where = GetScheduler(f);
 
-    SetCallback<T>(::std::move(f), ::std::move(cb));
+    SetCallback(::std::move(f), ::std::move(cb));
 
     return SetScheduler(::std::move(nf), where);
   }
