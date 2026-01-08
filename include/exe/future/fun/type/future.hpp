@@ -11,6 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_TYPE_FUTURE_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_TYPE_FUTURE_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/concept/future_value.hpp>
 #include <exe/future/fun/make/contract_fwd.hpp>
 #include <exe/future/fun/operator/operator_fwd.hpp>
 #include <exe/future/fun/state/shared_state.hpp>
@@ -29,7 +30,7 @@ struct Noop {
  *
  *  Future is moveable value type
  */
-template <typename T>
+template <concepts::FutureValue T>
 class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
   friend Contract<T>;
   friend Operator;
@@ -54,7 +55,7 @@ class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
   void operator= (SemiFuture &&) = delete;
 };
 
-template <typename T>
+template <concepts::FutureValue T>
 class [[nodiscard]] Future : public SemiFuture<T> {
   friend Operator;
 

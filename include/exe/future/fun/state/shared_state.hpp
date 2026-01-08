@@ -14,7 +14,6 @@
 #include <exe/future/fun/type/callback.hpp>
 #include <exe/future/fun/type/result.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
-#include <exe/result/concept.hpp>
 #include <exe/runtime/task/task.hpp>
 
 #include <concurrency/rendezvous.hpp>
@@ -26,22 +25,17 @@
 
 namespace exe::future::detail {
 
-template <typename T>
-concept SuitableForState =
-    ::std::is_object_v<T> &&
-    !::util::is_qualified_v<T> &&
-    ::std::is_nothrow_destructible_v<T> &&
-    ::std::is_nothrow_move_constructible_v<T> && // implies !std::is_array_v<T>
-    exe::concepts::ResultValue<T>;
-
 /**
  *  Shared state for Future and Promise
  *
  *  Allows you to pass result from Promise to Future and callback in
  *  the opposite direction, as well as specify where callback will be called
  */
-template <SuitableForState T>
+template <typename T>
 class SharedState : public runtime::task::TaskBase {
+  static_assert(::std::is_nothrow_destructible_v<T>);
+  static_assert(::std::is_nothrow_move_constructible_v<T>);
+
  private:
   ::std::optional<Result<T>> result_;
   ::std::optional<Callback<T>> callback_;
@@ -84,8 +78,6 @@ class SharedState : public runtime::task::TaskBase {
   }
 
  private:
-  SharedState() noexcept = default;
-
   // TaskBase
   void Run() noexcept override {
     (*::std::move(callback_))(*::std::move(result_));

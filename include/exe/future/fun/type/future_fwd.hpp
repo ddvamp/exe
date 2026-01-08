@@ -11,12 +11,14 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_TYPE_FUTURE_FWD_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_TYPE_FUTURE_FWD_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/concept/future_value.hpp>
+
 namespace exe::future {
 
-template <typename T>
+template <concepts::FutureValue T>
 class SemiFuture;
 
-template <typename T>
+template <concepts::FutureValue T>
 class Future;
 
 } // namespace exe::future

@@ -11,6 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_MAKE_CONTRACT_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_MAKE_CONTRACT_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/concept/future_value.hpp>
 #include <exe/future/fun/make/contract_fwd.hpp>
 #include <exe/future/fun/state/shared_state.hpp>
 #include <exe/future/fun/type/future.hpp>
@@ -28,7 +29,7 @@ class BrokenPromise : public ::std::exception {
   }
 };
 
-template <typename T>
+template <concepts::FutureValue T>
 class Promise : protected detail::HoldState<T> {
   friend Contract<T>;
 
