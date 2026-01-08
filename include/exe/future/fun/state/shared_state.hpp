@@ -14,7 +14,7 @@
 #include <exe/future/fun/type/callback.hpp>
 #include <exe/future/fun/type/result.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
-#include <exe/result/trait.hpp>
+#include <exe/result/concept.hpp>
 #include <exe/runtime/task/task.hpp>
 
 #include <concurrency/rendezvous.hpp>
@@ -32,7 +32,7 @@ concept SuitableForState =
     !::util::is_qualified_v<T> &&
     ::std::is_nothrow_destructible_v<T> &&
     ::std::is_nothrow_move_constructible_v<T> && // implies !std::is_array_v<T>
-    exe::result::SuitableValue<T>;
+    exe::concepts::ResultValue<T>;
 
 /**
  *  Shared state for Future and Promise
