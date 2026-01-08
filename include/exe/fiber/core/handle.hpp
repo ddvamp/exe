@@ -29,6 +29,7 @@ class [[nodiscard]] FiberHandle {
   FiberHandle(FiberHandle const &) = delete;
   FiberHandle(FiberHandle &&that) noexcept : fiber_(that.Release()) {}
 
+  // [TODO]: Remove assignment
   // Precondition: IsValid() == false
   FiberHandle &operator= (FiberHandle) noexcept;
 
