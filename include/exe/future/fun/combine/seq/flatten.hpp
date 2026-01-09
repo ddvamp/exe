@@ -41,7 +41,7 @@ class [[nodiscard]] Flatten : public Operator {
 
 } // namespace pipe
 
-inline pipe::Flatten Flatten() noexcept {
+inline auto Flatten() noexcept {
   return pipe::Flatten();
 }
 

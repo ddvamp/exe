@@ -32,7 +32,7 @@ class [[nodiscard]] Inline : public Operator {
 
 } // namespace pipe
 
-inline pipe::Inline Inline() noexcept {
+inline auto Inline() noexcept {
   return pipe::Inline();
 }
 

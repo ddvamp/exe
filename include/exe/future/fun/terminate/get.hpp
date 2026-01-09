@@ -71,7 +71,7 @@ class [[nodiscard]] Get : public Operator {
 
 } // namespace pipe
 
-inline pipe::Get Get() noexcept {
+inline auto Get() noexcept {
   return pipe::Get();
 }
 

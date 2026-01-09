@@ -33,7 +33,7 @@ class [[nodiscard]] Detach : public Operator {
 
 } // namespace pipe
 
-inline pipe::Detach Detach() noexcept {
+inline auto Detach() noexcept {
   return pipe::Detach();
 }
 

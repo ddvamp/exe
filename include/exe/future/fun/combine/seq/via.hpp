@@ -37,7 +37,7 @@ class [[nodiscard]] Via : public Operator {
 
 } // namespace pipe
 
-inline pipe::Via Via(Scheduler &where) noexcept {
+inline auto Via(Scheduler &where) noexcept {
   return pipe::Via(where);
 }
 

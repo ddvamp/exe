@@ -30,7 +30,7 @@ class [[nodiscard]] After : public Operator {
   ::std::chrono::microseconds us_;
 
  public:
-  explicit After(::std::chrono::microseconds us) : us_(us) {}
+  explicit After(::std::chrono::microseconds us) noexcept : us_(us) {}
 
   template <typename T>
   SemiFuture<T> Apply(SemiFuture<T> f) && {
@@ -65,7 +65,7 @@ class [[nodiscard]] After : public Operator {
 
 } // namespace pipe
 
-inline pipe::After After(::std::chrono::microseconds us) {
+inline auto After(::std::chrono::microseconds us) noexcept {
   return pipe::After(us);
 }
 
