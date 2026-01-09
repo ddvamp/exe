@@ -1,10 +1,21 @@
+//
+// t_reactor.cpp
+// ~~~~~~~~~~~~~
+//
+// Copyright (C) 2025-2026 Artyom Kolpakov <ddvamp007@gmail.com>
+//
+// Licensed under GNU GPL-3.0-or-later.
+// See file LICENSE or <https://www.gnu.org/licenses/> for details.
+//
+
 #include <exe/runtime/reactor.hpp>
 
-#include <sys/timerfd.h>
 #include <unistd.h>
+#include <sys/timerfd.h>
 
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 
 class Timer : exe::runtime::Operation {
@@ -32,7 +43,7 @@ class Timer : exe::runtime::Operation {
   }
 
   void Arm() noexcept {
-    ::itimerspec spec = {.it_value = {.tv_nsec = 30'000'000}};
+    ::itimerspec spec = {.it_value = {.tv_nsec = 10'000'000}};
     assert(::timerfd_settime(fd_, 0, &spec, nullptr) == 0);
   }
 
@@ -51,7 +62,7 @@ class Timer : exe::runtime::Operation {
   }
 };
 
-void test_reactor() {
+int TestReactor() {
   exe::runtime::Reactor reactor;
   reactor.Init(128);
 
@@ -64,9 +75,11 @@ void test_reactor() {
   reactor.Run();
   reactor.Close();
 
-  ::std::cout << "End " << timer.Times() << std::endl;
+  ::std::cout << "End " << timer.Times() << ::std::endl;
+
+  return EXIT_SUCCESS;
 }
 
 int main() {
-  test_reactor();
+  return TestReactor();
 }

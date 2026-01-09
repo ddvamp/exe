@@ -1,8 +1,8 @@
 #
+# CMakeLists.txt
+# ~~~~~~~~~~~~~~
 #
-#
-#
-# Copyright (C) 2025 Artyom Kolpakov <ddvamp007@gmail.com>
+# Copyright (C) 2025-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 #
 # Licensed under GNU GPL-3.0-or-later.
 # See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -52,4 +52,4 @@ target_include_directories(
 target_compile_features(exe PUBLIC cxx_std_26)
 
 enable_testing()
-add_subdirectory(tests)
+add_subdirectory(test)
