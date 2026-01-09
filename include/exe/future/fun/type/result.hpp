@@ -15,6 +15,7 @@
 #include <exe/result/result.hpp>
 
 #include <expected>
+#include <type_traits>
 #include <utility>
 
 namespace exe::future {
@@ -25,12 +26,13 @@ using Result = exe::Result<Value, Error>;
 namespace result {
 
 template <typename V>
-[[nodiscard]] inline Result<V> Ok(V v) {
+[[nodiscard]] inline constexpr Result<V> Ok(V v)
+    noexcept(::std::is_nothrow_move_constructible_v<V>) {
   return Result<V>(::std::move(v));
 }
 
 template <typename V>
-[[nodiscard]] inline Result<V> Err(Error &&e) {
+[[nodiscard]] inline constexpr Result<V> Err(Error &&e) noexcept {
   return Result<V>(::std::unexpect_t{}, ::std::move(e));
 }
 
