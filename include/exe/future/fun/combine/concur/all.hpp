@@ -78,8 +78,8 @@ class AllImpl : private core::Operator {
 
  public:
   template <typename ...Fs>
-  static SemiFuture<::std::tuple<ValueOf<Fs>...>> Apply(Fs ...fs) {
-    using T = ::std::tuple<ValueOf<Fs>...>;
+  static SemiFuture<::std::tuple<trait::ValueOf<Fs>...>> Apply(Fs ...fs) {
+    using T = ::std::tuple<trait::ValueOf<Fs>...>;
 
     auto [f, p] = Contract<T>();
 
@@ -87,7 +87,7 @@ class AllImpl : private core::Operator {
 
     [&]<::std::size_t ...Idx>(::std::index_sequence<Idx...>) {
       (..., SetCallback(SetScheduler(::std::move(fs), runtime::GetInline()),
-                        [state](Result<ValueOf<Fs>> &&res) noexcept {
+                        [state](Result<trait::ValueOf<Fs>> &&res) noexcept {
                           state->template SetResult<Idx>(::std::move(res));
                         }));
     }(::std::index_sequence_for<Fs...>{});

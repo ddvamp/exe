@@ -27,13 +27,13 @@ namespace pipe {
 class [[nodiscard]] Flatten : private core::Operator {
  public:
   template <typename F>
-  SemiFuture<ValueOf<F>> Apply(SemiFuture<F> f) && {
+  SemiFuture<trait::ValueOf<F>> Apply(SemiFuture<F> f) && {
     return ::std::move(*this).Apply(
         SetScheduler(::std::move(f), runtime::GetInline()));
   }
 
   template <typename F>
-  Future<ValueOf<F>> Apply(Future<F> f) && {
+  Future<trait::ValueOf<F>> Apply(Future<F> f) && {
     return ::std::move(f) |
         future::FlatMap([](F &&v) noexcept { return ::std::move(v); });
   }

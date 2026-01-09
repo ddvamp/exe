@@ -38,8 +38,8 @@ class [[nodiscard]] FlatMap : private core::Operator {
 
   template <typename T>
   requires (::std::is_invocable_v<Fn &&, T &&>)
-  Future<ValueOf<::std::invoke_result_t<Fn &&, T &&>>> Apply(Future<T> f) && {
-    using U = ValueOf<::std::invoke_result_t<Fn &&, T &&>>;
+  Future<trait::ValueOf<::std::invoke_result_t<Fn &&, T &&>>> Apply(Future<T> f) && {
+    using U = trait::ValueOf<::std::invoke_result_t<Fn &&, T &&>>;
 
     auto [nf, p] = Contract<U>();
 

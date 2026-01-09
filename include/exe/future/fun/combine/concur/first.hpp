@@ -69,8 +69,8 @@ class FirstImpl : private core::Operator {
 
  public:
   template <typename ...Fs>
-  static SemiFuture<ValueOf<Fs...[0]>> Apply(Fs ...fs) {
-    using T = ValueOf<Fs...[0]>;
+  static SemiFuture<trait::ValueOf<Fs...[0]>> Apply(Fs ...fs) {
+    using T = trait::ValueOf<Fs...[0]>;
 
     auto [f, p] = Contract<T>();
 
@@ -86,7 +86,7 @@ class FirstImpl : private core::Operator {
 } // namespace detail
 
 template <concepts::Future ...Fs>
-requires ((sizeof...(Fs) > 1) && ::util::is_all_same_v<ValueOf<Fs>...>)
+requires ((sizeof...(Fs) > 1) && ::util::is_all_same_v<trait::ValueOf<Fs>...>)
 inline auto First(Fs ...fs) {
   return detail::FirstImpl::Apply(::std::move(fs)...);
 }

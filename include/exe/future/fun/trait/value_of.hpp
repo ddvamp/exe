@@ -13,11 +13,11 @@
 
 #include <exe/future/fun/concept/future.hpp>
 
-namespace exe::future {
+namespace exe::future::trait {
 
 template <concepts::Future F>
 using ValueOf = F::ValueType;
 
-} // namespace exe::future
+} // namespace exe::future::trait
 
 #endif /* DDVAMP_EXE_FUTURE_FUN_TRAIT_VALUE_OF_HPP_INCLUDED_ */
