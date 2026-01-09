@@ -11,6 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_FLAT_MAP_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_FLAT_MAP_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/core/mapper.hpp>
 #include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
@@ -20,7 +21,6 @@
 #include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
 
-#include <concepts>
 #include <type_traits>
 #include <utility>
 
@@ -28,15 +28,16 @@ namespace exe::future {
 
 namespace pipe {
 
-template <::std::destructible Fn>
+template <core::concepts::Mapper Fn>
 class [[nodiscard]] FlatMap : public Operator {
  private:
   Fn fn_;
 
  public:
-  explicit FlatMap(Fn fn) : fn_(::std::move(fn)) {}
+  explicit FlatMap(Fn &&fn) noexcept : fn_(::std::move(fn)) {}
 
   template <typename T>
+  requires (::std::is_invocable_v<Fn &&, T &&>)
   Future<ValueOf<::std::invoke_result_t<Fn &&, T &&>>> Apply(Future<T> f) && {
     using U = ValueOf<::std::invoke_result_t<Fn &&, T &&>>;
 
@@ -73,8 +74,8 @@ class [[nodiscard]] FlatMap : public Operator {
 } // namespace pipe
 
 template <typename Fn>
-inline pipe::FlatMap<Fn> FlatMap(Fn fn) {
-  return pipe::FlatMap(::std::move(fn));
+inline auto FlatMap(Fn fn) noexcept {
+  return pipe::FlatMap(core::Mapper(::std::move(fn)));
 }
 
 } // namespace exe::future

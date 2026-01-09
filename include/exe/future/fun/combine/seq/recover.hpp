@@ -11,6 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_RECOVER_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_RECOVER_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/core/mapper.hpp>
 #include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
@@ -19,20 +20,20 @@
 #include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
 
-#include <concepts>
 #include <utility>
 
 namespace exe::future {
 
 namespace pipe {
 
-template <::std::destructible Fn>
+template <core::concepts::Mapper Fn>
+requires (::std::is_invocable_v<Fn &&, Error &&>)
 class [[nodiscard]] Recover : public Operator {
  private:
   Fn fn_;
 
  public:
-  explicit Recover(Fn fn) : fn_(::std::move(fn)) {}
+  explicit Recover(Fn &&fn) noexcept : fn_(::std::move(fn)) {}
 
   template <typename T>
   Future<T> Apply(Future<T> f) && {
@@ -62,8 +63,8 @@ class [[nodiscard]] Recover : public Operator {
 } // namespace pipe
 
 template <typename Fn>
-inline pipe::Recover<Fn> Recover(Fn fn) {
-  return pipe::Recover(::std::move(fn));
+inline auto Recover(Fn fn) noexcept {
+  return pipe::Recover(core::Mapper(::std::move(fn)));
 }
 
 } // namespace exe::future

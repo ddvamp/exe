@@ -11,6 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_MAP_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_MAP_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/core/mapper.hpp>
 #include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
@@ -18,7 +19,6 @@
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/future/fun/type/result.hpp>
 
-#include <concepts>
 #include <type_traits>
 #include <utility>
 
@@ -26,15 +26,16 @@ namespace exe::future {
 
 namespace pipe {
 
-template <::std::destructible Fn>
+template <core::concepts::Mapper Fn>
 class [[nodiscard]] Map : public Operator {
  private:
   Fn fn_;
 
  public:
-  explicit Map(Fn fn) : fn_(::std::move(fn)) {}
+  explicit Map(Fn &&fn) noexcept : fn_(::std::move(fn)) {}
 
   template <typename T>
+  requires (::std::is_invocable_v<Fn &&, T &&>)
   Future<::std::invoke_result_t<Fn &&, T &&>> Apply(Future<T> f) && {
     auto [nf, p] = Contract<::std::invoke_result_t<Fn &&, T &&>>();
 
@@ -62,8 +63,8 @@ class [[nodiscard]] Map : public Operator {
 } // namespace pipe
 
 template <typename Fn>
-inline pipe::Map<Fn> Map(Fn fn) {
-  return pipe::Map(::std::move(fn));
+inline auto Map(Fn fn) noexcept {
+  return pipe::Map(core::Mapper(::std::move(fn)));
 }
 
 } // namespace exe::future
