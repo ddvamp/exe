@@ -11,8 +11,8 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_AFTER_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_AFTER_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/make/contract.hpp>
-#include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/future/fun/type/result.hpp>
@@ -25,7 +25,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] After : public Operator {
+class [[nodiscard]] After : public core::Operator {
  private:
   ::std::chrono::microseconds us_;
 

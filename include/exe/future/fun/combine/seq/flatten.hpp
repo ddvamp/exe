@@ -12,7 +12,7 @@
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_FLATTEN_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/combine/seq/flat_map.hpp>
-#include <exe/future/fun/operator/operator.hpp>
+#include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/trait/value_of.hpp>
 #include <exe/future/fun/type/future.hpp>
@@ -24,7 +24,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Flatten : public Operator {
+class [[nodiscard]] Flatten : public core::Operator {
  public:
   template <typename F>
   SemiFuture<ValueOf<F>> Apply(SemiFuture<F> f) && {

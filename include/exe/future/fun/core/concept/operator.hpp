@@ -8,15 +8,15 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_FUTURE_FUN_CONCEPT_OPERATOR_HPP_INCLUDED_
-#define DDVAMP_EXE_FUTURE_FUN_CONCEPT_OPERATOR_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_FUTURE_FUN_CORE_CONCEPT_OPERATOR_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_FUN_CORE_CONCEPT_OPERATOR_HPP_INCLUDED_ 1
 
-#include <exe/future/fun/operator/operator_fwd.hpp>
+#include <exe/future/fun/core/operator_fwd.hpp>
 
 #include <concepts>
 #include <utility>
 
-namespace exe::future::concepts {
+namespace exe::future::core::concepts {
 
 template <typename Op, typename T>
 concept OperatorFor =
@@ -26,6 +26,6 @@ concept OperatorFor =
       { ::std::move(op).Apply(::std::move(t)) };
     };
 
-} // namespace exe::future::concepts
+} // namespace exe::future::core::concepts
 
-#endif /* DDVAMP_EXE_FUTURE_FUN_CONCEPT_OPERATOR_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_FUTURE_FUN_CORE_CONCEPT_OPERATOR_HPP_INCLUDED_ */

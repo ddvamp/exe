@@ -12,8 +12,8 @@
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_CONCUR_FIRST_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/concept/future.hpp>
+#include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/make/contract.hpp>
-#include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/trait/value_of.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/result.hpp>
@@ -30,7 +30,7 @@ namespace exe::future {
 
 namespace detail {
 
-class FirstImpl : public Operator {
+class FirstImpl : public core::Operator {
   // To guarantee the expected implementation
   static_assert(::std::atomic_bool::is_always_lock_free);
   static_assert(::std::atomic_size_t::is_always_lock_free);

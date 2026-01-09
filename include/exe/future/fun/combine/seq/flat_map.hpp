@@ -12,8 +12,8 @@
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_FLAT_MAP_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/core/mapper.hpp>
+#include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/make/contract.hpp>
-#include <exe/future/fun/operator/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/trait/value_of.hpp>
 #include <exe/future/fun/type/error.hpp>
@@ -29,7 +29,7 @@ namespace exe::future {
 namespace pipe {
 
 template <core::concepts::Mapper Fn>
-class [[nodiscard]] FlatMap : public Operator {
+class [[nodiscard]] FlatMap : public core::Operator {
  private:
   Fn fn_;
 

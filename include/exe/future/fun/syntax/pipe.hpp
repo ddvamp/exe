@@ -12,13 +12,13 @@
 #define DDVAMP_EXE_FUTURE_FUN_SYNTAX_PIPE_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/concept/future.hpp>
-#include <exe/future/fun/concept/operator.hpp>
+#include <exe/future/fun/core/concept/operator.hpp>
 
 #include <utility>
 
 namespace exe::future::pipe {
 
-template <concepts::Future F, concepts::OperatorFor<F> Op>
+template <concepts::Future F, core::concepts::OperatorFor<F> Op>
 inline auto operator| (F f, Op op) {
   return ::std::move(op).Apply(::std::move(f));
 }

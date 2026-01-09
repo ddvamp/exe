@@ -12,8 +12,8 @@
 #define DDVAMP_EXE_FUTURE_FUN_TYPE_FUTURE_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/concept/future_value.hpp>
+#include <exe/future/fun/core/operator_fwd.hpp>
 #include <exe/future/fun/make/contract_fwd.hpp>
-#include <exe/future/fun/operator/operator_fwd.hpp>
 #include <exe/future/fun/state/shared_state.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/runtime/inline.hpp>
@@ -33,7 +33,7 @@ struct Noop {
 template <concepts::FutureValue T>
 class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
   friend Contract<T>;
-  friend Operator;
+  friend core::Operator;
 
  protected:
   using Base = detail::HoldState<T>;
@@ -59,7 +59,7 @@ class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
 
 template <concepts::FutureValue T>
 class [[nodiscard]] Future : public SemiFuture<T> {
-  friend Operator;
+  friend core::Operator;
 
  private:
   using SemiFuture<T>::SemiFuture;

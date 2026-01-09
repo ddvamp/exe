@@ -11,7 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_TERMINATE_DETACH_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_TERMINATE_DETACH_HPP_INCLUDED_ 1
 
-#include <exe/future/fun/operator/operator.hpp>
+#include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/runtime/inline.hpp>
@@ -22,7 +22,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Detach : public Operator {
+class [[nodiscard]] Detach : public core::Operator {
  public:
   template <typename T>
   void Apply(SemiFuture<T> f) && noexcept {

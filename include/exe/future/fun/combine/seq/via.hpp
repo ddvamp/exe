@@ -11,7 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_VIA_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_VIA_HPP_INCLUDED_ 1
 
-#include <exe/future/fun/operator/operator.hpp>
+#include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
@@ -22,7 +22,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Via : public Operator {
+class [[nodiscard]] Via : public core::Operator {
  private:
   Scheduler &where_;
 

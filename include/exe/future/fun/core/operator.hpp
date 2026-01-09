@@ -8,10 +8,10 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_FUTURE_FUN_OPERATOR_OPERATOR_HPP_INCLUDED_
-#define DDVAMP_EXE_FUTURE_FUN_OPERATOR_OPERATOR_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_FUTURE_FUN_CORE_OPERATOR_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_FUN_CORE_OPERATOR_HPP_INCLUDED_ 1
 
-#include <exe/future/fun/operator/operator_fwd.hpp>
+#include <exe/future/fun/core/operator_fwd.hpp>
 #include <exe/future/fun/type/callback.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
@@ -19,7 +19,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace exe::future {
+namespace exe::future::core {
 
 class Operator {
  protected:
@@ -59,6 +59,6 @@ class Operator {
   }
 };
 
-} // namespace exe::future
+} // namespace exe::future::core
 
-#endif /* DDVAMP_EXE_FUTURE_FUN_OPERATOR_OPERATOR_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_FUTURE_FUN_CORE_OPERATOR_HPP_INCLUDED_ */

@@ -11,13 +11,14 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_TERMINATE_GET_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_TERMINATE_GET_HPP_INCLUDED_ 1
 
-#include <concurrency/pause.hpp>
-#include <exe/future/fun/operator/operator.hpp>
+#include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/type/error.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
+
+#include <concurrency/pause.hpp>
 
 #include <atomic>
 #include <optional>
@@ -27,7 +28,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Get : public Operator {
+class [[nodiscard]] Get : public core::Operator {
  private:
   enum class Phase {
     Init,
