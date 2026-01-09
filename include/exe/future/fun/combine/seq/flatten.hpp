@@ -34,7 +34,8 @@ class [[nodiscard]] Flatten : public Operator {
 
   template <typename F>
   Future<ValueOf<F>> Apply(Future<F> f) && {
-    return ::std::move(f) | FlatMap(Noop{});
+    return ::std::move(f) |
+        FlatMap([](F &&v) noexcept { return ::std::move(v); });
   }
 };
 
