@@ -2,7 +2,7 @@
 // utility.hpp
 // ~~~~~~~~~~~
 //
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -11,6 +11,7 @@
 #ifndef DDVAMP_UTIL_UTILITY_HPP_INCLUDED_
 #define DDVAMP_UTIL_UTILITY_HPP_INCLUDED_ 1
 
+#include <util/concepts.hpp>
 #include <util/macro.hpp>
 #include <util/type_traits.hpp>
 
@@ -33,9 +34,8 @@ inline constexpr unit_t unit{};
  *  This function can be used to convert an prvalue to an lvalue.
  *  In this case temporary materialization occurs.
  */
-template <typename T>
-[[nodiscard]] inline constexpr T &temporary(T &&t) noexcept
-  requires (!::std::is_lvalue_reference_v<T>) {
+template <RvalueDeduced T>
+[[nodiscard]] inline constexpr T &temporary(T &&t) noexcept {
   return static_cast<T &>(t);
 }
 
