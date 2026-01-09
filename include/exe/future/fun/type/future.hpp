@@ -13,8 +13,8 @@
 
 #include <exe/future/fun/concept/future_value.hpp>
 #include <exe/future/fun/core/operator_fwd.hpp>
+#include <exe/future/fun/detail/shared_state.hpp>
 #include <exe/future/fun/make/contract_fwd.hpp>
-#include <exe/future/fun/state/shared_state.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/runtime/inline.hpp>
 
