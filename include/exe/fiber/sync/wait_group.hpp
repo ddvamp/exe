@@ -21,6 +21,9 @@
 
 namespace exe::fiber {
 
+// [TODO]: Add IsReady, improve description (Reset on edge of session using),
+// make all (thread and fiber) primitives consistent semantically
+
 /**
  *  Synchronization primitive for waiting for the completion of tasks,
  *  which are expressed as a 64-bit counter. Formally, the wait ends when
