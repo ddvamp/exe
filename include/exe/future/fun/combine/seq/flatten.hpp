@@ -24,7 +24,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Flatten : public core::Operator {
+class [[nodiscard]] Flatten : private core::Operator {
  public:
   template <typename F>
   SemiFuture<ValueOf<F>> Apply(SemiFuture<F> f) && {

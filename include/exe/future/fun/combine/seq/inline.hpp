@@ -22,7 +22,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Inline : public core::Operator {
+class [[nodiscard]] Inline : private core::Operator {
  public:
   template <typename T>
   Future<T> Apply(SemiFuture<T> f) && noexcept {

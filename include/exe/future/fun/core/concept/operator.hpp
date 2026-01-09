@@ -13,18 +13,14 @@
 
 #include <exe/future/fun/core/operator_fwd.hpp>
 
-#include <concepts>
 #include <utility>
 
 namespace exe::future::core::concepts {
 
 template <typename Op, typename T>
-concept OperatorFor =
-    ::std::destructible<Op> &&
-    ::std::derived_from<Op, Operator> &&
-    requires (Op op, T t) {
-      { ::std::move(op).Apply(::std::move(t)) };
-    };
+concept OperatorFor = requires (Op op, T t) {
+  { ::std::move(op).Apply(::std::move(t)) };
+};
 
 } // namespace exe::future::core::concepts
 

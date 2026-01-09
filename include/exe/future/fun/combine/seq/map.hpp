@@ -27,7 +27,7 @@ namespace exe::future {
 namespace pipe {
 
 template <core::concepts::Mapper Fn>
-class [[nodiscard]] Map : public core::Operator {
+class [[nodiscard]] Map : private core::Operator {
  private:
   Fn fn_;
 

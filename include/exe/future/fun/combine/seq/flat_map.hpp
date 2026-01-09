@@ -29,7 +29,7 @@ namespace exe::future {
 namespace pipe {
 
 template <core::concepts::Mapper Fn>
-class [[nodiscard]] FlatMap : public core::Operator {
+class [[nodiscard]] FlatMap : private core::Operator {
  private:
   Fn fn_;
 

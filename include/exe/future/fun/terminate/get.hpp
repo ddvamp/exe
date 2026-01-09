@@ -28,7 +28,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Get : public core::Operator {
+class [[nodiscard]] Get : private core::Operator {
  private:
   enum class Phase {
     Init,
@@ -37,15 +37,15 @@ class [[nodiscard]] Get : public core::Operator {
   };
   using enum Phase;
 
-  // To guarantee the expected implementation
-  static_assert(::std::atomic<Phase>::is_always_lock_free);
-
  public:
   template <typename T>
   [[nodiscard]] T Apply(SemiFuture<T> f) && {
     ::std::optional<Result<T>> result;
 
     ::std::atomic<Phase> phase = Init;
+
+    // To guarantee the expected implementation
+    static_assert(::std::atomic<Phase>::is_always_lock_free);
 
     auto cb = [&](Result<T> &&res) noexcept {
       result.emplace(::std::move(res));

@@ -25,7 +25,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] After : public core::Operator {
+class [[nodiscard]] After : private core::Operator {
  private:
   ::std::chrono::microseconds us_;
 

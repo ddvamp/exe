@@ -28,7 +28,7 @@ namespace pipe {
 
 template <core::concepts::Mapper Fn>
 requires (::std::is_invocable_v<Fn &&, Error &&>)
-class [[nodiscard]] Recover : public core::Operator {
+class [[nodiscard]] Recover : private core::Operator {
  private:
   Fn fn_;
 

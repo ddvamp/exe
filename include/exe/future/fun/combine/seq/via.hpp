@@ -22,7 +22,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Via : public core::Operator {
+class [[nodiscard]] Via : private core::Operator {
  private:
   Scheduler &where_;
 

@@ -29,11 +29,7 @@ namespace exe::future {
 
 namespace detail {
 
-class AllImpl : public core::Operator {
-  // To guarantee the expected implementation
-  static_assert(::std::atomic_bool::is_always_lock_free);
-  static_assert(::std::atomic_size_t::is_always_lock_free);
-
+class AllImpl : private core::Operator {
  private:
   template <typename ...Ts>
   struct State {
@@ -44,6 +40,10 @@ class AllImpl : public core::Operator {
     ::std::atomic_bool first_ = true;
     ::std::atomic_size_t live_;
     ::std::atomic_size_t ref_cnt_;
+
+    // To guarantee the expected implementation
+    static_assert(::std::atomic_bool::is_always_lock_free);
+    static_assert(::std::atomic_size_t::is_always_lock_free);
 
     State(Promise<T> p, ::std::size_t sz) noexcept
         : p_(::std::move(p))
@@ -78,7 +78,7 @@ class AllImpl : public core::Operator {
 
  public:
   template <typename ...Fs>
-  SemiFuture<::std::tuple<ValueOf<Fs>...>> Apply(Fs ...fs) && {
+  static SemiFuture<::std::tuple<ValueOf<Fs>...>> Apply(Fs ...fs) {
     using T = ::std::tuple<ValueOf<Fs>...>;
 
     auto [f, p] = Contract<T>();
@@ -100,8 +100,8 @@ class AllImpl : public core::Operator {
 
 template <concepts::Future ...Fs>
 requires (sizeof...(Fs) > 1)
-inline SemiFuture<::std::tuple<ValueOf<Fs>...>> All(Fs ...fs) {
-  return detail::AllImpl().Apply(::std::move(fs)...);
+inline auto All(Fs ...fs) {
+  return detail::AllImpl::Apply(::std::move(fs)...);
 }
 
 } // namespace exe::future

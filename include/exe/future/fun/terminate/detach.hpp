@@ -22,7 +22,7 @@ namespace exe::future {
 
 namespace pipe {
 
-class [[nodiscard]] Detach : public core::Operator {
+class [[nodiscard]] Detach : private core::Operator {
  public:
   template <typename T>
   void Apply(SemiFuture<T> f) && noexcept {
