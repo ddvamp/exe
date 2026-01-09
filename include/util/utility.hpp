@@ -34,7 +34,7 @@ inline constexpr unit_t unit{};
  *  This function can be used to convert an prvalue to an lvalue.
  *  In this case temporary materialization occurs.
  */
-template <RvalueDeduced T>
+template <rvalue_deduced T>
 [[nodiscard]] inline constexpr T &temporary(T &&t) noexcept {
   return static_cast<T &>(t);
 }

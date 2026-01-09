@@ -22,7 +22,7 @@ namespace util {
  *  Prohibits the use of lvalue as an argument for forwarding reference (T &&)
  */
 template <typename T>
-concept RvalueDeduced = !::std::is_lvalue_reference_v<T>;
+concept rvalue_deduced = !::std::is_lvalue_reference_v<T>;
 
 } // namespace util
 
