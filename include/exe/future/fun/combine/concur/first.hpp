@@ -14,9 +14,9 @@
 #include <exe/future/fun/concept/future.hpp>
 #include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/make/contract.hpp>
+#include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/trait/value_of.hpp>
 #include <exe/future/fun/type/future.hpp>
-#include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
 
 #include <util/type_traits.hpp>

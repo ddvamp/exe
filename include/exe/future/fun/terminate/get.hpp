@@ -13,9 +13,9 @@
 
 #include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
-#include <exe/future/fun/type/error.hpp>
+#include <exe/future/fun/result/error.hpp>
+#include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/type/future.hpp>
-#include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
 
 #include <concurrency/pause.hpp>

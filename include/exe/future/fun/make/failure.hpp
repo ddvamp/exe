@@ -12,7 +12,7 @@
 #define DDVAMP_EXE_FUTURE_FUN_MAKE_FAILURE_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/make/contract.hpp>
-#include <exe/future/fun/type/error.hpp>
+#include <exe/future/fun/result/error.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
 
 #include <utility>

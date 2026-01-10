@@ -12,8 +12,8 @@
 #define DDVAMP_EXE_FUTURE_FUN_MAKE_JUST_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/make/contract.hpp>
+#include <exe/future/fun/result/unit.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
-#include <exe/future/fun/type/unit.hpp>
 
 #include <utility>
 

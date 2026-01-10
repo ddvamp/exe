@@ -14,8 +14,8 @@
 #include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
+#include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
-#include <exe/future/fun/type/result.hpp>
 #include <exe/runtime/inline.hpp>
 
 #include <chrono>

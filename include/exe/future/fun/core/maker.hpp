@@ -11,7 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_CORE_MAKER_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_CORE_MAKER_HPP_INCLUDED_ 1
 
-#include <exe/future/fun/type/unit.hpp>
+#include <exe/future/fun/result/unit.hpp>
 
 #include <util/type_traits.hpp>
 

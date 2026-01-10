@@ -14,9 +14,9 @@
 #include <exe/future/fun/concept/future_value.hpp>
 #include <exe/future/fun/detail/shared_state.hpp>
 #include <exe/future/fun/make/contract_fwd.hpp>
-#include <exe/future/fun/type/error.hpp>
+#include <exe/future/fun/result/error.hpp>
+#include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/type/future.hpp>
-#include <exe/future/fun/type/result.hpp>
 
 #include <exception>
 #include <utility>

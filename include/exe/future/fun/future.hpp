@@ -24,10 +24,10 @@
 #include <exe/future/fun/make/just.hpp> // IWYU pragma: export
 #include <exe/future/fun/make/spawn.hpp> // IWYU pragma: export
 #include <exe/future/fun/make/value.hpp> // IWYU pragma: export
+#include <exe/future/fun/result/error.hpp> // IWYU pragma: export
+#include <exe/future/fun/result/result.hpp> // IWYU pragma: export
+#include <exe/future/fun/result/unit.hpp> // IWYU pragma: export
 #include <exe/future/fun/terminate/detach.hpp> // IWYU pragma: export
 #include <exe/future/fun/terminate/get.hpp> // IWYU pragma: export
-#include <exe/future/fun/type/error.hpp> // IWYU pragma: export
-#include <exe/future/fun/type/result.hpp> // IWYU pragma: export
-#include <exe/future/fun/type/unit.hpp> // IWYU pragma: export
 
 #endif /* DDVAMP_EXE_FUTURE_FUN_FUTURE_HPP_INCLUDED_ */

@@ -12,7 +12,7 @@
 #define DDVAMP_EXE_FUTURE_FUN_CORE_MAPPER_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/core/maker.hpp>
-#include <exe/future/fun/type/unit.hpp>
+#include <exe/future/fun/result/unit.hpp>
 
 #include <util/concepts.hpp>
 #include <util/type_traits.hpp>

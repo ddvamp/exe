@@ -11,7 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_DETAIL_CALLBACK_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_DETAIL_CALLBACK_HPP_INCLUDED_ 1
 
-#include <exe/future/fun/type/result.hpp>
+#include <exe/future/fun/result/result.hpp>
 
 #include <functional>
 

@@ -12,8 +12,8 @@
 #define DDVAMP_EXE_FUTURE_FUN_DETAIL_SHARED_STATE_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/detail/callback.hpp>
-#include <exe/future/fun/type/error.hpp>
-#include <exe/future/fun/type/result.hpp>
+#include <exe/future/fun/result/error.hpp>
+#include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
 #include <exe/runtime/task/task.hpp>
 

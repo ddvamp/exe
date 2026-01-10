@@ -8,8 +8,8 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_FUTURE_FUN_TYPE_ERROR_HPP_INCLUDED_
-#define DDVAMP_EXE_FUTURE_FUN_TYPE_ERROR_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_FUTURE_FUN_RESULT_ERROR_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_FUN_RESULT_ERROR_HPP_INCLUDED_ 1
 
 #include <exception>
 #include <utility>
@@ -33,4 +33,4 @@ template <typename T>
 
 } // namespace exe::future
 
-#endif /* DDVAMP_EXE_FUTURE_FUN_TYPE_ERROR_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_FUTURE_FUN_RESULT_ERROR_HPP_INCLUDED_ */
