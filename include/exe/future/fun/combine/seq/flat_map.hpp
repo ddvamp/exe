@@ -14,6 +14,7 @@
 #include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/core/mapper.hpp>
 #include <exe/future/fun/core/operator.hpp>
+#include <exe/future/fun/core/concept/mapper.hpp>
 #include <exe/future/fun/result/error.hpp>
 #include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export

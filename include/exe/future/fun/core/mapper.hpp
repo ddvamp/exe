@@ -12,22 +12,20 @@
 #define DDVAMP_EXE_FUTURE_FUN_CORE_MAPPER_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/core/maker.hpp>
+#include <exe/future/fun/core/mapper_fwd.hpp>
+#include <exe/future/fun/core/concept/mapper_value.hpp>
 #include <exe/future/fun/result/unit.hpp>
 
 #include <util/concepts.hpp>
-#include <util/type_traits.hpp>
 
+#include <type_traits>
 #include <functional>
 #include <utility>
 
 namespace exe::future::core {
 
-template <typename Fn>
-requires (::std::is_object_v<Fn> &&
-          !::util::is_qualified_v<Fn> &&
-          ::std::is_nothrow_destructible_v<Fn> &&
-          ::std::is_nothrow_move_constructible_v<Fn>)
-class Mapper {
+template <concepts::MapperValue Fn>
+class [[nodiscard]] Mapper {
  private:
   Fn fn_;
 
@@ -59,23 +57,6 @@ class Mapper {
     })();
   }
 };
-
-namespace concepts {
-
-namespace detail {
-
-template <typename>
-inline constexpr bool IsMapperImpl = false;
-
-template <typename T>
-inline constexpr bool IsMapperImpl<Mapper<T>> = true;
-
-} // namespace detail
-
-template <typename T>
-concept Mapper = detail::IsMapperImpl<T>;
-
-} // namespace concepts
 
 } // namespace exe::future::core
 
