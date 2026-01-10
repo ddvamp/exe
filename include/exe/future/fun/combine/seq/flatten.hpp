@@ -15,7 +15,7 @@
 #include <exe/future/fun/core/operator.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/trait/value_of.hpp>
-#include <exe/future/fun/type/future.hpp>
+#include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/runtime/inline.hpp>
 
 #include <utility>

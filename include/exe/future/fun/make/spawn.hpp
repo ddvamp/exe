@@ -16,7 +16,7 @@
 #include <exe/future/fun/core/maker.hpp>
 #include <exe/future/fun/core/concept/maker.hpp>
 #include <exe/future/fun/result/error.hpp>
-#include <exe/future/fun/type/future.hpp>
+#include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
 #include <exe/runtime/task/submit.hpp>
 
