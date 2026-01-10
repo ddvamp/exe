@@ -8,6 +8,8 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
+// Umbrella header
+
 #ifndef DDVAMP_EXE_FUTURE_FUN_FUTURE_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_FUTURE_HPP_INCLUDED_ 1
 
