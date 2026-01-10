@@ -12,7 +12,7 @@
 #define DDVAMP_EXE_FUTURE_FUN_CORE_OPERATOR_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/core/operator_fwd.hpp>
-#include <exe/future/fun/type/callback.hpp>
+#include <exe/future/fun/detail/callback.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
 
@@ -53,7 +53,8 @@ class Operator {
   }
 
   template <typename T>
-  static void SetCallback(Future<T> f, ::std::type_identity_t<Callback<T>> &&cb)
+  static void SetCallback(Future<T> f,
+                          ::std::type_identity_t<detail::Callback<T>> &&cb)
       noexcept {
     f.ReleaseChecked()->SetCallback(::std::move(cb));
   }

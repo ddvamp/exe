@@ -8,14 +8,14 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_FUTURE_FUN_TYPE_CALLBACK_HPP_INCLUDED_
-#define DDVAMP_EXE_FUTURE_FUN_TYPE_CALLBACK_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_FUTURE_FUN_DETAIL_CALLBACK_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_FUN_DETAIL_CALLBACK_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/type/result.hpp>
 
 #include <functional>
 
-namespace exe::future {
+namespace exe::future::detail {
 
 /**
  *  Instead of synchronously waiting for a future value
@@ -28,6 +28,6 @@ namespace exe::future {
 template <typename T>
 using Callback = ::std::move_only_function<void(Result<T> &&) noexcept>;
 
-} // namespace exe::future
+} // namespace exe::future::detail
 
-#endif /* DDVAMP_EXE_FUTURE_FUN_TYPE_CALLBACK_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_FUTURE_FUN_DETAIL_CALLBACK_HPP_INCLUDED_ */
