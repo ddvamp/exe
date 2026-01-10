@@ -52,7 +52,7 @@ class [[nodiscard]] Mapper {
   [[nodiscard]] decltype(auto) operator() (T &&t) &&
       noexcept (::std::is_nothrow_invocable_v<Fn &&, T &&>)
       requires (::std::is_invocable_v<Fn &&, T &&>) {
-    return Maker([&] {
+    return Maker([&] -> decltype(auto) {
       return ::std::invoke(::std::move(fn_), ::std::move(t));
     })();
   }
