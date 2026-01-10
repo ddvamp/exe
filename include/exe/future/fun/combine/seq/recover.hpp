@@ -11,9 +11,9 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_RECOVER_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_RECOVER_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/core/mapper.hpp>
 #include <exe/future/fun/core/operator.hpp>
-#include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/result/error.hpp>
 #include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
@@ -37,7 +37,7 @@ class [[nodiscard]] Recover : private core::Operator {
 
   template <typename T>
   Future<T> Apply(Future<T> f) && {
-    auto [nf, p] = Contract<T>();
+    auto [nf, p] = core::Contract<T>();
 
     auto cb = [p = ::std::move(p), fn = ::std::move(fn_)]
               (Result<T> &&res) mutable noexcept {

@@ -11,7 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_MAKE_JUST_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_MAKE_JUST_HPP_INCLUDED_ 1
 
-#include <exe/future/fun/make/contract.hpp>
+#include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/result/unit.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
 
@@ -20,7 +20,7 @@
 namespace exe::future {
 
 inline SemiFuture<Unit> Just() {
-  auto [f, p] = Contract<Unit>();
+  auto [f, p] = core::Contract<Unit>();
 
   ::std::move(p).SetValue(Unit{});
 

@@ -12,8 +12,8 @@
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_CONCUR_FIRST_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/concept/future.hpp>
+#include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/core/operator.hpp>
-#include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/trait/value_of.hpp>
 #include <exe/future/fun/type/future.hpp>
@@ -72,7 +72,7 @@ class FirstImpl : private core::Operator {
   static SemiFuture<trait::ValueOf<Fs...[0]>> Apply(Fs ...fs) {
     using T = trait::ValueOf<Fs...[0]>;
 
-    auto [f, p] = Contract<T>();
+    auto [f, p] = core::Contract<T>();
 
     auto const state = ::new State(::std::move(p), sizeof...(Fs));
 

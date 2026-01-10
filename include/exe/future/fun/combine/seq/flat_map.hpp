@@ -11,9 +11,9 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_FLAT_MAP_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_FLAT_MAP_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/core/mapper.hpp>
 #include <exe/future/fun/core/operator.hpp>
-#include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/result/error.hpp>
 #include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
@@ -41,7 +41,7 @@ class [[nodiscard]] FlatMap : private core::Operator {
   Future<trait::ValueOf<::std::invoke_result_t<Fn &&, T &&>>> Apply(Future<T> f) && {
     using U = trait::ValueOf<::std::invoke_result_t<Fn &&, T &&>>;
 
-    auto [nf, p] = Contract<U>();
+    auto [nf, p] = core::Contract<U>();
 
     auto cb = [p = ::std::move(p), fn = ::std::move(fn_)]
               (Result<T> &&res) mutable noexcept {

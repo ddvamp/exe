@@ -11,8 +11,8 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_AFTER_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_SEQ_AFTER_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/core/operator.hpp>
-#include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/syntax/pipe.hpp> // IWYU pragma: export
 #include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
@@ -38,7 +38,7 @@ class [[nodiscard]] After : private core::Operator {
       return ::std::move(f);
     }
 
-    auto [nf, p] = Contract<T>();
+    auto [nf, p] = core::Contract<T>();
 
     auto cb = [p = ::std::move(p), us = us_](Result<T> &&res) mutable noexcept {
       auto cb = [p = ::std::move(p), res = ::std::move(res)] mutable noexcept {

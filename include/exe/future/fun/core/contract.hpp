@@ -8,15 +8,15 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_FUTURE_FUN_MAKE_CONTRACT_HPP_INCLUDED_
-#define DDVAMP_EXE_FUTURE_FUN_MAKE_CONTRACT_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_FUTURE_FUN_CORE_CONTRACT_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_FUN_CORE_CONTRACT_HPP_INCLUDED_ 1
 
+#include <exe/future/fun/core/contract_fwd.hpp>
 #include <exe/future/fun/detail/shared_state.hpp>
-#include <exe/future/fun/make/contract_fwd.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/promise.hpp>
 
-namespace exe::future {
+namespace exe::future::core {
 
 template <typename T>
 struct [[nodiscard]] Contract {
@@ -31,6 +31,6 @@ struct [[nodiscard]] Contract {
       , promise(state) {}
 };
 
-} // namespace exe::future
+} // namespace exe::future::core
 
-#endif /* DDVAMP_EXE_FUTURE_FUN_MAKE_CONTRACT_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_FUTURE_FUN_CORE_CONTRACT_HPP_INCLUDED_ */

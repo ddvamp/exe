@@ -12,8 +12,8 @@
 #define DDVAMP_EXE_FUTURE_FUN_MAKE_SPAWN_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/combine/seq/via.hpp>
+#include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/core/maker.hpp>
-#include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/result/error.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/scheduler.hpp>
@@ -28,7 +28,7 @@ namespace detail {
 
 template <core::concepts::Maker Fn>
 Future<::std::invoke_result_t<Fn &&>> SpawnImpl(Scheduler &where, Fn &&fn) {
-  auto [f, p] = Contract<::std::invoke_result_t<Fn &&>>();
+  auto [f, p] = core::Contract<::std::invoke_result_t<Fn &&>>();
 
   auto task = [p = ::std::move(p), fn = ::std::move(fn)] mutable noexcept {
     try {

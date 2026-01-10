@@ -12,8 +12,8 @@
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_CONCUR_ALL_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/concept/future.hpp>
+#include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/core/operator.hpp>
-#include <exe/future/fun/make/contract.hpp>
 #include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/trait/value_of.hpp>
 #include <exe/future/fun/type/future.hpp>
@@ -81,7 +81,7 @@ class AllImpl : private core::Operator {
   static SemiFuture<::std::tuple<trait::ValueOf<Fs>...>> Apply(Fs ...fs) {
     using T = ::std::tuple<trait::ValueOf<Fs>...>;
 
-    auto [f, p] = Contract<T>();
+    auto [f, p] = core::Contract<T>();
 
     auto const state = ::new State(::std::move(p), sizeof...(Fs));
 

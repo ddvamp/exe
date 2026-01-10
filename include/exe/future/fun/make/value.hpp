@@ -11,7 +11,7 @@
 #ifndef DDVAMP_EXE_FUTURE_FUN_MAKE_VALUE_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_MAKE_VALUE_HPP_INCLUDED_ 1
 
-#include <exe/future/fun/make/contract.hpp>
+#include <exe/future/fun/core/contract.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
 
 #include <utility>
@@ -20,7 +20,7 @@ namespace exe::future {
 
 template <typename T>
 inline SemiFuture<T> Value(T v) {
-  auto [f, p] = Contract<T>();
+  auto [f, p] = core::Contract<T>();
 
   ::std::move(p).SetValue(::std::move(v));
 
