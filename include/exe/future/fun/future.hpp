@@ -19,6 +19,7 @@
 #include <exe/future/fun/combine/seq/flat_map.hpp> // IWYU pragma: export
 #include <exe/future/fun/combine/seq/flatten.hpp> // IWYU pragma: export
 #include <exe/future/fun/combine/seq/inline.hpp> // IWYU pragma: export
+#include <exe/future/fun/combine/seq/invoke_with.hpp> // IWYU pragma: export
 #include <exe/future/fun/combine/seq/map.hpp> // IWYU pragma: export
 #include <exe/future/fun/combine/seq/recover.hpp> // IWYU pragma: export
 #include <exe/future/fun/combine/seq/via.hpp> // IWYU pragma: export
