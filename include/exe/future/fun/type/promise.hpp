@@ -13,7 +13,8 @@
 
 #include <exe/future/fun/concept/future_value.hpp>
 #include <exe/future/fun/core/contract_fwd.hpp>
-#include <exe/future/fun/detail/shared_state.hpp>
+#include <exe/future/fun/core/hold_state.hpp>
+#include <exe/future/fun/detail/promise_state.hpp>
 #include <exe/future/fun/result/error.hpp>
 #include <exe/future/fun/result/result.hpp>
 #include <exe/future/fun/type/promise_fwd.hpp>
@@ -31,11 +32,11 @@ class BrokenPromise : public ::std::exception {
 };
 
 template <concepts::FutureValue T>
-class Promise : protected detail::HoldState<T> {
+class Promise : protected core::HoldState<detail::PromiseState<T>> {
   friend core::Contract<T>;
 
  private:
-  using Base = detail::HoldState<T>;
+  using Base = core::HoldState<detail::PromiseState<T>>;
   using Base::Base;
 
  public:

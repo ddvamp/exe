@@ -13,8 +13,10 @@
 
 #include <exe/future/fun/concept/future_value.hpp>
 #include <exe/future/fun/core/contract_fwd.hpp>
+#include <exe/future/fun/core/future_factory_fwd.hpp>
+#include <exe/future/fun/core/future_state.hpp>
+#include <exe/future/fun/core/hold_state.hpp>
 #include <exe/future/fun/core/operator_fwd.hpp>
-#include <exe/future/fun/detail/shared_state.hpp>
 #include <exe/future/fun/type/future_fwd.hpp>
 #include <exe/runtime/inline.hpp>
 
@@ -31,12 +33,13 @@ struct Noop {
  *  Future is moveable value type
  */
 template <concepts::FutureValue T>
-class [[nodiscard]] SemiFuture : protected detail::HoldState<T> {
-  friend core::Contract<T>;
+class [[nodiscard]] SemiFuture
+    : protected core::HoldState<core::FutureState<T>> {
+  friend core::FutureFactory;
   friend core::Operator;
 
  protected:
-  using Base = detail::HoldState<T>;
+  using Base = core::HoldState<core::FutureState<T>>;
   using Base::Base;
 
  public:

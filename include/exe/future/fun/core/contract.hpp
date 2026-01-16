@@ -12,22 +12,23 @@
 #define DDVAMP_EXE_FUTURE_FUN_CORE_CONTRACT_HPP_INCLUDED_ 1
 
 #include <exe/future/fun/core/contract_fwd.hpp>
-#include <exe/future/fun/detail/shared_state.hpp>
+#include <exe/future/fun/core/future_factory.hpp>
+#include <exe/future/fun/detail/promise_state.hpp>
 #include <exe/future/fun/type/future.hpp>
 #include <exe/future/fun/type/promise.hpp>
 
 namespace exe::future::core {
 
 template <typename T>
-struct [[nodiscard]] Contract {
+struct [[nodiscard]] Contract : private FutureFactory {
   SemiFuture<T> future;
   Promise<T> promise;
 
-  Contract() : Contract(detail::SharedState<T>::Create()) {}
+  Contract() : Contract(::new detail::PromiseState<T>) {}
 
  private:
-  Contract(detail::SharedState<T> *state) noexcept
-      : future(state)
+  Contract(detail::PromiseState<T> *state) noexcept
+      : future(MakeSemiFuture(state))
       , promise(state) {}
 };
 
