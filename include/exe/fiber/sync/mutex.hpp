@@ -2,7 +2,7 @@
 // mutex.hpp
 // ~~~~~~~~~
 //
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -19,6 +19,7 @@
 #include <util/debug.hpp>
 #include <util/macro.hpp>
 #include <util/utility.hpp>
+#include <util/mm/release_sequence.hpp>
 
 #include <atomic>
 #include <mutex> // IWYU pragma: export - std::lock_guard, std::unique_lock
@@ -125,7 +126,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
       return FiberHandle::Invalid();
     }
 
-    UTIL_IGNORE(owner->next_.load(::std::memory_order_acquire)); // sync
+    ::util::SyncWithReleaseSequences(owner->next_);
     return Acquire(owner, self, true);
   }
 

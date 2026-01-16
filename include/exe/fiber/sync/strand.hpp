@@ -2,7 +2,7 @@
 // strand.hpp
 // ~~~~~~~~~~
 //
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -16,9 +16,9 @@
 #include <exe/fiber/core/handle.hpp>
 
 #include <concurrency/intrusive/forward_list.hpp>
-#include <util/macro.hpp>
 #include <util/utility.hpp>
 #include <util/debug/assert.hpp>
+#include <util/mm/release_sequence.hpp>
 
 #include <atomic>
 #include <new>
@@ -117,8 +117,7 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
       return;
     }
 
-    // Synchronization
-    UTIL_IGNORE(pred->next_.load(::std::memory_order_acquire));
+    ::util::SyncWithReleaseSequences(pred->next_);
 
     if (pred != &dummy_) [[likely]] {
       return Schedule(pred);

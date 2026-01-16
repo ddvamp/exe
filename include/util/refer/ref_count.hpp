@@ -2,7 +2,7 @@
 // ref_count.hpp
 // ~~~~~~~~~~~~~
 //
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -13,6 +13,7 @@
 
 #include <util/macro.hpp>
 #include <util/debug/assert.hpp>
+#include <util/mm/release_sequence.hpp>
 
 #include <atomic>
 #include <concepts>
@@ -51,7 +52,7 @@ class ref_count {
     }
 
     UTIL_ASSERT(before != 0, "An attempt to lower a ref_count below zero");
-    UTIL_IGNORE(cnt_.load(::std::memory_order_acquire)); // Synchronize
+    ::util::SyncWithReleaseSequences(cnt_);
     static_cast<Derived const *>(this)->destroy_self();
   }
 };

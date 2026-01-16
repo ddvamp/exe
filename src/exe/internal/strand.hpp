@@ -15,8 +15,8 @@
 #include <exe/runtime/task/scheduler.hpp>
 #include <exe/runtime/task/task.hpp>
 
-#include <util/macro.hpp>
 #include <util/debug/assert.hpp>
+#include <util/mm/release_sequence.hpp>
 #include <util/refer/ref_count.hpp>
 
 #include <atomic>
@@ -83,8 +83,9 @@ class Strand::Impl final : private task::TaskBase,
       return;
     }
 
+    ::util::SyncWithReleaseSequences(node->next_);
+
     inc_ref();
-    UTIL_IGNORE(node->next_.load(::std::memory_order_acquire)); // sync
     underlying_.Submit(this);
   }
 

@@ -2,7 +2,7 @@
 // wait_group.hpp
 // ~~~~~~~~~~~~~~
 //
-// Copyright (C) 2023-2025 Artyom Kolpakov <ddvamp007@gmail.com>
+// Copyright (C) 2023-2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
 // Licensed under GNU GPL-3.0-or-later.
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
@@ -13,8 +13,8 @@
 
 #include <exe/fiber/sync/event.hpp>
 
-#include <util/macro.hpp>
 #include <util/debug/assert.hpp>
+#include <util/mm/release_sequence.hpp>
 
 #include <atomic>
 #include <cstdint>
@@ -83,8 +83,7 @@ class WaitGroup {
       return;
     }
 
-    // Synchronization
-    UTIL_IGNORE(count_.load(::std::memory_order_acquire));
+    ::util::SyncWithReleaseSequences(count_);
     count_is_zero_.Fire();
   }
 
