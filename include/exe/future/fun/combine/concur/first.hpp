@@ -8,8 +8,6 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-// [TODO]: WhenFirst/WhenAll
-
 #ifndef DDVAMP_EXE_FUTURE_FUN_COMBINE_CONCUR_FIRST_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_FUN_COMBINE_CONCUR_FIRST_HPP_INCLUDED_ 1
 
@@ -23,6 +21,7 @@
 #include <exe/runtime/inline.hpp>
 
 #include <util/type_traits.hpp>
+#include <util/mm/release_sequence.hpp>
 
 #include <atomic>
 #include <cstddef>
@@ -52,11 +51,12 @@ class FirstImpl : private core::Operator {
         , ref_cnt_(sz) {}
 
     void operator() (Result<T> &&res) noexcept {
-      if (res.has_value() ? IsFirstOk() : IsLastError()) {
+      if (res.has_value() ? IsFirstOk() : IsLastError()) [[unlikely]] {
         ::std::move(p_).SetResult(::std::move(res));
       }
 
-      if (ref_cnt_.fetch_sub(1, ::std::memory_order_acq_rel) == 1) [[unlikely]] {
+      if (ref_cnt_.fetch_sub(1, ::std::memory_order_release) == 1) [[unlikely]] {
+        ::util::SyncWithReleaseSequences(ref_cnt_);
         delete this;
       }
     }
