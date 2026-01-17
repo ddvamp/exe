@@ -40,16 +40,14 @@ class AllState<::std::tuple<Ts...>> final
   ::std::tuple<::std::optional<Ts>...> vals_;
   Error error_ = nullptr;
   ::std::atomic_bool first_ = true;
-  ::std::atomic_size_t live_;
-  ::std::atomic_size_t ref_cnt_;
+  ::std::atomic_size_t live_ = sizeof...(Ts);
+  ::std::atomic_size_t ref_cnt_ = sizeof...(Ts);
 
   // To guarantee the expected implementation
   static_assert(::std::atomic_bool::is_always_lock_free);
   static_assert(::std::atomic_size_t::is_always_lock_free);
 
  public:
-  AllState() noexcept : live_(sizeof...(Ts)), ref_cnt_(sizeof...(Ts)) {}
-
   SemiFuture<T> ToFuture() noexcept {
     return MakeSemiFuture(this);
   }
