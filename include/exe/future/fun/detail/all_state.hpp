@@ -92,9 +92,8 @@ class AllState<::std::tuple<Ts...>> final
       return result::Err<T>(::std::move(error_));
     }
 
-    return [&]<::std::size_t ...Idx>(::std::index_sequence<Idx...>) noexcept {
-      return result::Ok(T(*::std::get<Idx>(::std::move(vals_))...));
-    }(::std::index_sequence_for<Ts...>{});
+    auto &[...val] = vals_;
+    return result::Ok(T(*::std::move(val)...));
   }
 };
 
