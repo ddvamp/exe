@@ -57,7 +57,7 @@ class AllState<::std::tuple<Ts...>> final
     ::std::get<I>(vals_).emplace(::std::move(val));
 
     if (live_.fetch_sub(1, ::std::memory_order_release) == 1) [[unlikely]] {
-      ::util::SyncWithReleaseSequences(live_);
+      ::util::sync_with_release_sequences(live_);
       this->TrySchedule();
     } else {
       Release();
@@ -82,7 +82,7 @@ class AllState<::std::tuple<Ts...>> final
 
   void Release() noexcept {
     if (ref_cnt_.fetch_sub(1, ::std::memory_order_release) == 1) [[unlikely]] {
-      ::util::SyncWithReleaseSequences(ref_cnt_);
+      ::util::sync_with_release_sequences(ref_cnt_);
       delete this;
     }
   }

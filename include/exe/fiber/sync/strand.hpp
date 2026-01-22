@@ -117,7 +117,7 @@ class alignas (::std::hardware_destructive_interference_size) Strand {
       return;
     }
 
-    ::util::SyncWithReleaseSequences(pred->next_);
+    ::util::sync_with_release_sequences(pred->next_);
 
     if (pred != &dummy_) [[likely]] {
       return Schedule(pred);

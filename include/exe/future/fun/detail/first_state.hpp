@@ -62,7 +62,7 @@ class FirstState final : private core::FutureState<T>
 
   void Release() noexcept {
     if (ref_cnt_.fetch_sub(1, ::std::memory_order_release) == 1) [[unlikely]] {
-      ::util::SyncWithReleaseSequences(ref_cnt_);
+      ::util::sync_with_release_sequences(ref_cnt_);
       delete this;
     }
   }

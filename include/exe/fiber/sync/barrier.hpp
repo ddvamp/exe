@@ -96,7 +96,7 @@ class Barrier {
   }
 
   void ScheduleWaiters(FiberNode *self = nullptr) noexcept {
-    ::util::SyncWithReleaseSequences(remains_);
+    ::util::sync_with_release_sequences(remains_);
     remains_.store(participants_, ::std::memory_order_relaxed);
 
     auto waiter = top_.load(::std::memory_order_relaxed);

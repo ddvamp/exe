@@ -25,7 +25,7 @@ namespace util {
  *  A fence does not synchronize with release sequences on a specific atomic
  */
 template <typename T>
-inline void SyncWithReleaseSequences(::std::atomic<T> const &a) noexcept {
+inline void sync_with_release_sequences(::std::atomic<T> const &a) noexcept {
   UTIL_IGNORE(a.load(::std::memory_order_acquire));
 }
 

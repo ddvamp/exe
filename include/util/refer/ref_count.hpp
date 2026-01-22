@@ -52,7 +52,7 @@ class ref_count {
     }
 
     UTIL_ASSERT(before != 0, "An attempt to lower a ref_count below zero");
-    ::util::SyncWithReleaseSequences(cnt_);
+    ::util::sync_with_release_sequences(cnt_);
     static_cast<Derived const *>(this)->destroy_self();
   }
 };

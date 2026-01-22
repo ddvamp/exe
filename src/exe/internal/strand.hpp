@@ -83,7 +83,7 @@ class Strand::Impl final : private task::TaskBase,
       return;
     }
 
-    ::util::SyncWithReleaseSequences(node->next_);
+    ::util::sync_with_release_sequences(node->next_);
 
     inc_ref();
     underlying_.Submit(this);

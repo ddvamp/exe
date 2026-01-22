@@ -83,7 +83,7 @@ class WaitGroup {
       return;
     }
 
-    ::util::SyncWithReleaseSequences(count_);
+    ::util::sync_with_release_sequences(count_);
     count_is_zero_.Fire();
   }
 

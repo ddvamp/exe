@@ -126,7 +126,7 @@ class alignas (::std::hardware_destructive_interference_size) Mutex {
       return FiberHandle::Invalid();
     }
 
-    ::util::SyncWithReleaseSequences(owner->next_);
+    ::util::sync_with_release_sequences(owner->next_);
     return Acquire(owner, self, true);
   }
 
