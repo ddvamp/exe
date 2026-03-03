@@ -12,11 +12,10 @@
 #define DDVAMP_EXE_FUTURE_THUNK_MAKE_READY_HPP_INCLUDED_ 1
 
 #include <exe/future2/scheduler.hpp>
-#include <exe/future2/model/continuation.hpp>
+#include <exe/future2/model/control.hpp>
 #include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/state.hpp>
 
-#include <type_traits>
 #include <utility>
 
 namespace exe::future::thunk {
@@ -43,11 +42,10 @@ class [[nodiscard]] Ready {
 
   using ValueType = Value;
 
-  template <concepts::Continuation<ValueType> Consumer>
-  requires (::std::is_nothrow_destructible_v<Consumer>)
-  class [[nodiscard]] Computation : private Consumer {
+  template <concepts::Control<ValueType, Ready> Control>
+  class [[nodiscard]] Computation {
    private:
-    Value val_;
+    Control ctrl_;
 
    public:
     ~Computation() = default;
@@ -59,16 +57,12 @@ class [[nodiscard]] Ready {
     void operator= (Computation &&) = delete;
 
    public:
-    template <typename ...Args>
-    requires (::std::is_nothrow_constructible_v<Consumer, Args...>)
-    explicit Computation(Ready &&r, Args &&...args) noexcept
-        : Consumer(::std::forward<Args>(args)...)
-        , val_(::std::move(r).val_) {}
-
-    /* Computation */
+    explicit Computation(Control c) noexcept
+        : ctrl_(::std::forward<Control>(c)) {}
 
     void Start(Scheduler &s) && noexcept {
-      ::std::move(*this).Continue(::std::move(val_), {.sched = s});
+      auto &val = ctrl_.Data().val_;
+      ::std::move(ctrl_).Continue(::std::move(val), State{s});
     }
   };
 };

@@ -13,10 +13,11 @@
 
 #include <exe/future2/scheduler.hpp>
 #include <exe/future2/concept/valid_input.hpp>
-#include <exe/future2/model/control.hpp>
+#include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/state.hpp>
 
+#include <type_traits>
 #include <utility>
 
 namespace exe::future::thunk {
@@ -40,30 +41,47 @@ class [[nodiscard]] Via {
 
   /* Combinator */
 
-  template <typename V>
-  inline static constexpr bool ValidInput = concepts::FutureValue<V>;
+  template <typename InputType>
+  inline static constexpr bool ValidInput = concepts::FutureValue<InputType>;
 
   template <concepts::ValidInput<Via> InputType>
   using ValueType = InputType;
 
   template <concepts::ValidInput<Via> InputType,
-            concepts::Control<ValueType<InputType>, Via> Control>
-  class [[nodiscard]] Step {
+            concepts::Continuation<ValueType<InputType>> Consumer>
+  requires (::std::is_nothrow_destructible_v<Consumer>)
+  class [[nodiscard]] Continuation : private Consumer {
    private:
-    Control ctrl_;
+    Scheduler &sched_;
 
    public:
-    explicit Step(Control c) noexcept : ctrl_(::std::forward<Control>(c)) {}
+    ~Continuation() = default;
 
-    void Execute(InputType &&val, State) && noexcept {
-      auto &sched = ctrl_.Data().sched_;
-      ::std::move(ctrl_).Return(::std::move(val), State{sched});
+    Continuation(Continuation const &) = delete;
+    void operator= (Continuation const &) = delete;
+
+    Continuation(Continuation &&) = delete;
+    void operator= (Continuation &&) = delete;
+
+   public:
+    template <typename ...Args>
+    requires (::std::is_nothrow_constructible_v<Consumer, Args...>)
+    explicit Continuation(Via &&v, Args &&...args) noexcept
+        : Consumer(::std::forward<Args>(args)...)
+        , sched_(v.sched_) {}
+
+    /* Continuation */
+
+    void Continue(InputType &&v, State) && noexcept {
+      static_cast<Consumer &&>(*this).Continue(::std::move(v),
+                                               {.sched = sched_});
     }
 
-    void Execute(State) && noexcept {
-      auto &sched = ctrl_.Data().sched_;
-      ::std::move(ctrl_).Cancel(State{sched});
+    void Cancel(State) && noexcept {
+      static_cast<Consumer &&>(*this).Cancel({.sched = sched_});
     }
+
+    using Consumer::CancelSource;
   };
 };
 

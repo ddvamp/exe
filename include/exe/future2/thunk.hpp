@@ -60,13 +60,13 @@ struct IConsumer {
 };
 
 template <concepts::FutureValue InputType,
-          concepts::Continuation<InputType> Consumer>
+          concepts::Continuation<InputType> Proxied>
 class [[nodiscard]] Proxy {
  private:
-  Consumer &cons_;
+  Proxied &cons_;
 
  public:
-  explicit Proxy(Consumer &c) noexcept : cons_(c) {}
+  explicit Proxy(Proxied &c) noexcept : cons_(c) {}
 
   /* Continuation */
 
@@ -83,9 +83,8 @@ class [[nodiscard]] Proxy {
   }
 };
 
-// [TODO]: = core::Proxy<IConsumer<T>>;
-template <typename T>
-using Demand = IConsumer<T> &;
+template <typename InputType>
+using Demand = Proxy<InputType, IConsumer<InputType>>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -123,6 +122,7 @@ concept ErroneousTraits = requires {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// [TODO]: Add size_t parameter for ValueType/Step O(1) access
 template <typename Combinator, typename ...Head>
 struct TraitsImpl {
   using Error = InvalidCombinator<Combinator,
@@ -148,7 +148,19 @@ struct TraitsImpl<Maker> {
 
   template <typename Consumer>
   using Computation = trait::Computation<Maker, Consumer>;
+
+  template <::std::size_t>
+  using Type = ValueType;
+
+  template <::std::size_t, typename Consumer>
+  using Step = Computation<Consumer>;
 };
+
+template <typename T, ::std::size_t I>
+using Type = T::template Type<I>;
+
+template <typename T, ::std::size_t I, typename Consumer>
+using Step = T::template Step<I, Consumer>;
 
 template <typename Combinator, typename ...Head>
 requires (concepts::Combinator<Combinator, trait::ValueOf<TraitsImpl<Head...>>>)
@@ -164,6 +176,18 @@ struct TraitsImpl<Combinator, Head...> {
   template <typename Consumer>
   using Computation = trait::Computation<TraitsImpl<Head...>,
                                          Continuation<Consumer>>;
+
+  template <::std::size_t I>
+  using Type =
+      ::std::conditional_t<I == 0,
+                           ValueType,
+                           typename TraitsImpl<Head...>::template Type<I - 1>>;
+
+  template <::std::size_t I, typename Consumer>
+  using Step =
+      ::std::conditional_t<I == 0,
+                           Continuation<Consumer>,
+                           Step<TraitsImpl<Head...>, I - 1, Consumer>>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,8 +236,6 @@ template <typename Maker, typename ...Combinators>
 concept CorrectPipeline =
     !detail::ErroneousTraits<Traits<Maker, Combinators...>>;
 
-static_assert(CorrectPipeline<int>);
-
 } // namespace concepts
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,38 +261,37 @@ class [[nodiscard]] Thunk : private detail::Data<Maker, Combinators...> {
   using ValueType = trait::ValueOf<Traits>;
 
  private:
-  // [TODO]: ?ResourceDropper
-  template <concepts::Continuation<ValueType> Consumer>
-  struct Continuation {
-    Thunk thunk_;
-    Consumer cons_;
+  // // [TODO]: ?ResourceDropper
+  // template <concepts::Continuation<ValueType> Consumer>
+  // struct Continuation {
+  //   Thunk thunk_;
+  //   Consumer cons_;
 
-    void Continue(ValueType &&val, State st) && noexcept {
-      auto _ = ::std::move(thunk_);
-      ::std::move(cons_).Continue(::std::move(val), st);
-    }
+  //   void Continue(ValueType &&val, State st) && noexcept {
+  //     auto _ = ::std::move(thunk_);
+  //     ::std::move(cons_).Continue(::std::move(val), st);
+  //   }
 
-    void Cancel(State st) && noexcept {
-      auto _ = ::std::move(thunk_);
-      ::std::move(cons_).Cancel(st);
-    }
+  //   void Cancel(State st) && noexcept {
+  //     auto _ = ::std::move(thunk_);
+  //     ::std::move(cons_).Cancel(st);
+  //   }
 
-    /**/
+  //   /**/
 
-    cancel::CancelSource &CancelSource() & noexcept {
-      return cons_.CancelSource();
-    }
-  };
+  //   cancel::CancelSource &CancelSource() & noexcept {
+  //     return cons_.CancelSource();
+  //   }
+  // };
+
+  template <typename Consumer>
+  using Comp = trait::Computation<Traits, Proxy<ValueType, Consumer>>;
 
  public:
   template <concepts::Continuation<ValueType> Consumer>
-  class Computation : private Continuation<Consumer> {
+  class Computation : private Comp<Consumer> {
    private:
-    using Cont = Continuation<Consumer>;
-    using Comp = Traits::template Computation<Cont &>;
-
-    // [TODO]: ?lazy
-    Comp comp;
+    using Base = Comp<Consumer>;
 
    public:
     ~Computation() = default;
@@ -282,49 +303,157 @@ class [[nodiscard]] Thunk : private detail::Data<Maker, Combinators...> {
     void operator= (Computation &&) = delete;
 
    public:
-    Computation(Thunk &&t, Consumer &&c)
-        : Computation(::std::make_index_sequence<sizeof...(Combinators) + 1>{},
-                      t, c) {}
+    Computation(Thunk &&t, Consumer &c) noexcept : Computation(t, c) {}
 
-    void Start(Scheduler &sched) && noexcept {
-      ::std::move(comp).Start(sched);
-    }
+    /* Computation */
+
+    using Base::Start;
 
    private:
-    template <::std::size_t ...Is>
-    Computation(::std::index_sequence<Is...>, Thunk &t, Consumer &c)
-        : Cont{.thunk_ = ::std::move(t),
-               .cons_ = ::std::forward<Consumer>(c)}
-        , comp(Cont::thunk_.template get<Is>()...,
-               static_cast<Cont &>(*this)) {}
+    template <typename ...Ts>
+    Computation(detail::ThunkData<Ts...> &d, Consumer &c) noexcept
+        : Base(static_cast<Ts &&>(d).val..., c) {}
   };
 
  public:
   explicit Thunk(Maker &&m, Combinators &&...cs) noexcept
       : Data{{::std::move(m)}, {::std::move(cs)}...} {}
 
-  template <concepts::Combinator<ValueType> Combinator>
-  concepts::Thunk auto Extend(Combinator c) && noexcept {
-    return ExtendImpl(::std::make_index_sequence<sizeof...(Combinators) + 1>{},
-                      c);
-  }
-
   template <concepts::Continuation<ValueType> Consumer>
-  concepts::Computation auto Materialize(
-      ::std::type_identity_t<Consumer> &&c) && noexcept {
-    return Computation<Consumer>(::std::move(*this),
-                                 ::std::forward<Consumer>(c));
+  concepts::Computation auto Materialize(Consumer &c) && noexcept {
+    using Cons = Proxy<ValueType, Consumer>;
+    return Computation<Cons>(::std::move(*this), Cons(c));
   }
 
- private:
-  template <::std::size_t ...Is, typename C>
-  auto ExtendImpl(::std::index_sequence<Is...>, C &c) noexcept {
-    return Thunk(::std::move(this->template get<Is>())..., ::std::move(c));
-  }
+//   template <concepts::Combinator<ValueType> Combinator>
+//   concepts::Thunk auto Extend(Combinator c) && noexcept {
+//     return ExtendImpl(::std::make_index_sequence<sizeof...(Combinators) + 1>{},
+//                       c);
+//   }
+
+//  private:
+//   template <::std::size_t ...Is, typename C>
+//   auto ExtendImpl(::std::index_sequence<Is...>, C &c) noexcept {
+//     return Thunk(::std::move(this->template get<Is>())..., ::std::move(c));
+//   }
 };
 
 template <typename ...Ts>
 inline constexpr bool trait::Thunk<Thunk<Ts...>> = true;
+
+template <typename Consumer, typename Maker, typename ...Combinators>
+struct Core {
+  template <::std::size_t I>
+  struct Redirect {
+    Core &core_;
+
+    void Continue(auto &&v, State s) && noexcept {
+      ::std::move(core_).template Continue<I>(::std::move(v), s);
+    }
+
+    void Cancel(State s) && noexcept {
+      ::std::move(core_).template Cancel<I>(s);
+    }
+
+    auto &CancelSource() & noexcept {
+      return core_.CancelSource();
+    }
+  };
+
+  using Traits = Traits<Maker, Combinators...>;
+
+  Consumer cons_;
+
+  Maker maker_;
+  ::std::tuple<Combinators...> combinators_;
+
+  void *buffer_;
+
+  Core(void *ptr, Consumer &&c, Maker &&m, Combinators &&...cs)
+      : cons_(::std::forward<Consumer>(c))
+      , maker_(::std::move(m))
+      , combinators_{::std::move(cs)...}
+      , buffer_(ptr) {}
+
+  template <typename T>
+  T &As() {
+    return *static_cast<T *>(buffer_);
+  }
+
+  template <::std::size_t I>
+  using Type = detail::Type<Traits, I>;
+
+  template <::std::size_t I>
+  using Step = detail::Step<Traits, I, Redirect<I>>;
+
+  void Start(Scheduler &s) && noexcept {
+    using Curr = Step<0>;
+
+    ::new (buffer_) Curr(this, ::std::move(maker_));
+    ::std::move(As<Curr>()).Start(s);
+  }
+
+  template <::std::size_t I>
+  void Continue(Type<I> &&v, State s) && noexcept { // [TODO]: ?by value
+    if constexpr (I < sizeof...(Combinators)) {
+      using Prev = Step<I>;
+      using Curr = Step<I + 1>;
+
+      Destroy<Prev>();
+      ::new (buffer_) Curr(this, ::std::get<I>(::std::move(combinators_)));
+      ::std::move(As<Curr>()).Continue(::std::move(v), s);
+    } else {
+      using Prev = Step<I>;
+
+      Destroy<Prev>();
+      ::std::move(cons_).Continue(::std::move(v), s);
+    }
+  }
+
+  template <::std::size_t I>
+  void Cancel(State s) && noexcept {
+    if constexpr (I < sizeof...(Combinators)) {
+      using Prev = Step<I>;
+      using Curr = Step<I + 1>;
+
+      Destroy<Prev>();
+      ::new (buffer_) Curr(this, ::std::get<I>(::std::move(combinators_)));
+      ::std::move(As<Curr>()).Cancel(s);
+    } else {
+      using Prev = Step<I>;
+
+      Destroy<Prev>();
+      ::std::move(cons_).Cancel(s);
+    }
+  }
+
+  auto &CancelSource() & noexcept {
+    return cons_.CancelSource();
+  }
+
+ private:
+  template <typename T>
+  void Destroy() {
+    As<T>().~T();
+  }
+};
+
+template <typename Consumer, typename ...Ts>
+Core(void *, Consumer &&, Ts...) -> Core<Consumer, Ts...>;
+
+template <typename Consumer, typename Maker, typename ...Combinators>
+struct Computation {
+  Consumer cons;
+  Maker maker;
+  ::std::tuple<Combinators...> combinators;
+
+  // Storage<Maker, Combinators...>
+
+  Computation(Consumer &&c, Maker &&m, Combinators &&...cs)
+      : cons(::std::move(c))
+      , maker(::std::move(m))
+      , combinators{::std::move(cs)...} {}
+};
 
 } // namespace exe::future
 
