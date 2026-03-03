@@ -19,23 +19,41 @@ int TestFuture() {
   using namespace exe::future;
   using namespace std::chrono_literals;
 
-  auto f = First(All(Just(), Value(0), Failure<int>(MakeError(0)),
-                     Spawn(exe::runtime::GetInline(), [] {})) |
-                     Inline() | Map([](auto) { return Value(0); }) | Flatten() |
-                     Recover([](Error) { return 42; }),
-                 Just() | Via(exe::runtime::GetInline()) |
-                     FlatMap([] { return Value(42); }) | Map([](int) {}) |
-                     Recover([](Error) {}) | Map([](Unit) { return 42; })) |
-           After(1s);
+  {
+    auto f = First(All(Value(0), Just(),
+                          Failure<int>(MakeError(0)),
+                          Spawn(exe::runtime::GetInline(), [] {})) |
+                      Inline() | Map([](auto) { return Value(0); }) | Flatten() |
+                      Recover([](Error) { return 42; }),
+                  Just() | Via(exe::runtime::GetInline()) |
+                      FlatMap([] { return Value(42); }) | Map([](int) {}) |
+                      Recover([](Error) {}) | Map([](Unit) { return 42; })) |
+            After(1s);
 
-  try {
-    auto res = ::std::move(f) | Get();
-    if (res == 42) {
+    try {
+      auto res = ::std::move(f) | Get();
+      if (res == 42) {
+        return EXIT_SUCCESS;
+      }
+      return EXIT_FAILURE;
+    } catch (...) {
+      return EXIT_FAILURE;
+    }
+  }
+
+  {
+    auto f = All(Value(0),
+                Just(),
+                Value(nullptr),
+                Value(TestFuture),
+                Failure<int>(0));
+
+    try {
+      auto v = ::std::move(f) | Get();
+    } catch (int) {
       return EXIT_SUCCESS;
     }
-  } catch (...) {}
-
-  return EXIT_FAILURE;
+  }
 }
 
 int main() {

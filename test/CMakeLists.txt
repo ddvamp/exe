@@ -29,6 +29,7 @@ set(
 
   channel
   future
+  future2
   reactor
 )
 
