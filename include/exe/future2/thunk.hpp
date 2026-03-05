@@ -148,115 +148,135 @@ concept ErroneousTraits = requires {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <::std::size_t I, typename Combinator, typename ...Head>
-struct TraitsImpl;
-
-template <::std::size_t I, typename ...Ts>
-TraitsImpl<I, Ts...> Select(TraitsImpl<I, Ts...>);
-
-template <typename Traits, ::std::size_t I>
-using TraitsBase = decltype(Select<I>(::std::declval<Traits>()));
-
+// [TODO]: ?Adapt util::type_list
 template <typename ...Ts>
-using Traits = TraitsImpl<sizeof...(Ts) - 1, Ts...>;
-
-template <::std::size_t I, typename Combinator, typename ...Head>
-struct TraitsImpl : Traits<Head...> {
-  using Error = InvalidCombinator<Combinator,
-                                  trait::ValueOf<Traits<Head...>>,
-                                  I>;
+struct TypeList {
+  template <::std::size_t I>
+  using Type = Ts...[I];
 };
 
+template <typename Combinator, typename ...Head>
+struct TraitsImpl;
+
 template <typename Maker>
-struct TraitsImpl<0, Maker> {
+struct TraitsImpl<Maker> {
   using Error = InvalidMaker<Maker>;
 };
 
-template <::std::size_t I, typename Combinator, typename ...Head>
-requires (ErroneousTraits<Traits<Head...>>)
-struct TraitsImpl<I, Combinator, Head...> : Traits<Head...> {};
+template <typename Combinator, typename ...Head>
+struct TraitsImpl {
+  using Error = InvalidCombinator<Combinator,
+                                  trait::ValueOf<TraitsImpl<Head...>>,
+                                  sizeof...(Head)>;
+};
+
+template <typename Combinator, typename ...Head>
+requires (ErroneousTraits<TraitsImpl<Head...>>)
+struct TraitsImpl<Combinator, Head...> {
+  using Error = TraitsImpl<Head...>::Error;
+};
 
 template <typename Maker>
 requires (concepts::Maker<Maker>)
-struct TraitsImpl<0, Maker> {
+struct TraitsImpl<Maker> {
   using ValueType = trait::ValueOf<Maker>;
 
   template <typename Consumer>
   using Step = trait::MakeStep<Maker, Consumer>;
+
+  template <typename ...Ts>
+  using List = TypeList<TraitsImpl, Ts...>;
 };
 
-template <::std::size_t I, typename Combinator, typename ...Head>
-requires (concepts::Combinator<Combinator, trait::ValueOf<Traits<Head...>>>)
-struct TraitsImpl<I, Combinator, Head...> : Traits<Head...> {
-  using InputType = trait::ValueOf<Traits<Head...>>;
+template <typename Combinator, typename ...Head>
+requires (concepts::Combinator<Combinator, trait::ValueOf<TraitsImpl<Head...>>>)
+struct TraitsImpl<Combinator, Head...> {
+  using Prev = TraitsImpl<Head...>;
+  using InputType = trait::ValueOf<Prev>;
   using OutputType = trait::ValueType<Combinator, InputType>;
 
   using ValueType = OutputType;
 
   template <typename Consumer>
   using Step = trait::CombineStep<Combinator, InputType, Consumer>;
+
+  template <typename ...Ts>
+  using List = Prev::template List<TraitsImpl, Ts...>;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-// [TODO]: Inheritance for non-final class types
-template <typename V, ::std::size_t>
-struct ThunkVal {
-  using Type = V;
-
-  [[no_unique_address]] V val;
-};
-
-template <typename ...>
-struct ThunkData;
+template <typename T, ::std::size_t I>
+using Traits = T::template List<>::template Type<I>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename ...>
-struct ThunkHelperImpl;
+struct TraitsHelper;
 
 template <::std::size_t ...Is, typename ...Ts>
-struct ThunkHelperImpl<::std::index_sequence<Is...>, Ts...> {
-  using Data = ThunkData<ThunkVal<Ts, Is>...>;
-  using Traits = Traits<Ts...[sizeof...(Is) - 1 - Is]...>;
+struct TraitsHelper<::std::index_sequence<Is...>, Ts...> {
+  using Traits = TraitsImpl<Ts...[sizeof...(Is) - 1 - Is]...>;
 };
-
-template <typename ...Ts>
-using ThunkHelper = ThunkHelperImpl<::std::index_sequence_for<Ts...>, Ts...>;
-
-template <typename ...Ts>
-using Data = ThunkHelper<Ts...>::Data;
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename ...Ts>
-struct ThunkData : Ts... {
-  template <typename ...Us>
-  using ExtendedData = Data<typename Ts::Type..., Us...>;
-
-  template <::std::size_t I>
-  inline auto &Get() & noexcept {
-    return static_cast<Ts...[I] &>(*this).val;
-  }
-
-  template <typename ...Vs>
-  inline ExtendedData<Vs...> Extend(Vs &&...vs) && {
-    return {static_cast<Ts &&>(*this)..., {::std::forward<Vs>(vs)}...};
-  }
-};
-
-////////////////////////////////////////////////////////////////////////////////
 
 } // namespace detail
 
-template <typename Maker, typename ...Combinators>
-struct Traits : detail::ThunkHelper<Maker, Combinators...>::Traits {
-  template <::std::size_t I>
-  using Type = detail::TraitsBase<Traits, I>::ValueType;
+template <typename ...Ts>
+using Traits =
+    detail::TraitsHelper<::std::index_sequence_for<Ts...>, Ts...>::Traits;
 
-  template <::std::size_t I, typename Consumer>
-  using Step = detail::TraitsBase<Traits, I>::template Step<Consumer>;
+template <typename Traits, ::std::size_t I>
+using Type = detail::Traits<Traits, I>::ValueType;
+
+template <typename Traits, ::std::size_t I, typename Consumer>
+using Step = detail::Traits<Traits, I>::template Step<Consumer>;
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace detail {
+
+// [TODO]: ?Inheritance for non-final class types
+template <typename T, ::std::size_t>
+struct ThunkVal {
+  [[no_unique_address]] T val;
 };
+
+template <typename ...>
+struct ThunkDataImpl;
+
+template <typename ...Ts>
+using ThunkData = ThunkDataImpl<::std::index_sequence_for<Ts...>, Ts...>;
+
+template <typename ...Ts, ::std::size_t ...Is>
+struct ThunkDataImpl<::std::index_sequence<Is...>, Ts...>
+    : ThunkVal<Ts, Is>... {
+  template <typename ...Us>
+  using ExtendedData = ThunkData<Ts..., Us...>;
+
+  template <::std::size_t I>
+  using Leaf = ThunkVal<Ts...[I], I>;
+
+  template <::std::size_t I>
+  inline Ts...[I] &Get() & noexcept {
+    return static_cast<Leaf<I> &>(*this).val;
+  }
+
+  template <typename ...Us>
+  inline ExtendedData<Us...> Extend(Us &&...us) && {
+    return {static_cast<Leaf<Is> &&>(*this)..., {::std::forward<Us>(us)}...};
+  }
+
+  template <typename ...Us, ::std::size_t ...Js>
+  inline ExtendedData<Us...> Extend(
+      ThunkDataImpl<::std::index_sequence<Js...>, Us...> &&d) && {
+    using D = ThunkDataImpl<::std::index_sequence<Js...>, Us...>;
+    return {static_cast<Leaf<Is> &&>(*this)...,
+            {static_cast<D::template Leaf<Js> &&>(d).val}...};
+  }
+};
+
+template <typename ...Ts>
+ThunkDataImpl(Ts...) -> ThunkDataImpl<::std::index_sequence_for<Ts...>, Ts...>;
+
+} // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -279,7 +299,7 @@ class [[nodiscard]] Thunk {
   requires (concepts::CorrectPipeline<M, Cs...>)
   friend class Thunk;
 
-  using Data = detail::Data<Maker, Combinators...>;
+  using Data = detail::ThunkData<Maker, Combinators...>;
   using Traits = Traits<Maker, Combinators...>;
 
   template <typename ...Cs>
@@ -298,18 +318,18 @@ class [[nodiscard]] Thunk {
   void operator= (Thunk &&) = delete;
 
  public:
-  explicit Thunk(Maker &&m, Combinators &&...cs) noexcept
+  inline explicit Thunk(Maker &&m, Combinators &&...cs) noexcept
       : data_{{::std::move(m)}, {::std::move(cs)}...} {}
 
   using ValueType = trait::ValueOf<Traits>;
 
   template <typename ...Cs>
   inline ExtendedThunk<Cs...> Extend(Cs &&...c) && noexcept {
-    return ExtendedThunk<Cs...>(::std::move(data_).Extend(::std::move(c)...));
+    return ::std::move(data_).Extend(::std::move(c)...);
   }
 
  private:
-  explicit Thunk(Data &&d) noexcept : data_(::std::move(d)) {}
+  inline Thunk(Data &&d) noexcept : data_(::std::move(d)) {}
 
 //  private:
 //   template <typename Consumer>
@@ -348,12 +368,6 @@ class [[nodiscard]] Thunk {
 //     using Cons = Proxy<ValueType, Consumer>;
 //     return Computation<Cons>(::std::move(*this), Cons(c));
 //   }
-
-//  private:
-//   template <::std::size_t ...Is, typename C>
-//   auto ExtendImpl(::std::index_sequence<Is...>, C &c) noexcept {
-//     return Thunk(::std::move(this->template get<Is>())..., ::std::move(c));
-//   }
 };
 
 template <typename ...Ts>
@@ -378,7 +392,7 @@ struct Redirect {
   }
 };
 
-// [TODO]: variant-like storage
+// [TODO]: Variant-like storage
 template <typename ...Ts>
 struct VariadicStorage;
 
@@ -392,10 +406,10 @@ struct Core {
   ::std::tuple<Maker, Combinators...> specs_;
 
   template <::std::size_t I>
-  using Type = Traits::template Type<I>;
+  using Type = Type<Traits, I>;
 
   template <::std::size_t I>
-  using Step = Traits::template Step<I, Redirect<Core, I>>;
+  using Step = Step<Traits, I, Redirect<Core, I>>;
 
   static constexpr auto MaxSizeAlign() {
     return []<::std::size_t ...Is>(::std::index_sequence<Is...>) {
@@ -462,20 +476,6 @@ struct Core {
 
 template <typename Consumer, typename ...Ts>
 Core(Consumer &&, Ts...) -> Core<Consumer, Ts...>;
-
-template <typename Consumer, typename Maker, typename ...Combinators>
-struct Computation {
-  Consumer cons;
-  Maker maker;
-  ::std::tuple<Combinators...> combinators;
-
-  // Storage<Maker, Combinators...>
-
-  Computation(Consumer &&c, Maker &&m, Combinators &&...cs)
-      : cons(::std::move(c))
-      , maker(::std::move(m))
-      , combinators{::std::move(cs)...} {}
-};
 
 } // namespace exe::future
 
