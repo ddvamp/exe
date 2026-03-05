@@ -32,6 +32,7 @@ namespace detail {
 template <typename Mapper, typename InputType>
 using MapResult = core::trait::AdaptCallResult<Mapper, InputType>;
 
+// For lazy instantiation of steps
 template <typename Mapper, typename InputType>
 concept ValidInput =
     concepts::FutureValue<InputType> &&
@@ -110,10 +111,10 @@ class [[nodiscard]] Map {
     }
 
     bool TryCancel(State s) {
-      // if (this->CancelSource().CancelRequested()) [[unlikely]] {
-      //   ::std::move(*this).Cancel(s);
-      //   return true;
-      // }
+      if (cons_.CancelSource().CancelRequested()) [[unlikely]] {
+        ::std::move(*this).Cancel(s);
+        return true;
+      }
 
       return false;
     }

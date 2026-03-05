@@ -11,20 +11,17 @@
 #ifndef DDVAMP_EXE_FUTURE_MODEL_CONTINUATION_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_MODEL_CONTINUATION_HPP_INCLUDED_ 1
 
-#include <exe/future2/cancel.hpp>
-#include <exe/future2/model/state.hpp>
-
-#include <concepts>
+#include <exe/future2/detail/has_cancel.hpp>
+#include <exe/future2/detail/has_cancel_source.hpp>
+#include <exe/future2/detail/has_continue.hpp>
 
 namespace exe::future::concepts {
 
-template <typename C, typename V>
-concept Continuation = requires (C c, V v, State s) {
-  { ::std::move(c).Continue(::std::move(v), s) } noexcept
-      -> ::std::same_as<void>;
-  { ::std::move(c).Cancel(s) } noexcept -> ::std::same_as<void>;
-  // { c.CancelSource() } noexcept -> ::std::same_as<cancel::CancelSource &>; // [TODO]: ?concept CancelSource
-};
+template <typename Consumer, typename InputType>
+concept Continuation =
+    detail::HasContinue<Consumer, InputType> &&
+    detail::HasCancel<Consumer> &&
+    detail::HasCancelSource<Consumer>;
 
 } // namespace exe::future::concepts
 

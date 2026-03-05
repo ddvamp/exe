@@ -13,7 +13,11 @@
 
 namespace exe::future::cancel {
 
-struct CancelSource {};
+struct CancelSource {
+  bool CancelRequested() noexcept {
+    return false;
+  }
+};
 
 } // namespace exe::future::cancel
 

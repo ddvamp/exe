@@ -12,6 +12,7 @@
 #define DDVAMP_EXE_FUTURE_THUNK_MAKE_READY_HPP_INCLUDED_ 1
 
 #include <exe/future2/scheduler.hpp>
+#include <exe/future2/concept/async_safe.hpp>
 #include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/state.hpp>
@@ -40,12 +41,13 @@ class [[nodiscard]] Ready {
 
   using ValueType = Value;
 
-  template <concepts::Continuation<ValueType> Consumer>
+  template <concepts::AsyncSafe Consumer>
+  requires (concepts::Continuation<Consumer, ValueType>)
   struct MakeStep {
     Consumer cons_;
     Ready &data_;
 
-    MakeStep(Consumer &&c, Ready &r)
+    MakeStep(Consumer &&c, Ready &r) noexcept
         : cons_(::std::forward<Consumer>(c))
         , data_(r) {}
 

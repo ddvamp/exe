@@ -26,49 +26,40 @@ struct Mapper {
   }
 };
 
-template <typename>
-struct TYPE;
-
 int TestFuture() {
   using namespace exe::future;
 
   struct Consumer {
-    int result;
+    int result = 0;
+    cancel::CancelSource source;
 
     void Continue(int r, State) && noexcept {
       result = r;
     }
 
-    void Cancel(State) && noexcept {}
-    cancel::CancelSource &CancelSource() & noexcept;
+    void Cancel(State) && noexcept {
+      result = -1;
+    }
+
+    cancel::CancelSource &CancelSource() & noexcept {
+      return source;
+    }
   };
 
   Consumer cons;
 
-  alignas (1'024) unsigned char buffer[1'024];
+  static_assert(concepts::Combinator<thunk::Via, int>);
 
-  static_assert(concepts::CorrectPipeline<thunk::Ready<int>,
-                                          thunk::Via,
-                                          thunk::Map<Mapper<int, int>>>);
+  Thunk t(thunk::Ready(0),
+          thunk::Via(exe::runtime::GetInline()),
+          thunk::Map([](int v) { return v + 1; }),
+          thunk::Via(exe::runtime::GetInline()),
+          thunk::Map([](int v) { return v * 2; }),
+          thunk::Via(exe::runtime::GetInline()),
+          thunk::Map([](int v) { return v + 50; }));
 
-  using T = Traits<thunk::Ready<int>,
-                   thunk::Via,
-                   thunk::Map<Mapper<int, int>>,
-                   thunk::Via,
-                   thunk::Map<Mapper<int, int>>,
-                   thunk::Via,
-                   thunk::Map<Mapper<int, int>>>;
-
-  Core computation(cons,
-                   thunk::Ready(0),
-                   thunk::Via(exe::runtime::GetInline()),
-                   thunk::Map([](int v) { return v + 1; }),
-                   thunk::Via(exe::runtime::GetInline()),
-                   thunk::Map([](int v) { return v * 2; }),
-                   thunk::Via(exe::runtime::GetInline()),
-                   thunk::Map([](int v) { return v + 50; }));
-
-  ::std::move(computation).Start(exe::runtime::GetInline());
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
 
   ::std::cout << cons.result;
 
