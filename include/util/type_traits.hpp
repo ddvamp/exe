@@ -149,7 +149,7 @@ struct is_all_unique : ::std::bool_constant<is_all_unique_v<Ts...>> {};
 /* Determining max size and alignment of types */
 
 template <typename ...Ts>
-inline constexpr ::std::size_t max_size_of_v = ::std::max({alignof(Ts)...});
+inline constexpr ::std::size_t max_size_of_v = ::std::max({sizeof(Ts)...});
 
 template <typename ...Ts>
 struct max_size_of

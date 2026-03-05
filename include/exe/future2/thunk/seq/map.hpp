@@ -23,7 +23,6 @@
 #include <exe/runtime/task/task.hpp>
 
 #include <optional>
-#include <type_traits>
 #include <utility>
 
 namespace exe::future::thunk {
@@ -59,8 +58,6 @@ class [[nodiscard]] Map {
  public:
   explicit Map(Mapper m) noexcept : mapper_(::std::move(m)) {}
 
-  /* Combinator */
-
   template <typename InputType>
   inline static constexpr bool ValidInput =
       detail::ValidInput<Mapper, InputType>;
@@ -70,61 +67,41 @@ class [[nodiscard]] Map {
 
   template <concepts::ValidInput<Map> InputType,
             concepts::Continuation<ValueType<InputType>> Consumer>
-  requires (::std::is_nothrow_destructible_v<Consumer>)
-  class [[nodiscard]] Continuation : private Consumer {
-   private:
-    struct Task final : runtime::task::TaskBase {
-      Continuation *cont;
+  struct CombineStep final : private runtime::task::TaskBase {
+    Consumer cons_;
+    Map &data_;
 
-      Task(Continuation *c) : cont(c) {}
+    // [TODO]: ?::util::storage
+    ::std::optional<::std::pair<InputType, State>> input_; // [TODO]: ?struct
 
-      void Run() && noexcept final {
-        cont->RunImpl();
-      }
-    };
-
-    Task task{this};
-    Mapper mapper_;
-    ::std::optional<::std::pair<InputType, State>> val_; // [TODO]: ?struct
-
-   public:
-    ~Continuation() = default;
-
-    Continuation(Continuation const &) = delete;
-    void operator= (Continuation const &) = delete;
-
-    Continuation(Continuation &&) = delete;
-    void operator= (Continuation &&) = delete;
-
-   public:
-    template <typename ...Args>
-    requires (::std::is_nothrow_constructible_v<Consumer, Args...>)
-    explicit Continuation(Map &&m, Args &&...args) noexcept
-        : Consumer(::std::forward<Args>(args)...)
-        , mapper_(::std::move(m).mapper_) {}
-
-    /* Continuation */
+    CombineStep(Consumer &&c, Map &m)
+        : cons_(::std::forward<Consumer>(c))
+        , data_(m) {}
 
     void Continue(InputType &&v, State s) && noexcept {
-      if (!TryCancel(s)) [[likely]] {
-        val_.emplace(::std::move(v), s);
-        s.sched.Submit(&task);
+      if (TryCancel(s)) [[unlikely]] {
+        return;
       }
+
+      input_.emplace(::std::move(v), s);
+      s.sched.Submit(this);
     }
 
-    using Consumer::Cancel;
-    using Consumer::CancelSource;
+    void Cancel(State s) && noexcept {
+      ::std::move(cons_).Cancel(s);
+    }
 
    private:
-    void RunImpl() noexcept {
-      auto &[v, s] = *val_;
+    // TaskBase
+    void Run() && noexcept final {
+      auto &[v, s] = *input_;
       if (TryCancel(s)) [[unlikely]] {
         return;
       }
 
       try {
-        static_cast<Consumer &&>(*this).Continue(
-            core::AdaptCall(auto(::std::move(mapper_)),
+        ::std::move(cons_).Continue(
+            core::AdaptCall(auto(::std::move(data_).mapper_),
                             ::std::move(v)),
             s);
       } catch (...) {

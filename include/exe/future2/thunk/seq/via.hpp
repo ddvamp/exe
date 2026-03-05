@@ -17,7 +17,6 @@
 #include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/state.hpp>
 
-#include <type_traits>
 #include <utility>
 
 namespace exe::future::thunk {
@@ -39,8 +38,6 @@ class [[nodiscard]] Via {
  public:
   explicit Via(Scheduler &s) noexcept : sched_(s) {}
 
-  /* Combinator */
-
   template <typename InputType>
   inline static constexpr bool ValidInput = concepts::FutureValue<InputType>;
 
@@ -49,39 +46,21 @@ class [[nodiscard]] Via {
 
   template <concepts::ValidInput<Via> InputType,
             concepts::Continuation<ValueType<InputType>> Consumer>
-  requires (::std::is_nothrow_destructible_v<Consumer>)
-  class [[nodiscard]] Continuation : private Consumer {
-   private:
-    Scheduler &sched_;
+  struct CombineStep {
+    Consumer cons_;
+    Via &data_;
 
-   public:
-    ~Continuation() = default;
-
-    Continuation(Continuation const &) = delete;
-    void operator= (Continuation const &) = delete;
-
-    Continuation(Continuation &&) = delete;
-    void operator= (Continuation &&) = delete;
-
-   public:
-    template <typename ...Args>
-    requires (::std::is_nothrow_constructible_v<Consumer, Args...>)
-    explicit Continuation(Via &&v, Args &&...args) noexcept
-        : Consumer(::std::forward<Args>(args)...)
-        , sched_(v.sched_) {}
-
-    /* Continuation */
+    CombineStep(Consumer &&c, Via &v)
+        : cons_(::std::forward<Consumer>(c))
+        , data_(v) {}
 
     void Continue(InputType &&v, State) && noexcept {
-      static_cast<Consumer &&>(*this).Continue(::std::move(v),
-                                               {.sched = sched_});
+      ::std::move(cons_).Continue(::std::move(v), {.sched = data_.sched_});
     }
 
     void Cancel(State) && noexcept {
-      static_cast<Consumer &&>(*this).Cancel({.sched = sched_});
+      ::std::move(cons_).Cancel({.sched = data_.sched_});
     }
-
-    using Consumer::CancelSource;
   };
 };
 

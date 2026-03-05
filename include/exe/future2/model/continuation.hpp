@@ -23,7 +23,7 @@ concept Continuation = requires (C c, V v, State s) {
   { ::std::move(c).Continue(::std::move(v), s) } noexcept
       -> ::std::same_as<void>;
   { ::std::move(c).Cancel(s) } noexcept -> ::std::same_as<void>;
-  { c.CancelSource() } noexcept -> ::std::same_as<cancel::CancelSource &>; // [TODO]: ?concept CancelSource
+  // { c.CancelSource() } noexcept -> ::std::same_as<cancel::CancelSource &>; // [TODO]: ?concept CancelSource
 };
 
 } // namespace exe::future::concepts

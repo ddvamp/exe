@@ -16,7 +16,6 @@
 #include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/state.hpp>
 
-#include <type_traits>
 #include <utility>
 
 namespace exe::future::thunk {
@@ -39,36 +38,19 @@ class [[nodiscard]] Ready {
  public:
   explicit Ready(Value v) noexcept : val_(::std::move(v)) {}
 
-  /* Maker */
-
   using ValueType = Value;
 
   template <concepts::Continuation<ValueType> Consumer>
-  requires (::std::is_nothrow_destructible_v<Consumer>)
-  class [[nodiscard]] Computation : private Consumer {
-   private:
-    Value val_;
+  struct MakeStep {
+    Consumer cons_;
+    Ready &data_;
 
-   public:
-    ~Computation() = default;
-
-    Computation(Computation const &) = delete;
-    void operator= (Computation const &) = delete;
-
-    Computation(Computation &&) = delete;
-    void operator= (Computation &&) = delete;
-
-   public:
-    template <typename ...Args>
-    requires (::std::is_nothrow_constructible_v<Consumer, Args...>)
-    explicit Computation(Ready &&r, Args &&...args) noexcept
-        : Consumer(::std::forward<Args>(args)...)
-        , val_(::std::move(r).val_) {}
-
-    /* Computation */
+    MakeStep(Consumer &&c, Ready &r)
+        : cons_(::std::forward<Consumer>(c))
+        , data_(r) {}
 
     void Start(Scheduler &s) && noexcept {
-      ::std::move(*this).Continue(::std::move(val_), {.sched = s});
+      ::std::move(cons_).Continue(::std::move(data_).val_, {.sched = s});
     }
   };
 };
