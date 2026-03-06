@@ -22,6 +22,7 @@
 #include <exe/future2/model/thunk_resource.hpp>
 #include <exe/runtime/task/task.hpp>
 
+#include <exception>
 #include <optional>
 #include <utility>
 
@@ -67,7 +68,7 @@ class [[nodiscard]] Map {
   using ValueType = detail::MapResult<Mapper, InputType>;
 
   template <concepts::ValidInput<Map> InputType,
-            concepts::Continuation<ValueType<InputType>> Consumer>
+            concepts::Consumer<ValueType<InputType>> Consumer>
   struct CombineStep final : private runtime::task::TaskBase {
     Consumer cons_;
     Map &data_;
@@ -75,13 +76,13 @@ class [[nodiscard]] Map {
     // [TODO]: ?::util::storage
     ::std::optional<::std::pair<InputType, State>> input_; // [TODO]: ?struct
 
-    CombineStep(Consumer &&c, Map &m)
+    CombineStep(Consumer &&c, Map &m) noexcept
         : cons_(::std::forward<Consumer>(c))
         , data_(m) {}
 
     void Continue(InputType &&v, State s) && noexcept {
-      if (TryCancel(s)) [[unlikely]] {
-        return;
+      if (CancelRequested()) [[unlikely]] {
+        return ::std::move(*this).Cancel(s);
       }
 
       input_.emplace(::std::move(v), s);
@@ -96,8 +97,8 @@ class [[nodiscard]] Map {
     // TaskBase
     void Run() && noexcept final {
       auto &[v, s] = *input_;
-      if (TryCancel(s)) [[unlikely]] {
-        return;
+      if (CancelRequested()) [[unlikely]] {
+        return ::std::move(*this).Cancel(s);
       }
 
       try {
@@ -110,13 +111,8 @@ class [[nodiscard]] Map {
       }
     }
 
-    bool TryCancel(State s) {
-      if (cons_.CancelSource().CancelRequested()) [[unlikely]] {
-        ::std::move(*this).Cancel(s);
-        return true;
-      }
-
-      return false;
+    bool CancelRequested() noexcept {
+      return cons_.CancelSource().CancelRequested();
     }
   };
 };

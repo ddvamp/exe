@@ -41,8 +41,7 @@ class [[nodiscard]] Ready {
 
   using ValueType = Value;
 
-  template <concepts::AsyncSafe Consumer>
-  requires (concepts::Continuation<Consumer, ValueType>)
+  template <concepts::Consumer<ValueType> Consumer>
   struct MakeStep {
     Consumer cons_;
     Ready &data_;

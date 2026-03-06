@@ -252,12 +252,10 @@ class [[nodiscard]] Thunk {
 
   using ValueType = trait::ValueOf<Traits>;
 
-  template <concepts::AsyncSafe Consumer>
-  requires (concepts::Continuation<Consumer, ValueType>)
+  template <concepts::Consumer<ValueType> Consumer>
   class ExecutionCore;
 
-  template <concepts::AsyncSafe Consumer>
-  requires (concepts::Continuation<Consumer, ValueType>)
+  template <concepts::Consumer<ValueType> Consumer>
   class Computation;
 
   template <typename Consumer>
@@ -313,9 +311,8 @@ struct VariadicStorage;
 template <concepts::ThunkResource Maker,
           concepts::ThunkResource ...Combinators>
 requires (concepts::CorrectPipeline<Maker, Combinators...>)
-template <concepts::AsyncSafe Consumer>
-requires (concepts::Continuation<Consumer,
-                                 trait::ValueOf<Thunk<Maker, Combinators...>>>)
+template <concepts::Consumer<
+              trait::ValueOf<Thunk<Maker, Combinators...>>> Consumer>
 class Thunk<Maker, Combinators...>::ExecutionCore {
  private:
   template <::std::size_t I>
@@ -368,7 +365,7 @@ class Thunk<Maker, Combinators...>::ExecutionCore {
 
  private:
   template <::std::size_t I>
-  auto &GetStep() {
+  auto &GetStep() noexcept {
     if constexpr (I != 0) {
       DestroyStep<I - 1>();
     }
@@ -381,7 +378,7 @@ class Thunk<Maker, Combinators...>::ExecutionCore {
   }
 
   template <::std::size_t I>
-  auto &CreateStep() {
+  auto &CreateStep() noexcept {
     using Step = Step<I>;
 
     Redirect<I> consumer(*this);
@@ -391,11 +388,11 @@ class Thunk<Maker, Combinators...>::ExecutionCore {
     static_assert(::std::is_nothrow_constructible_v<
                       Step, Redirect<I>, decltype(resources) &>);
 
-    return *::new (buffer_) Step<I>(::std::move(consumer), resources);
+    return *::new (buffer_) Step(::std::move(consumer), resources);
   }
 
   template <::std::size_t I>
-  void DestroyStep() {
+  void DestroyStep() noexcept {
     using Step = Step<I>;
 
     // [TODO]: Better
@@ -410,9 +407,8 @@ class Thunk<Maker, Combinators...>::ExecutionCore {
 template <concepts::ThunkResource Maker,
           concepts::ThunkResource ...Combinators>
 requires (concepts::CorrectPipeline<Maker, Combinators...>)
-template <concepts::AsyncSafe Consumer>
-requires (concepts::Continuation<Consumer,
-                                 trait::ValueOf<Thunk<Maker, Combinators...>>>)
+template <concepts::Consumer<
+              trait::ValueOf<Thunk<Maker, Combinators...>>> Consumer>
 class Thunk<Maker, Combinators...>::Computation
     : private ExecutionCore<Consumer> {
  private:

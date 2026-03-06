@@ -45,12 +45,12 @@ class [[nodiscard]] Via {
   using ValueType = InputType;
 
   template <concepts::ValidInput<Via> InputType,
-            concepts::Continuation<ValueType<InputType>> Consumer>
+            concepts::Consumer<ValueType<InputType>> Consumer>
   struct CombineStep {
     Consumer cons_;
     Via &data_;
 
-    CombineStep(Consumer &&c, Via &v)
+    CombineStep(Consumer &&c, Via &v) noexcept
         : cons_(::std::forward<Consumer>(c))
         , data_(v) {}
 
