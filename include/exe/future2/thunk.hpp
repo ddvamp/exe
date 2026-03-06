@@ -281,8 +281,9 @@ inline constexpr bool trait::Thunk<Thunk<Ts...>> = true;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace detail {
+namespace core {
 
+// [TODO]: Move to future/core
 template <typename Raw, ::std::size_t I>
 struct Redirect {
   Raw &raw_;
@@ -300,7 +301,7 @@ struct Redirect {
   }
 };
 
-} // namespace detail
+} // namespace core
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -308,6 +309,7 @@ struct Redirect {
 template <typename ...Ts>
 struct VariadicStorage;
 
+// [TODO]: ?Out of Thunk
 template <concepts::ThunkResource Maker,
           concepts::ThunkResource ...Combinators>
 requires (concepts::CorrectPipeline<Maker, Combinators...>)
@@ -319,7 +321,7 @@ class Thunk<Maker, Combinators...>::ExecutionCore {
   using InputType = Type<Traits, I>;
 
   template <::std::size_t I>
-  using Redirect = detail::Redirect<ExecutionCore, I>;
+  using Redirect = core::Redirect<ExecutionCore, I>;
 
   template <::std::size_t I>
   using Step = Step<Traits, I, Redirect<I>>;
@@ -337,25 +339,29 @@ class Thunk<Maker, Combinators...>::ExecutionCore {
   alignas (MaxSizeAlign().second) unsigned char buffer_[MaxSizeAlign().first];
 
  public:
-  ExecutionCore(Consumer &&c, Data &d) noexcept
+  ExecutionCore(Consumer &&c, Thunk &t) noexcept
       : cons_(::std::forward<Consumer>(c))
-      , data_(d) {}
+      , data_(t.data_) {}
 
   void Start(Scheduler &s) && noexcept {
-    auto &step = GetStep<0>();
+    auto &step = CreateStep<0>();
     ::std::move(step).Start(s);
   }
 
   template <::std::size_t I>
   void Continue(InputType<I> &&v, State s) && noexcept {
     // [TODO]: ?v by value (possibly dangling reference after GetStep())
-    auto &step = GetStep<I + 1>();
+    DestroyStep<I>();
+
+    auto &step = GetContinueStep<I + 1>();
     ::std::move(step).Continue(::std::move(v), s);
   }
 
   template <::std::size_t I>
   void Cancel(State s) && noexcept {
-    auto &step = GetStep<I + 1>();
+    DestroyStep<I>();
+
+    auto &step = GetCancelStep<I + 1>();
     ::std::move(step).Cancel(s);
   }
 
@@ -365,15 +371,23 @@ class Thunk<Maker, Combinators...>::ExecutionCore {
 
  private:
   template <::std::size_t I>
-  auto &GetStep() noexcept {
-    if constexpr (I != 0) {
-      DestroyStep<I - 1>();
-    }
-
+  auto &GetContinueStep() noexcept {
     if constexpr (I == 1 + sizeof...(Combinators)) {
       return cons_;
     } else {
       return CreateStep<I>();
+    }
+  }
+
+  // [TODO]: ?Better trait for fast get of next cancel aware step
+  template <::std::size_t I>
+  auto &GetCancelStep() noexcept {
+    if constexpr (I == 1 + sizeof...(Combinators)) {
+      return cons_;
+    } else if constexpr (detail::HasCancel<Step<I>>) {
+      return CreateStep<I>();
+    } else {
+      return GetCancelStep<I + 1>();
     }
   }
 
@@ -427,7 +441,7 @@ class Thunk<Maker, Combinators...>::Computation
 
  public:
   Computation(Consumer &&c, Thunk &&t) noexcept
-      : Core(::std::forward<Consumer>(c), data_)
+      : Core(::std::forward<Consumer>(c), t)
       , data_(::std::move(t).data_) {}
 
   using Core::Start;

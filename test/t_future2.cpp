@@ -8,12 +8,15 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
+#include <exe/future2/cancel.hpp>
 #include <exe/future2/all_thunks.hpp>
 #include <exe/future2/thunk.hpp>
+#include <exe/future2/model/state.hpp>
 #include <exe/runtime/inline.hpp>
 
 #include <cstdlib>
 #include <iostream>
+#include <utility>
 
 namespace {
 
@@ -23,6 +26,23 @@ struct Mapper {
 
   To operator() (From &&) && noexcept {
     return ::std::move(to);
+  }
+};
+
+struct AnyConsumer {
+  int success = -1;
+  exe::future::cancel::CancelSource source;
+
+  void Continue(auto &&, exe::future::State) && noexcept {
+    success = 1;
+  }
+
+  void Cancel(exe::future::State) && noexcept {
+    success = 0;
+  }
+
+  auto &CancelSource() & noexcept {
+    return source;
   }
 };
 
@@ -90,6 +110,22 @@ int TestFuture2() {
   auto d4 = ::std::move(d3).Extend(detail::ThunkData{0.0});
 
   return EXIT_SUCCESS;
+}
+
+int TestSequence() {
+  using namespace exe::future;
+
+  Thunk t1(thunk::Ready(0));
+  Thunk t2(thunk::Ready(0.0));
+  Thunk t3(thunk::Ready(nullptr));
+
+  auto t = Sequence(::std::move(t1), ::std::move(t2), ::std::move(t3));
+
+  AnyConsumer cons;
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  return (cons.success == 1 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 } // namespace

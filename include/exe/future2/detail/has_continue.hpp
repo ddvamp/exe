@@ -18,9 +18,9 @@
 
 namespace exe::future::detail {
 
-template <typename Consumer, typename InputType>
-concept HasContinue = requires (Consumer c, InputType v, State s) {
-  { ::std::move(c).Continue(::std::move(v), s) } noexcept
+template <typename T, typename InputType>
+concept HasContinue = requires (T t, InputType v, State s) {
+  { ::std::move(t).Continue(::std::move(v), s) } noexcept
       -> ::std::same_as<void>;
 };
 

@@ -17,9 +17,9 @@
 
 namespace exe::future::detail {
 
-template <typename Consumer>
-concept HasCancelSource = requires (Consumer c) {
-  { c.CancelSource() } noexcept -> ::std::same_as<cancel::CancelSource &>;
+template <typename T>
+concept HasCancelSource = requires (T t) {
+  { t.CancelSource() } noexcept -> ::std::same_as<cancel::CancelSource &>;
 };
 
 } // namespace exe::future::detail

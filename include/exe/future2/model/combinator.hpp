@@ -12,7 +12,6 @@
 #define DDVAMP_EXE_FUTURE_MODEL_COMBINATOR_HPP_INCLUDED_ 1
 
 #include <exe/future2/concept/valid_input.hpp>
-#include <exe/future2/detail/has_cancel.hpp>
 #include <exe/future2/detail/has_continue.hpp>
 #include <exe/future2/model/demand.hpp>
 #include <exe/future2/model/future_value.hpp>
@@ -23,8 +22,7 @@
 namespace exe::future::concepts {
 
 template <typename Step, typename InputType>
-concept CombineStep =
-    detail::HasContinue<Step, InputType> && detail::HasCancel<Step>;
+concept CombineStep = detail::HasContinue<Step, InputType>;
 
 template <typename C, typename InputType>
 concept Combinator =

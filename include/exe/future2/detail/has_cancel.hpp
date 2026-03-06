@@ -18,9 +18,9 @@
 
 namespace exe::future::detail {
 
-template <typename Consumer>
-concept HasCancel = requires (Consumer c, State s) {
-  { ::std::move(c).Cancel(s) } noexcept -> ::std::same_as<void>;
+template <typename T>
+concept HasCancel = requires (T t, State s) {
+  { ::std::move(t).Cancel(s) } noexcept -> ::std::same_as<void>;
 };
 
 } // namespace exe::future::detail
