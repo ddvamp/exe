@@ -13,9 +13,7 @@
 
 #include <exe/future2/scheduler.hpp>
 #include <exe/future2/thunk.hpp>
-#include <exe/future2/concept/valid_input.hpp>
 #include <exe/future2/model/continuation.hpp>
-#include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/state.hpp>
 #include <exe/future2/model/thunk.hpp>
 #include <exe/future2/trait/make_step.hpp>
@@ -27,27 +25,22 @@
 
 namespace exe::future::thunk {
 
-// [TODO]: ?util
-template <typename ...Ts>
-using Tail = Ts...[sizeof...(Ts) - 1];
-
 namespace detail {
 
 template <typename Thunk>
 struct SequenceMaker {
   Thunk t_;
 
-  template <typename Consumer>
-  using Step = trait::MakeStep<Thunk, Consumer>;
-
   using ValueType = trait::ValueOf<Thunk>;
 
-  template <concepts::Consumer<ValueType> Consumer>
-  struct MakeStep : private Step<Consumer> {
-    MakeStep(Consumer &&c, SequenceMaker &sm) noexcept
-        : Step<Consumer>(::std::forward<Consumer>(c), sm.t_) {}
+  template <typename Consumer>
+  struct MakeStep : private trait::MakeStep<Thunk, Consumer> {
+    using Base = trait::MakeStep<Thunk, Consumer>;
 
-    using Step<Consumer>::Start;
+    MakeStep(Consumer &&c, SequenceMaker &sm) noexcept
+        : Base(::std::forward<Consumer>(c), sm.t_) {}
+
+    using Base::Start;
   };
 };
 
@@ -55,24 +48,21 @@ template <typename Thunk>
 struct SequenceCombinator {
   Thunk t_;
 
-  template <typename Consumer>
-  using Step = trait::MakeStep<Thunk, Consumer>;
+  template <typename>
+  inline static constexpr bool ValidInput = true;
 
-  template <typename InputType>
-  inline static constexpr bool ValidInput =
-      future::concepts::FutureValue<InputType>;
-
-  template <future::concepts::ValidInput<SequenceCombinator>>
+  template <typename>
   using ValueType = trait::ValueOf<Thunk>;
 
-  template <future::concepts::ValidInput<SequenceCombinator> InputType,
-            concepts::Consumer<ValueType<InputType>> Consumer>
-  struct CombineStep : private Step<Consumer> {
+  template <typename InputType, typename Consumer>
+  struct CombineStep : private trait::MakeStep<Thunk, Consumer> {
+    using Base = trait::MakeStep<Thunk, Consumer>;
+
     CombineStep(Consumer &&c, SequenceCombinator &sm) noexcept
-        : Step<Consumer>(::std::forward<Consumer>(c), sm.t_) {}
+        : Base(::std::forward<Consumer>(c), sm.t_) {}
 
     void Continue(InputType &&, State s) && noexcept {
-      static_cast<Step<Consumer> &&>(*this).Start(s.sched);
+      static_cast<Base &&>(*this).Start(s.sched);
     }
   };
 };
@@ -83,11 +73,8 @@ template <concepts::Thunk First, concepts::Thunk ...Rest>
 requires (sizeof...(Rest) != 0)
 class Sequence {
  private:
-  using Thunk = future::Thunk<detail::SequenceMaker<First>,
-                              detail::SequenceCombinator<Rest>...>;
-
-  template <typename Consumer>
-  using Step = trait::MakeStep<Thunk, Consumer>;
+  using Thunk = Thunk<detail::SequenceMaker<First>,
+                      detail::SequenceCombinator<Rest>...>;
 
   Thunk thunk_;
 
@@ -108,11 +95,13 @@ class Sequence {
   using ValueType = trait::ValueOf<Thunk>;
 
   template <concepts::Consumer<ValueType> Consumer>
-  struct MakeStep : private Step<Consumer> {
-    MakeStep(Consumer &&c, Sequence &s) noexcept
-        : Step<Consumer>(::std::forward<Consumer>(c), s.thunk_) {}
+  struct MakeStep : private trait::MakeStep<Thunk, Consumer> {
+    using Base = trait::MakeStep<Thunk, Consumer>;
 
-    using Step<Consumer>::Start;
+    MakeStep(Consumer &&c, Sequence &s) noexcept
+        : Base(::std::forward<Consumer>(c), s.thunk_) {}
+
+    using Base::Start;
   };
 };
 

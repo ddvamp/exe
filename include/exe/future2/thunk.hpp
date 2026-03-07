@@ -247,7 +247,7 @@ class [[nodiscard]] Thunk {
   void operator= (Thunk &&) = delete;
 
  public:
-  inline explicit Thunk(Maker &&m, Combinators &&...cs) noexcept
+  explicit Thunk(Maker &&m, Combinators &&...cs) noexcept
       : data_{{::std::move(m)}, {::std::move(cs)}...} {}
 
   using ValueType = trait::ValueOf<Traits>;
@@ -273,7 +273,7 @@ class [[nodiscard]] Thunk {
   }
 
  private:
-  inline Thunk(Data &&d) noexcept : data_(::std::move(d)) {}
+  Thunk(Data &&d) noexcept : data_(::std::move(d)) {}
 };
 
 template <typename ...Ts>

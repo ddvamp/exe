@@ -46,6 +46,22 @@ struct AnyConsumer {
   }
 };
 
+template <exe::future::concepts::FutureValue V>
+struct Consumer {
+  ::std::optional<V> res;
+  exe::future::cancel::CancelSource source;
+
+  void Continue(V &&v, exe::future::State) && noexcept {
+    res.emplace(::std::move(v));
+  }
+
+  void Cancel(exe::future::State) && noexcept {}
+
+  auto &CancelSource() & noexcept {
+    return source;
+  }
+};
+
 int TestFuture() {
   using namespace exe::future;
 
@@ -115,17 +131,28 @@ int TestFuture2() {
 int TestSequence() {
   using namespace exe::future;
 
-  Thunk t1(thunk::Ready(0));
-  Thunk t2(thunk::Ready(0.0));
-  Thunk t3(thunk::Ready(nullptr));
-
-  auto t = Sequence(::std::move(t1), ::std::move(t2), ::std::move(t3));
+  auto t = Sequence(Thunk(thunk::Ready(0)),
+                    Thunk(thunk::Ready(0.0)),
+                    Thunk(thunk::Ready(nullptr)));
 
   AnyConsumer cons;
   auto comp = ::std::move(t).Materialize(cons);
   ::std::move(comp).Start(exe::runtime::GetInline());
 
   return (cons.success == 1 ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+
+int TestFlatten() {
+  using namespace exe::future;
+
+  Thunk t(thunk::Ready(Thunk(thunk::Ready(42))),
+          thunk::Flatten{});
+
+  Consumer<int> cons;
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 } // namespace
