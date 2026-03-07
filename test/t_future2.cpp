@@ -155,6 +155,18 @@ int TestFlatten() {
   return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
+int TestBox() {
+  using namespace exe::future;
+
+  Thunk t(thunk::Box(Thunk(thunk::Ready(42))));
+
+  Consumer<int> cons;
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+
 } // namespace
 
 int main() {

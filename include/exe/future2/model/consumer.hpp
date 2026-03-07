@@ -20,7 +20,7 @@ namespace exe::future {
 template <concepts::FutureValue InputType>
 struct IConsumer {
  protected:
-  // Lifetime cannot be controlled via IConsumer<V> &
+  // Lifetime cannot be controlled via IConsumer<> *
   ~IConsumer() = default;
 
  public:

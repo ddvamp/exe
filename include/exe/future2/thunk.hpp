@@ -13,12 +13,9 @@
 
 #include <exe/future2/cancel.hpp>
 #include <exe/future2/scheduler.hpp>
-#include <exe/future2/concept/async_safe.hpp>
-#include <exe/future2/concept/valid_input.hpp>
+#include <exe/future2/core/proxy.hpp>
 #include <exe/future2/model/combinator.hpp>
-#include <exe/future2/model/computation.hpp>
 #include <exe/future2/model/continuation.hpp>
-#include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/maker.hpp>
 #include <exe/future2/model/state.hpp>
 #include <exe/future2/model/thunk.hpp>
@@ -35,32 +32,6 @@
 #include <utility>
 
 namespace exe::future {
-
-// template <concepts::FutureValue InputType,
-//           concepts::Continuation<InputType> Proxied>
-// class [[nodiscard]] Proxy {
-//  private:
-//   Proxied &cons_;
-//
-//  public:
-//   explicit Proxy(Proxied &c) noexcept : cons_(c) {}
-//
-//   /* Continuation */
-//
-//   void Continue(InputType &&i, State s) && noexcept {
-//     ::std::move(cons_).Continue(::std::move(i), s);
-//   }
-//
-//   void Cancel(State s) && noexcept {
-//     ::std::move(cons_).Cancel(s);
-//   }
-//
-//   auto &CancelSource() & noexcept {
-//     return cons_.CancelSource();
-//   }
-// };
-
-////////////////////////////////////////////////////////////////////////////////
 
 namespace detail {
 
@@ -278,30 +249,6 @@ class [[nodiscard]] Thunk {
 
 template <typename ...Ts>
 inline constexpr bool trait::Thunk<Thunk<Ts...>> = true;
-
-////////////////////////////////////////////////////////////////////////////////
-
-namespace core {
-
-// [TODO]: Move to future/core
-template <typename Raw, ::std::size_t I>
-struct Redirect {
-  Raw &raw_;
-
-  void Continue(auto &&v, State s) && noexcept {
-    ::std::move(raw_).template Continue<I>(::std::move(v), s);
-  }
-
-  void Cancel(State s) && noexcept {
-    ::std::move(raw_).template Cancel<I>(s);
-  }
-
-  cancel::CancelSource &CancelSource() & noexcept {
-    return raw_.CancelSource();
-  }
-};
-
-} // namespace core
 
 ////////////////////////////////////////////////////////////////////////////////
 

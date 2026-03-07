@@ -12,6 +12,7 @@
 #define DDVAMP_EXE_FUTURE_TYPE_FUTURE_HPP_INCLUDED_ 1
 
 #include <exe/future2/model/thunk.hpp>
+#include <exe/future2/trait/value_of.hpp>
 
 #include <concepts>
 
@@ -21,7 +22,7 @@ template <typename F>
 concept SomeFuture = Thunk<F>;
 
 template <typename F, typename V>
-concept Future = SomeFuture<F> && ::std::same_as<typename F::ValueType, V>;
+concept Future = SomeFuture<F> && ::std::same_as<trait::ValueOf<F>, V>;
 
 } // namespace exe::future
 
