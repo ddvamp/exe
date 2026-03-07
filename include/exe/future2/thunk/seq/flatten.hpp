@@ -15,6 +15,7 @@
 #include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/state.hpp>
 #include <exe/future2/model/thunk.hpp>
+#include <exe/future2/trait/computation.hpp>
 #include <exe/future2/trait/make_step.hpp>
 #include <exe/future2/trait/value_of.hpp>
 
@@ -47,7 +48,7 @@ class [[nodiscard]] Flatten {
             concepts::Consumer<ValueType<InputType>> Consumer>
   struct CombineStep {
     using Thunk = InputType;
-    using Comp = Thunk::template Computation<Consumer &>;
+    using Comp = trait::Computation<Thunk, Consumer &>;
 
     Consumer cons_;
     ::std::optional<Comp> comp_;

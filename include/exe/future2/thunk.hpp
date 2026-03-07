@@ -371,11 +371,10 @@ requires (concepts::CorrectPipeline<Maker, Combinators...>)
 template <concepts::Consumer<
               trait::ValueOf<Thunk<Maker, Combinators...>>> Consumer>
 class Thunk<Maker, Combinators...>::Computation
-    : private ExecutionCore<Consumer> {
+    : private Thunk,
+      private ExecutionCore<Consumer> {
  private:
   using Core = ExecutionCore<Consumer>;
-
-  Data data_;
 
  public:
   ~Computation() = default;
@@ -388,8 +387,8 @@ class Thunk<Maker, Combinators...>::Computation
 
  public:
   Computation(Consumer &&c, Thunk &&t) noexcept
-      : Core(::std::forward<Consumer>(c), t)
-      , data_(::std::move(t).data_) {}
+      : Thunk(::std::move(t))
+      , Core(::std::forward<Consumer>(c), *this) {}
 
   using Core::Start;
 };

@@ -14,9 +14,56 @@
 #include <exe/future2/model/state.hpp>
 #include <exe/runtime/inline.hpp>
 
+#include <util/abort.hpp>
+#include <util/debug.hpp>
+
 #include <cstdlib>
 #include <iostream>
 #include <utility>
+
+namespace exe::future {
+
+namespace {
+
+struct AnyConsumer {
+  int success = -1;
+  cancel::CancelSource source;
+
+  void Continue(auto &&, State) && noexcept {
+    success = 1;
+  }
+
+  void Cancel(State) && noexcept {
+    success = 0;
+  }
+
+  auto &CancelSource() & noexcept {
+    return source;
+  }
+};
+
+template <concepts::FutureValue V>
+struct Consumer {
+  ::std::optional<V> res;
+  cancel::CancelSource source;
+
+  void Continue(V &&v, State) && noexcept {
+    res.emplace(::std::move(v));
+    source.RequestCancel();
+  }
+
+  void Cancel(State) && noexcept {
+    UTIL_ABORT("Unexpected upstream Cancel() call");
+  }
+
+  cancel::CancelSource &CancelSource() & noexcept {
+    return source;
+  }
+};
+
+} // namespace
+
+} // namespace exe::future
 
 namespace {
 
@@ -26,39 +73,6 @@ struct Mapper {
 
   To operator() (From &&) && noexcept {
     return ::std::move(to);
-  }
-};
-
-struct AnyConsumer {
-  int success = -1;
-  exe::future::cancel::CancelSource source;
-
-  void Continue(auto &&, exe::future::State) && noexcept {
-    success = 1;
-  }
-
-  void Cancel(exe::future::State) && noexcept {
-    success = 0;
-  }
-
-  auto &CancelSource() & noexcept {
-    return source;
-  }
-};
-
-template <exe::future::concepts::FutureValue V>
-struct Consumer {
-  ::std::optional<V> res;
-  exe::future::cancel::CancelSource source;
-
-  void Continue(V &&v, exe::future::State) && noexcept {
-    res.emplace(::std::move(v));
-  }
-
-  void Cancel(exe::future::State) && noexcept {}
-
-  auto &CancelSource() & noexcept {
-    return source;
   }
 };
 
@@ -167,8 +181,35 @@ int TestBox() {
   return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
+int TestFirst() {
+  using namespace exe::future;
+
+  Consumer<int> cons;
+
+  auto t = First(Thunk(thunk::Ready(0)),
+                 Thunk(thunk::Ready(0)),
+                 Thunk(thunk::Ready(0)),
+                 Thunk(thunk::Ready(0)),
+                 Thunk(thunk::Ready(0)),
+                 Thunk(thunk::Ready(0)));
+
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  return (cons.res.value_or(1) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+
 } // namespace
 
+#define RUN_TEST(test) UTIL_CHECK(test() == EXIT_SUCCESS, #test);
+
 int main() {
-  return TestFuture();
+  RUN_TEST(TestFuture);
+  RUN_TEST(TestFuture2);
+  RUN_TEST(TestSequence);
+  RUN_TEST(TestFlatten);
+  RUN_TEST(TestBox);
+  RUN_TEST(TestFirst);
+
+  return EXIT_SUCCESS;
 }

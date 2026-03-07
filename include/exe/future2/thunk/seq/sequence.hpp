@@ -71,7 +71,7 @@ struct SequenceCombinator {
 
 template <concepts::Thunk First, concepts::Thunk ...Rest>
 requires (sizeof...(Rest) != 0)
-class Sequence {
+class [[nodiscard]] Sequence {
  private:
   using Thunk = Thunk<detail::SequenceMaker<First>,
                       detail::SequenceCombinator<Rest>...>;
