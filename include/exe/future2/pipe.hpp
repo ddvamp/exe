@@ -16,10 +16,21 @@
 
 namespace exe::future::pipe {
 
+// [TODO]: Better design
+template <concepts::Thunk T, ::util::rvalue_deduced Combinator>
+concepts::Thunk auto operator| (T &&t, Combinator &&c) {
+  return ::std::move(c).Pipe(::std::move(t));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename ...Combinators>
 struct Pipe {
   ThunkData<Combinators...> data;
 };
+
+template <typename ...Ts>
+Pipe(Ts...) -> Pipe<Ts...>;
 
 template <typename ...Ts, typename ...Us>
 inline Thunk<Ts..., Us...> operator| (Thunk<Ts...> &&t, Pipe<Us...> &&p) {

@@ -22,7 +22,6 @@
 #include <exe/future2/trait/computation.hpp>
 #include <exe/future2/trait/value_of.hpp>
 
-#include <util/concepts.hpp>
 #include <util/debug/assert.hpp>
 #include <util/mm/release_sequence.hpp>
 
@@ -32,9 +31,7 @@
 #include <tuple>
 #include <utility>
 
-namespace exe::future {
-
-namespace thunk {
+namespace exe::future::thunk {
 
 namespace detail {
 
@@ -184,14 +181,6 @@ class [[nodiscard]] All final
   }
 };
 
-} // namespace thunk
-
-// [TODO]: Move to future/combine/
-template <::util::rvalue_deduced ...Producers>
-auto All(Producers &&...prods) {
-  return Thunk(thunk::Box(::new thunk::All(::std::move(prods)...)));
-}
-
-} // namespace exe::future
+} // namespace exe::future::thunk
 
 #endif /* DDVAMP_EXE_FUTURE_THUNK_CONCUR_ALL_HPP_INCLUDED_ */

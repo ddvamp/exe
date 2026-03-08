@@ -19,8 +19,6 @@
 #include <exe/future2/trait/make_step.hpp>
 #include <exe/future2/trait/value_of.hpp>
 
-#include <util/concepts.hpp>
-
 #include <utility>
 
 namespace exe::future::thunk {
@@ -106,15 +104,5 @@ class [[nodiscard]] Sequence {
 };
 
 } // namespace exe::future::thunk
-
-namespace exe::future {
-
-// [TODO]: Move to future/combine
-template <::util::rvalue_deduced ...Ts>
-inline Thunk<thunk::Sequence<Ts...>> Sequence(Ts &&...ts) noexcept {
-  return Thunk(thunk::Sequence(::std::move(ts)...));
-}
-
-} // namespace exe::future
 
 #endif /* DDVAMP_EXE_FUTURE_THUNK_SEQ_SEQUENCE_HPP_INCLUDED_ */

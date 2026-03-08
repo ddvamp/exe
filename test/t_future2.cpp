@@ -275,6 +275,28 @@ int TestSpawn() {
   return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
+int TestPipe() {
+  using namespace exe::future;
+
+  auto &sched = exe::runtime::GetInline();
+
+  auto t1 = Just() | Via(sched) | Map([] { return 42; });
+  auto t2 = Sequence(Just(), Ready(0), Ready(42));
+  auto t3 = Just() | FlatMap([&] { return Ready(42) | Via(sched); });
+  auto t4 = First(::std::move(t1), ::std::move(t2), ::std::move(t3));
+  auto t5 = All(::std::move(t4), Just());
+
+  Consumer<::std::tuple<int, Unit>> cons;
+  auto comp = ::std::move(t5).Materialize(cons);
+  ::std::move(comp).Start(sched);
+
+  if (!cons.res.has_value()) {
+    return EXIT_FAILURE;
+  }
+
+  return ::std::get<0>(*cons.res) == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
 } // namespace
 
 #define RUN_TEST(test) UTIL_CHECK(test() == EXIT_SUCCESS, #test);
@@ -291,6 +313,7 @@ int main() {
   RUN_TEST(TestValue);
   RUN_TEST(TestJust);
   RUN_TEST(TestSpawn);
+  RUN_TEST(TestPipe);
 
   return EXIT_SUCCESS;
 }
