@@ -1,5 +1,10 @@
 #pragma once
 
+#include <exe/future2/make/just.hpp> // IWYU pragma: export
+#include <exe/future2/make/ready.hpp> // IWYU pragma: export
+#include <exe/future2/make/spawn.hpp> // IWYU pragma: export
+#include <exe/future2/make/value.hpp> // IWYU pragma: export
+
 #include <exe/future2/thunk/make/ready.hpp> // IWYU pragma: export
 #include <exe/future2/thunk/concur/all.hpp> // IWYU pragma: export
 #include <exe/future2/thunk/concur/first.hpp> // IWYU pragma: export

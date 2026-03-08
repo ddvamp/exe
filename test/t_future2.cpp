@@ -227,6 +227,54 @@ int TestAll() {
   return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
+int TestReady() {
+  using namespace exe::future;
+
+  auto t = Ready(42);
+
+  Consumer<int> cons;
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+
+int TestValue() {
+  using namespace exe::future;
+
+  auto t = Value(42);
+
+  Consumer<int> cons;
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+
+int TestJust() {
+  using namespace exe::future;
+
+  auto t = Just();
+
+  Consumer<Unit> cons;
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  return (cons.res.has_value() ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+
+int TestSpawn() {
+  using namespace exe::future;
+
+  auto t = Spawn(exe::runtime::GetInline(), []{ return 42; });
+
+  Consumer<int> cons;
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+
 } // namespace
 
 #define RUN_TEST(test) UTIL_CHECK(test() == EXIT_SUCCESS, #test);
@@ -239,6 +287,10 @@ int main() {
   RUN_TEST(TestBox);
   RUN_TEST(TestFirst);
   RUN_TEST(TestAll);
+  RUN_TEST(TestReady);
+  RUN_TEST(TestValue);
+  RUN_TEST(TestJust);
+  RUN_TEST(TestSpawn);
 
   return EXIT_SUCCESS;
 }

@@ -31,7 +31,7 @@ namespace exe::future {
 
 namespace core {
 
-template <concepts::FutureValue V>
+template <future::concepts::FutureValue V>
 struct IBoxedThunk {
  protected:
   // Lifetime cannot be controlled via IBoxedThunk<> *
@@ -43,7 +43,7 @@ struct IBoxedThunk {
   virtual void Drop() && noexcept = 0;
 };
 
-template <concepts::FutureValue V>
+template <future::concepts::FutureValue V>
 class [[nodiscard]] BoxHolder {
  private:
   IBoxedThunk<V> *box_;
