@@ -17,63 +17,47 @@
 
 В настоящем репозитории код **не тестировался, определённо содержит ошибки и не предназначен для использования**, но пишется для улучшения и отработки автором знания языка C++, а также служит демонстрацией применения этого знания
 
+Репозиторий находится в активной разработке (WIP), поэтому структура и содержимое могут со временем изменяться. Наиболее интересный с точки зрения применения возможностей языка C++ код можно найти [здесь](https://github.com/ddvamp/exe/tree/main/include/exe/future2)
+
 ---
 
 ## About
 
 Учебный фреймворк для написания многопоточных масштабируемых concurrency приложений, созданный на основе выполнения заданий из курса "Теория и практика многопоточной синхронизации" за авторством [Романа Липовского](https://gitlab.com/Lipovsky), MIPT
 
-**Написан с использованием C++23**
+**Написан с использованием C++26**
 
 ## Structure
 
-- ***[scheduler](https://github.com/ddvamp/exe/tree/main/exe/runtime)***
-  - inline (выполняет задачи на месте)
-  - blocking static threadpool
-  - [ ] fast work-stealing threadpool
-  - strand ([сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/))
-- ***[fiber](https://github.com/ddvamp/exe/tree/main/exe/fiber)***
-    - API & implementation
+- ***[runtime](https://github.com/ddvamp/exe/tree/main/include/exe/runtime)*** - среда исполнения
+  - schedulers - управление задачами
+    - inline - выполняет задачи на месте
+    - blocking static threadpool
+    - [ ] fast work-stealing threadpool
+    - strand - [сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/)
+    - manual loop - ручной запуск задач
+  - [] timers - управление таймерами
+- ***[fiber](https://github.com/ddvamp/exe/tree/main/include/exe/fiber)***
+  - API & implementation
   - synchronization primitives
-    - mutex
-    - shared mutex
-    - condition variable
-    - wait group ([позволяет дождаться окончания задач и синхронизироваться с ними](https://gobyexample.com/waitgroups))
-    - wait point (обобщенная wait group)
   - [ ] future support
-- ***[(go) channels for fiber](https://github.com/ddvamp/exe/blob/main/exe/fiber/sync/channel.hpp)*** (имплементация каналов из языка go)
+- ***[(go) channels for fiber](https://github.com/ddvamp/exe/blob/main/exe/fiber/sync/channel.hpp)*** - имплементация каналов из языка go
   - implementation
-  - [ ] select
-- ***[(functional) future](https://github.com/ddvamp/exe/tree/main/exe/future/fun)*** (фьючи в функциональном стиле)
-  - constructors (пораждают фьючи)
-    - contract (канал future-promise)
-    - value (создать готовое значение)
-    - just (создать готовое событие)
-    - failure (создать готовую ошибку)
-    - submit (отправить вычисление в scheduler и получить его будущий результат)
-  - combinators (преобразуют одни фьючи в другие)
-    - seq
-      - via (установить, где будет значение будет потреблено)
-      - inLine (использовать значение на месте)
-      - map (преобразовать будущее значение)
-      - flatten (получить фьючу, которая сама представлена будущим значением)
-      - flatMap (map + flatten)
-      - andThen (асинхронный try)
-      - orElse (асинхронный catch)
-    - par
-      - first (получить первое значение или последнюю ошибку)
-      - all (получить все значения или первую ошибку)
-  - terminators (поглощают фьючи)
-    - apply (установить способ использования будущего значения)
-    - get (синхронно дождаться будущего значения)
-    - detach (сбросить будущее значение)
+  - select
+- ***[(functional) future](https://github.com/ddvamp/exe/tree/main/exe/future/fun)*** - фьючи в функциональном стиле
+  - constructors - создают фьючи
+  - combinators - преобразуют одни фьючи в другие
+    - seq - последовательные комбинаторы
+    - par - параллельные комбинаторы
+  - terminators - поглощают фьючи
+- ***[lazy future](https://github.com/ddvamp/exe/tree/main/exe/future2)*** - ленивые фьючи (осуществляют выделение памяти и синхронизацию потоков лишь при необходимости)
 
 ## Requirements
 
-1. C++23
-2. gcc (trunk)
+1. C++26
+2. clang++-21/libstdc++
 3. x86-64/sysv/elf
-4. POSIX
+4. Linux
 
 ## Configuration
 
