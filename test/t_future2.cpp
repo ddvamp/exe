@@ -134,10 +134,10 @@ int TestFuture2() {
   auto t3 = ::std::move(t2).Extend(thunk::Map([](int v) { return v + 5; }),
                                    thunk::Map([](int) { return 0.0; }));
 
-  detail::ThunkData d1{0};
+  ThunkData d1{0};
   auto d2 = ::std::move(d1).Extend(0);
   auto d3 = ::std::move(d2).Extend(0, 0, 0);
-  auto d4 = ::std::move(d3).Extend(detail::ThunkData{0.0});
+  auto d4 = ::std::move(d3).Extend(ThunkData{0.0});
 
   return EXIT_SUCCESS;
 }
