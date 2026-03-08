@@ -11,12 +11,17 @@
 #ifndef DDVAMP_EXE_RESULT_RESULT_HPP_INCLUDED_
 #define DDVAMP_EXE_RESULT_RESULT_HPP_INCLUDED_ 1
 
+#include <exe/result/trait/result.hpp>
+
 #include <expected>
 
 namespace exe {
 
 template <typename Value, typename Error>
 using Result = ::std::expected<Value, Error>;
+
+template <typename V, typename E>
+inline constexpr bool trait::Result<Result<V, E>> = true;
 
 } // namespace exe
 
