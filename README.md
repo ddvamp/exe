@@ -50,7 +50,7 @@
     - seq - последовательные комбинаторы
     - par - параллельные комбинаторы
   - terminators - поглощают фьючи
-- ***[lazy future](https://github.com/ddvamp/exe/tree/main/include/exe/future2)*** - ленивые фьючи (осуществляют выделение памяти и синхронизацию потоков лишь при необходимости)
+- ***[(Wip) lazy future](https://github.com/ddvamp/exe/tree/main/include/exe/future2)*** - ленивые фьючи (осуществляют выделение памяти и синхронизацию потоков лишь при необходимости)
 
 ## Requirements
 
