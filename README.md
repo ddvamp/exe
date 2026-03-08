@@ -36,21 +36,21 @@
     - [ ] fast work-stealing threadpool
     - strand - [сериализует асинхронные задачи без блокировки](https://www.crazygaze.com/blog/2016/03/17/how-strands-work-and-why-you-should-use-them/)
     - manual loop - ручной запуск задач
-  - [] timers - управление таймерами
+  - [ ] timers - управление таймерами
 - ***[fiber](https://github.com/ddvamp/exe/tree/main/include/exe/fiber)***
   - API & implementation
   - synchronization primitives
   - [ ] future support
-- ***[(go) channels for fiber](https://github.com/ddvamp/exe/blob/main/exe/fiber/sync/channel.hpp)*** - имплементация каналов из языка go
-  - implementation
-  - select
-- ***[(functional) future](https://github.com/ddvamp/exe/tree/main/exe/future/fun)*** - фьючи в функциональном стиле
+- ***(go) channels for fiber*** - имплементация каналов из языка go
+  - [implementation](https://github.com/ddvamp/exe/blob/main/include/exe/fiber/sync/channel.hpp)
+  - [select](https://github.com/ddvamp/exe/blob/main/include/exe/fiber/sync/select.hpp)
+- ***[(functional) future](https://github.com/ddvamp/exe/tree/main/include/exe/future/fun)*** - фьючи в функциональном стиле
   - constructors - создают фьючи
   - combinators - преобразуют одни фьючи в другие
     - seq - последовательные комбинаторы
     - par - параллельные комбинаторы
   - terminators - поглощают фьючи
-- ***[lazy future](https://github.com/ddvamp/exe/tree/main/exe/future2)*** - ленивые фьючи (осуществляют выделение памяти и синхронизацию потоков лишь при необходимости)
+- ***[lazy future](https://github.com/ddvamp/exe/tree/main/include/exe/future2)*** - ленивые фьючи (осуществляют выделение памяти и синхронизацию потоков лишь при необходимости)
 
 ## Requirements
 
