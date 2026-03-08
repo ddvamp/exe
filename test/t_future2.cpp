@@ -199,6 +199,34 @@ int TestFirst() {
   return (cons.res.value_or(1) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
+int TestAll() {
+  using namespace exe::future;
+
+  auto t = All(Thunk(thunk::Ready(0)),
+               Thunk(thunk::Ready(1)),
+               Thunk(thunk::Ready(2)),
+               Thunk(thunk::Ready(3)),
+               Thunk(thunk::Ready(4)),
+               Thunk(thunk::Ready(5)));
+
+  using R = trait::ValueOf<decltype(t)>;
+
+  Consumer<R> cons;
+  auto comp = ::std::move(t).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  if (!cons.res.has_value()) {
+    return EXIT_FAILURE;
+  }
+
+  auto success = [&cons]<::std::size_t ...Is>(::std::index_sequence<Is...>) {
+    auto &[...val] = *cons.res;
+    return (... && (val == Is));
+  }(::std::make_index_sequence<6>{});
+
+  return success ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
 } // namespace
 
 #define RUN_TEST(test) UTIL_CHECK(test() == EXIT_SUCCESS, #test);
@@ -210,6 +238,7 @@ int main() {
   RUN_TEST(TestFlatten);
   RUN_TEST(TestBox);
   RUN_TEST(TestFirst);
+  RUN_TEST(TestAll);
 
   return EXIT_SUCCESS;
 }

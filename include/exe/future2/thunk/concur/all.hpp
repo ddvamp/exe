@@ -1,6 +1,6 @@
 //
-// first.hpp
-// ~~~~~~~~~
+// all.hpp
+// ~~~~~~~
 //
 // Copyright (C) 2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,8 +8,8 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_FUTURE_THUNK_CONCUR_FIRST_HPP_INCLUDED_
-#define DDVAMP_EXE_FUTURE_THUNK_CONCUR_FIRST_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_FUTURE_THUNK_CONCUR_ALL_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_THUNK_CONCUR_ALL_HPP_INCLUDED_ 1
 
 #include <exe/future2/cancel.hpp>
 #include <exe/future2/scheduler.hpp>
@@ -27,6 +27,8 @@
 #include <util/mm/release_sequence.hpp>
 
 #include <atomic>
+#include <cstddef>
+#include <optional>
 #include <tuple>
 #include <utility>
 
@@ -36,43 +38,59 @@ namespace thunk {
 
 namespace detail {
 
-template <typename Thunk, typename First>
-struct FirstBuilder {
-  First &f;
+template <typename Thunk, typename All, ::std::size_t I>
+struct AllBuilder {
+  All &a;
   Thunk &p;
 
-  using R = trait::Computation<Thunk, core::Proxy<First>>;
+  using R = trait::Computation<Thunk, core::Redirect<All, I>>;
 
   operator R () && noexcept {
-    return R({f}, ::std::move(p));
+    return R({a}, ::std::move(p));
   }
 };
 
 template <typename ...Thunks>
-using FirstResult = trait::ValueOf<Thunks...[0]>;
+using AllResult = ::std::tuple<trait::ValueOf<Thunks>...>;
 
 } // namespace detail
 
 template <concepts::Thunk ...Producers>
-requires (sizeof...(Producers) > 1 &&
-          ::util::is_all_same_v<trait::ValueOf<Producers>...>)
-class [[nodiscard]] First final
-    : public core::IBoxedThunk<detail::FirstResult<Producers...>>,
+requires (sizeof...(Producers) > 1)
+class [[nodiscard]] All final
+    : public core::IBoxedThunk<detail::AllResult<Producers...>>,
       private cancel::CancelSource,
       private cancel::HandlerBase {
  private:
-  using ValueType = detail::FirstResult<Producers...>;
+  using ValueType = detail::AllResult<Producers...>;
 
-  template <typename Producer>
-  using Comp = trait::Computation<Producer, core::Proxy<First>>;
+  template <::std::size_t I>
+  using ValueOf = trait::ValueOf<Producers...[I]>;
+
+  template <typename Producer, ::std::size_t I>
+  using Comp = trait::Computation<Producer, core::Redirect<All, I>>;
+
+  template <::std::size_t ...Is>
+  static ::std::tuple<Comp<Producers, Is>...> MakeComps(
+      ::std::index_sequence<Is...>, All &all, Producers &&...ps) noexcept {
+    return {detail::AllBuilder<Producers, All, Is>{all, ps}...};
+  }
+
+  using ISeq = ::std::index_sequence_for<Producers...>;
+
+  using Comps = decltype(MakeComps(::std::declval<ISeq>(),
+                                   ::std::declval<All &>(),
+                                   ::std::declval<Producers>()...));
 
   IConsumer<ValueType> *cons_;
   Scheduler *sched_;
+  ::std::tuple<::std::optional<trait::ValueOf<Producers>>...> results_;
 
   // [TODO]: ?Replace with inheritance
-  ::std::tuple<Comp<Producers>...> comps_;
+  Comps comps_;
 
   ::std::atomic_bool first_ = true;
+  ::std::atomic_size_t live_ = sizeof...(Producers);
   ::std::atomic_size_t ref_cnt_ = 1 + sizeof...(Producers);
 
   // To guarantee the expected implementation
@@ -80,8 +98,8 @@ class [[nodiscard]] First final
   static_assert(::std::atomic_size_t::is_always_lock_free);
 
  public:
-  First(Producers &&...prods) noexcept
-      : comps_{detail::FirstBuilder{*this, prods}...} {}
+  All(Producers &&...prods) noexcept
+      : comps_(MakeComps(ISeq{}, *this, ::std::move(prods)...)) {}
 
   /* IBoxedThunk */
 
@@ -101,16 +119,36 @@ class [[nodiscard]] First final
 
   /* Continuation */
 
-  void Continue(ValueType &&v, State) && noexcept {
-    if (TryEarly()) [[unlikely]] {
-      ::std::move(*cons_).Continue(::std::move(v), {.sched = *sched_});
+  template <::std::size_t I>
+  void Continue(ValueOf<I> &&v, State) && noexcept {
+    ::std::get<I>(results_).emplace(::std::move(v));
+
+    if (TryLate()) [[unlikely]] {
+      ::std::move(*cons_).Continue(MakeResult(), {.sched = *sched_});
       RequestCancel();
     }
 
     Release();
   }
 
-  void Cancel(State) && noexcept {
+  template <::std::size_t>
+  void Cancel(State s) && noexcept {
+    CancelImpl(s);
+  }
+
+  cancel::CancelSource &CancelSource() noexcept {
+    return *this;
+  }
+
+ private:
+  ValueType MakeResult() noexcept {
+    ::util::sync_with_release_sequences(live_);
+
+    auto &[...opt_vals] = results_;
+    return {*::std::move(opt_vals)...};
+  }
+
+  void CancelImpl(State) noexcept {
     UTIL_ASSERT(CancelRequested(), "Upstream Cancel without request");
 
     if (TryEarly()) [[unlikely]] {
@@ -120,11 +158,6 @@ class [[nodiscard]] First final
     Release();
   }
 
-  cancel::CancelSource &CancelSource() noexcept {
-    return *this;
-  }
-
- private:
   // cancel::IHandler
   void OnCancelRequested() && noexcept override {
     RequestCancel();
@@ -133,6 +166,10 @@ class [[nodiscard]] First final
 
   [[nodiscard]] bool TryEarly() noexcept {
     return first_.exchange(false, ::std::memory_order_relaxed);
+  }
+
+  [[nodiscard]] bool TryLate() noexcept {
+    return live_.fetch_sub(1, ::std::memory_order_release) == 1;
   }
 
   void Release() noexcept {
@@ -151,10 +188,10 @@ class [[nodiscard]] First final
 
 // [TODO]: Move to future/combine/
 template <::util::rvalue_deduced ...Producers>
-auto First(Producers &&...prods) {
-  return Thunk(thunk::Box(::new thunk::First(::std::move(prods)...)));
+auto All(Producers &&...prods) {
+  return Thunk(thunk::Box(::new thunk::All(::std::move(prods)...)));
 }
 
 } // namespace exe::future
 
-#endif /* DDVAMP_EXE_FUTURE_THUNK_CONCUR_FIRST_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_FUTURE_THUNK_CONCUR_ALL_HPP_INCLUDED_ */
