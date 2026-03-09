@@ -76,6 +76,60 @@ struct Mapper {
   }
 };
 
+int TestUnify() {
+  using namespace exe::future;
+
+  {
+    auto v = core::UnifyReturnInvoke([] {});
+    static_assert(::std::is_same_v<exe::Unit, decltype(v)>);
+  }
+
+  {
+    auto v = core::UnifyReturnInvoke([](int) {}, 0);
+    static_assert(::std::is_same_v<exe::Unit, decltype(v)>);
+  }
+
+  {
+    core::UnifyArgInvoke([](exe::Unit) {}, exe::Unit{});
+  }
+
+  {
+    core::UnifyArgInvoke([] {}, exe::Unit{});
+  }
+
+  {
+    auto v = core::UnifyInvoke([] {});
+    static_assert(::std::is_same_v<exe::Unit, decltype(v)>);
+  }
+
+  {
+    auto v = core::UnifyInvoke([](int) {}, 0);
+    static_assert(::std::is_same_v<exe::Unit, decltype(v)>);
+  }
+
+  {
+    auto v = core::UnifyInvoke([](exe::Unit) { return 0; }, exe::Unit{});
+    static_assert(::std::is_same_v<int, decltype(v)>);
+  }
+
+  {
+    auto v = core::UnifyInvoke([] { return 0; }, exe::Unit{});
+    static_assert(::std::is_same_v<int, decltype(v)>);
+  }
+
+  {
+    auto v = core::UnifyInvoke([](exe::Unit) {}, exe::Unit{});
+    static_assert(::std::is_same_v<exe::Unit, decltype(v)>);
+  }
+
+  {
+    auto v = core::UnifyInvoke([] {}, exe::Unit{});
+    static_assert(::std::is_same_v<exe::Unit, decltype(v)>);
+  }
+
+  return EXIT_SUCCESS;
+}
+
 int TestFuture() {
   using namespace exe::future;
 
@@ -256,7 +310,7 @@ int TestJust() {
 
   auto t = Just();
 
-  Consumer<Unit> cons;
+  Consumer<exe::Unit> cons;
   auto comp = ::std::move(t).Materialize(cons);
   ::std::move(comp).Start(exe::runtime::GetInline());
 
@@ -286,7 +340,7 @@ int TestPipe() {
   auto t4 = First(::std::move(t1), ::std::move(t2), ::std::move(t3));
   auto t5 = All(::std::move(t4), Just());
 
-  Consumer<::std::tuple<int, Unit>> cons;
+  Consumer<::std::tuple<int, exe::Unit>> cons;
   auto comp = ::std::move(t5).Materialize(cons);
   ::std::move(comp).Start(sched);
 
@@ -302,6 +356,7 @@ int TestPipe() {
 #define RUN_TEST(test) UTIL_CHECK(test() == EXIT_SUCCESS, #test);
 
 int main() {
+  RUN_TEST(TestUnify);
   RUN_TEST(TestFuture);
   RUN_TEST(TestFuture2);
   RUN_TEST(TestSequence);

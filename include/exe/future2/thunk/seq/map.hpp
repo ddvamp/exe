@@ -13,9 +13,8 @@
 
 #include <exe/future2/scheduler.hpp>
 #include <exe/future2/concept/valid_input.hpp>
-#include <exe/future2/core/adapt_call.hpp>
-#include <exe/future2/core/concept/adapt_call.hpp>
-#include <exe/future2/core/trait/adapt_call.hpp>
+#include <exe/future2/core/unify_invoke.hpp>
+#include <exe/future2/core/trait/unify_invoke.hpp>
 #include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/state.hpp>
@@ -31,13 +30,13 @@ namespace exe::future::thunk {
 namespace detail {
 
 template <typename Mapper, typename InputType>
-using MapResult = core::trait::AdaptCallResult<Mapper, InputType>;
+using MapResult = core::trait::UnifyInvokeResult<Mapper, InputType>;
 
 // For lazy instantiation of steps
 template <typename Mapper, typename InputType>
 concept ValidInput =
     concepts::FutureValue<InputType> &&
-    core::concepts::AdaptCallInvocable<Mapper, InputType> &&
+    core::trait::UnifyInvocable<Mapper, InputType> &&
     concepts::FutureValue<MapResult<Mapper, InputType>>;
 
 } // namespace detail
@@ -103,8 +102,8 @@ class [[nodiscard]] Map {
 
       try {
         ::std::move(cons_).Continue(
-            core::AdaptCall(auto(::std::move(data_).mapper_),
-                            ::std::move(v)),
+            core::UnifyInvoke(auto(::std::move(data_).mapper_),
+                              ::std::move(v)),
             s);
       } catch (...) {
         ::std::terminate(); // [TODO]: log

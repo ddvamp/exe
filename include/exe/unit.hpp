@@ -13,10 +13,10 @@
 
 #include <util/utility.hpp>
 
-namespace exe::future {
+namespace exe {
 
 using Unit = ::util::unit_t;
 
-} // namespace exe::future
+} // namespace exe
 
 #endif /* DDVAMP_EXE_UNIT_HPP_INCLUDED_ */
