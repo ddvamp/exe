@@ -1,6 +1,6 @@
 //
-// adapt_call.hpp
-// ~~~~~~~~~~~~~~
+// unify_invoke.hpp
+// ~~~~~~~~~~~~~~~~
 //
 // Copyright (C) 2026 Artyom Kolpakov <ddvamp007@gmail.com>
 //
@@ -8,8 +8,8 @@
 // See file LICENSE or <https://www.gnu.org/licenses/> for details.
 //
 
-#ifndef DDVAMP_EXE_FUTURE_CORE_ADAPT_CALL_HPP_INCLUDED_
-#define DDVAMP_EXE_FUTURE_CORE_ADAPT_CALL_HPP_INCLUDED_ 1
+#ifndef DDVAMP_EXE_FUTURE_CORE_UNIFY_INVOKE_HPP_INCLUDED_
+#define DDVAMP_EXE_FUTURE_CORE_UNIFY_INVOKE_HPP_INCLUDED_ 1
 
 #include <exe/unit.hpp>
 #include <exe/future2/core/trait/unify_invoke.hpp>
@@ -60,4 +60,4 @@ inline constexpr trait::UnifyInvokeResult<Fn, Args...> UnifyInvoke(
 
 } // namespace exe::future::core
 
-#endif /* DDVAMP_EXE_FUTURE_CORE_ADAPT_CALL_HPP_INCLUDED_ */
+#endif /* DDVAMP_EXE_FUTURE_CORE_UNIFY_INVOKE_HPP_INCLUDED_ */
