@@ -19,44 +19,58 @@
 
 namespace exe::future::core {
 
-template <typename Fn, typename ...Args>
-inline constexpr trait::UnifyArgInvokeResult<Fn, Args...> UnifyArgInvoke(
-    Fn &&fn, Args &&...args)
-    noexcept (trait::UnifyArgNothrowInvocable<Fn, Args...>) {
-  if constexpr (trait::UnifyArg<Fn, Args...>) {
-    return ::std::invoke(::std::forward<Fn>(fn));
-  } else {
-    return ::std::invoke(::std::forward<Fn>(fn), ::std::forward<Args>(args)...);
+struct UnifyArgInvoker {
+  template <typename Fn, typename ...Args>
+  inline static constexpr trait::UnifyArgInvokeResult<Fn, Args...>
+      operator() (Fn &&fn, Args &&...args)
+      noexcept (trait::UnifyArgNothrowInvocable<Fn, Args...>) {
+    if constexpr (trait::UnifyArg<Fn, Args...>) {
+      return ::std::invoke(::std::forward<Fn>(fn));
+    } else {
+      return ::std::invoke(::std::forward<Fn>(fn),
+                           ::std::forward<Args>(args)...);
+    }
   }
-}
+};
+
+inline constexpr UnifyArgInvoker UnifyArgInvoke{};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Fn, typename ...Args>
-inline constexpr trait::UnifyReturnInvokeResult<Fn, Args...> UnifyReturnInvoke(
-    Fn &&fn, Args &&...args)
-    noexcept (trait::UnifyReturnNothrowInvocable<Fn, Args...>) {
-  if constexpr (trait::UnifyReturn<Fn, Args...>) {
-    ::std::invoke(::std::forward<Fn>(fn), ::std::forward<Args>(args)...);
-    return Unit{};
-  } else {
-    return ::std::invoke(::std::forward<Fn>(fn), ::std::forward<Args>(args)...);
+struct UnifyReturnInvoker {
+  template <typename Fn, typename ...Args>
+  inline static constexpr trait::UnifyReturnInvokeResult<Fn, Args...>
+      operator() (Fn &&fn, Args &&...args)
+      noexcept (trait::UnifyReturnNothrowInvocable<Fn, Args...>) {
+    if constexpr (trait::UnifyReturn<Fn, Args...>) {
+      ::std::invoke(::std::forward<Fn>(fn), ::std::forward<Args>(args)...);
+      return Unit{};
+    } else {
+      return ::std::invoke(::std::forward<Fn>(fn),
+                           ::std::forward<Args>(args)...);
+    }
   }
-}
+};
+
+inline constexpr UnifyReturnInvoker UnifyReturnInvoke{};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Fn, typename ...Args>
-inline constexpr trait::UnifyInvokeResult<Fn, Args...> UnifyInvoke(
-    Fn &&fn, Args &&...args)
-    noexcept (trait::UnifyNothrowInvocable<Fn, Args...>) {
-  if constexpr (trait::UnifyArg<Fn, Args...>) {
-    return core::UnifyReturnInvoke(::std::forward<Fn>(fn));
-  } else {
-    return core::UnifyReturnInvoke(::std::forward<Fn>(fn),
-                                   ::std::forward<Args>(args)...);
+struct UnifyInvoker {
+  template <typename Fn, typename ...Args>
+  inline static constexpr trait::UnifyInvokeResult<Fn, Args...>
+      operator() (Fn &&fn, Args &&...args)
+      noexcept (trait::UnifyNothrowInvocable<Fn, Args...>) {
+    if constexpr (trait::UnifyArg<Fn, Args...>) {
+      return UnifyReturnInvoke(::std::forward<Fn>(fn));
+    } else {
+      return UnifyReturnInvoke(::std::forward<Fn>(fn),
+                               ::std::forward<Args>(args)...);
+    }
   }
-}
+};
+
+inline constexpr UnifyInvoker UnifyInvoke{};
 
 } // namespace exe::future::core
 
