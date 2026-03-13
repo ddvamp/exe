@@ -121,7 +121,7 @@ class ExecutionCoreBase {
   auto &CreateStep() noexcept {
     using Step = Step<I>;
 
-    return *::new (buffer_) Step({this}, data_.template Get<I>());
+    return *::new (buffer_) Step({*this}, data_.template Get<I>());
   }
 
   template <::std::size_t I>
