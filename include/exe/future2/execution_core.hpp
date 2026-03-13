@@ -31,7 +31,7 @@ namespace exe::future {
 
 namespace detail {
 
-template <::std::size_t I, typename ...>
+template <::std::size_t, typename ...>
 struct ExecutionCoreRedirect {
   void *core_;
 
@@ -40,49 +40,34 @@ struct ExecutionCoreRedirect {
   cancel::CancelSource &CancelSource() & noexcept;
 };
 
-template <::std::size_t I, typename ...Ts>
-using Resource = Ts...[I];
-
-template <::std::size_t I, typename Maker, typename ...Combinators>
-using ExecutionCoreStep
-    = Step<Traits<Maker, Combinators...>,
-           I,
-           ExecutionCoreRedirect<I, Maker, Combinators...>>;
-
-template <::std::size_t I, typename Maker, typename ...Combinators>
-inline constexpr bool CorrectStep
-    = ::std::is_nothrow_constructible_v<
-          ExecutionCoreStep<I, Maker, Combinators...>,
-          ExecutionCoreRedirect<I, Maker, Combinators...>,
-          Resource<I> &> &&
-      ::std::is_nothrow_destructible_v<
-          ExecutionCoreStep<I, Maker, Combinators...>>;
-
 template <typename ...>
 inline constexpr bool CorrectCore = false;
 
-template <::std::size_t ...Is, typename Maker, typename ...Combinators>
-inline constexpr bool CorrectCore<::std::index_sequence<Is...>,
-                                  Maker,
-                                  Combinators...>
-    = (... && CorrectStep<Is, Maker, Combinators...>);
+template <::std::size_t I, typename ...Ts>
+using Resource = Ts...[I];
 
 } // namespace detail
+
+////////////////////////////////////////////////////////////////////////////////
 
 // [TODO]: Variant-like storage
 template <typename ...Ts>
 struct VariadicStorage;
 
-template <typename Maker, typename ...Combinators>
+namespace concepts {
+
+template <typename Consumer, typename Maker, typename ...Combinators>
 concept CorrectCore
     = detail::CorrectCore<::std::index_sequence<1 + sizeof...(Combinators)>,
-                          Maker,
-                          Combinators...>;
+                          Consumer, Maker, Combinators...>;
+
+} // namespace concepts
 
 template <typename Consumer, typename Maker, typename ...Combinators>
 requires (concepts::Continuation<
               Consumer,
-              trait::ValueOf<Traits<Maker, Combinators...>>>)
+              trait::ValueOf<Traits<Maker, Combinators...>>> &&
+          concepts::CorrectCore<Consumer, Maker, Combinators...>)
 class ExecutionCore {
  private:
   using Data = ThunkData<Maker, Combinators...>;
@@ -170,9 +155,9 @@ class ExecutionCore {
     using Step = Step<I>;
 
     // [TODO]: Better
-    static_assert(::std::is_nothrow_constructible_v<
-                      Step, Redirect<I>, Resource<I> &>);
-    static_assert(::std::is_nothrow_destructible_v<Step>);
+    // static_assert(::std::is_nothrow_constructible_v<
+    //                   Step, Redirect<I>, Resource<I> &>);
+    // static_assert(::std::is_nothrow_destructible_v<Step>);
 
     return *::new (buffer_) Step({this}, data_.template Get<I>());
   }
@@ -185,26 +170,53 @@ class ExecutionCore {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 namespace detail {
 
 template <::std::size_t I, typename ...Ts>
 void ExecutionCoreRedirect<I, Ts...>::Continue(auto &&v, State s) && noexcept {
   auto &core = *static_cast<ExecutionCore<Ts...> *>(core_);
-  ::std::move(core).Continue(::std::move(v), s);
+  ::std::move(core).template Continue<I>(::std::move(v), s);
 }
 
 template <::std::size_t I, typename ...Ts>
 void ExecutionCoreRedirect<I, Ts...>::Cancel(State s) && noexcept {
   auto &core = *static_cast<ExecutionCore<Ts...> *>(core_);
-  ::std::move(core).Cancel(s);
+  ::std::move(core).template Cancel<I>(s);
 }
 
 template <::std::size_t I, typename ...Ts>
 cancel::CancelSource &ExecutionCoreRedirect<I, Ts...>::CancelSource() &
     noexcept {
   auto &core = *static_cast<ExecutionCore<Ts...> *>(core_);
-  core.CancelSource();
+  return core.CancelSource();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <::std::size_t I,
+          typename Consumer, typename Maker, typename ...Combinators>
+using ExecutionCoreStep
+    = Step<Traits<Maker, Combinators...>,
+           I,
+           ExecutionCoreRedirect<I, Consumer, Maker, Combinators...>>;
+
+template <::std::size_t I,
+          typename Consumer, typename Maker, typename ...Combinators>
+inline constexpr bool CorrectStep
+    = ::std::is_nothrow_constructible_v<
+          ExecutionCoreStep<I, Consumer, Maker, Combinators...>,
+          ExecutionCoreRedirect<I, Consumer, Maker, Combinators...>,
+          Resource<I> &> &&
+      ::std::is_nothrow_destructible_v<
+          ExecutionCoreStep<I, Consumer, Maker, Combinators...>>;
+
+template <::std::size_t ...Is,
+          typename Consumer, typename Maker, typename ...Combinators>
+inline constexpr bool CorrectCore<::std::index_sequence<Is...>,
+                                  Consumer, Maker, Combinators...>
+    = (... && CorrectStep<Is, Consumer, Maker, Combinators...>);
 
 } // namespace detail
 
