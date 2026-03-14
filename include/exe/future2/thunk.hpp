@@ -45,6 +45,9 @@ class [[nodiscard]] Thunk {
   using Data = ThunkData<Maker, Combinators...>;
   using Traits = Traits<Maker, Combinators...>;
 
+  template <typename Consumer>
+  using Core = ExecutionCore<Consumer, Maker, Combinators...>;
+
   template <typename ...Cs>
   using ExtendedThunk = Thunk<Maker, Combinators..., Cs...>;
 
@@ -67,10 +70,39 @@ class [[nodiscard]] Thunk {
   using ValueType = trait::ValueOf<Traits>;
 
   template <concepts::Consumer<ValueType> Consumer>
-  class MakeStep;
+  class MakeStep : private Core<Consumer> {
+   private:
+    using Base = Core<Consumer>;
+
+   public:
+    MakeStep(Consumer &&c, Thunk &t) noexcept
+        : Base(::std::forward<Consumer>(c), t.data_) {}
+
+    using Base::Start;
+  };
 
   template <concepts::Consumer<ValueType> Consumer>
-  class Computation;
+  class Computation : private Data,
+                      private Core<Consumer> {
+   private:
+    using Base = Core<Consumer>;
+
+   public:
+    ~Computation() = default;
+
+    Computation(Computation const &) = delete;
+    void operator= (Computation const &) = delete;
+
+    Computation(Computation &&) = delete;
+    void operator= (Computation &&) = delete;
+
+   public:
+    Computation(Consumer &&c, Thunk &&t) noexcept
+        : Data(::std::move(t).data_)
+        , Base(::std::forward<Consumer>(c), *this) {}
+
+    using Base::Start;
+  };
 
   template <typename Consumer>
   inline Computation<Consumer> Materialize(Consumer &&c) && noexcept {
@@ -94,55 +126,6 @@ class [[nodiscard]] Thunk {
 
 template <typename ...Ts>
 inline constexpr bool trait::Thunk<Thunk<Ts...>> = true;
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <concepts::ThunkResource Maker,
-          concepts::ThunkResource ...Combinators>
-requires (concepts::CorrectPipeline<Maker, Combinators...>)
-template <concepts::Consumer<
-              trait::ValueOf<Thunk<Maker, Combinators...>>> Consumer>
-class Thunk<Maker, Combinators...>::MakeStep
-    : private ExecutionCore<Consumer, Maker, Combinators...> {
- private:
-  using Base = MakeStep::ExecutionCore;
-
- public:
-  MakeStep(Consumer &&c, Thunk &t) noexcept
-      : Base(::std::forward<Consumer>(c), t.data_) {}
-
-  using Base::Start;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <concepts::ThunkResource Maker,
-          concepts::ThunkResource ...Combinators>
-requires (concepts::CorrectPipeline<Maker, Combinators...>)
-template <concepts::Consumer<
-              trait::ValueOf<Thunk<Maker, Combinators...>>> Consumer>
-class Thunk<Maker, Combinators...>::Computation
-    : private Thunk,
-      private ExecutionCore<Consumer, Maker, Combinators...> {
- private:
-  using Base = Computation::ExecutionCore;
-
- public:
-  ~Computation() = default;
-
-  Computation(Computation const &) = delete;
-  void operator= (Computation const &) = delete;
-
-  Computation(Computation &&) = delete;
-  void operator= (Computation &&) = delete;
-
- public:
-  Computation(Consumer &&c, Thunk &&t) noexcept
-      : Thunk(::std::move(t))
-      , Base(::std::forward<Consumer>(c), data_) {}
-
-  using Base::Start;
-};
 
 } // namespace exe::future
 

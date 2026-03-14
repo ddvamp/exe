@@ -16,6 +16,7 @@
 #include <exe/future2/thunk_data.hpp>
 #include <exe/future2/thunk_traits.hpp>
 #include <exe/future2/core/proxy.hpp>
+#include <exe/future2/detail/has_cancel.hpp>
 #include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/state.hpp>
 #include <exe/future2/trait/value_of.hpp>
@@ -168,7 +169,6 @@ class ExecutionCore
     : private detail::ExecutionCoreBase<Consumer, Maker, Combinators...> {
  private:
   using Base = ExecutionCore::ExecutionCoreBase;
-  // detail::ExecutionCoreBase<Consumer, Maker, Combinators...>;
 
  public:
   using Base::Base;
