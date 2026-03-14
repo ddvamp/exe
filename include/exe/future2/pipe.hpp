@@ -13,13 +13,16 @@
 
 #include <exe/future2/thunk.hpp>
 #include <exe/future2/thunk_data.hpp>
+#include <exe/future2/type/future.hpp>
+
+#include <util/concepts.hpp>
 
 namespace exe::future::pipe {
 
 // [TODO]: Better design
-template <concepts::Thunk T, ::util::rvalue_deduced Combinator>
-concepts::Thunk auto operator| (T &&t, Combinator &&c) {
-  return ::std::move(c).Pipe(::std::move(t));
+template <concepts::SomeFuture F, ::util::rvalue_deduced Combinator>
+concepts::SomeFuture auto operator| (F &&f, Combinator &&c) {
+  return ::std::move(c).Pipe(::std::move(f));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

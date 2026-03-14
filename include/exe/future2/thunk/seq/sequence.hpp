@@ -15,9 +15,9 @@
 #include <exe/future2/thunk.hpp>
 #include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/state.hpp>
-#include <exe/future2/model/thunk.hpp>
 #include <exe/future2/trait/make_step.hpp>
 #include <exe/future2/trait/value_of.hpp>
+#include <exe/future2/type/future.hpp>
 
 #include <utility>
 
@@ -67,7 +67,7 @@ struct SequenceCombinator {
 
 } // namespace
 
-template <concepts::Thunk First, concepts::Thunk ...Rest>
+template <concepts::SomeFuture First, concepts::SomeFuture ...Rest>
 requires (sizeof...(Rest) != 0)
 class [[nodiscard]] Sequence {
  private:

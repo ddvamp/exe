@@ -17,10 +17,10 @@
 #include <exe/future2/core/proxy.hpp>
 #include <exe/future2/model/consumer.hpp>
 #include <exe/future2/model/state.hpp>
-#include <exe/future2/model/thunk.hpp>
 #include <exe/future2/thunk/seq/box.hpp>
 #include <exe/future2/trait/computation.hpp>
 #include <exe/future2/trait/value_of.hpp>
+#include <exe/future2/type/future.hpp>
 
 #include <util/debug/assert.hpp>
 #include <util/mm/release_sequence.hpp>
@@ -45,20 +45,16 @@ struct FirstBuilder {
   }
 };
 
-template <typename ...Thunks>
-using FirstResult = trait::ValueOf<Thunks...[0]>;
-
 } // namespace detail
 
-template <concepts::Thunk ...Producers>
-requires (sizeof...(Producers) > 1 &&
-          ::util::is_all_same_v<trait::ValueOf<Producers>...>)
+template <concepts::SomeFuture F, concepts::Future<trait::ValueOf<F>> ...Fs>
+requires (sizeof...(Fs) != 0)
 class [[nodiscard]] First final
-    : public core::IBoxedThunk<detail::FirstResult<Producers...>>,
+    : public core::IBoxedThunk<trait::ValueOf<F>>,
       private cancel::CancelSource,
       private cancel::HandlerBase {
  private:
-  using ValueType = detail::FirstResult<Producers...>;
+  using ValueType = trait::ValueOf<F>;
 
   template <typename Producer>
   using Comp = trait::Computation<Producer, core::Proxy<First>>;
@@ -67,22 +63,23 @@ class [[nodiscard]] First final
   Scheduler *sched_;
 
   // [TODO]: ?Replace with inheritance
-  ::std::tuple<Comp<Producers>...> comps_;
+  ::std::tuple<Comp<F>, Comp<Fs>...> comps_;
 
   ::std::atomic_bool first_ = true;
-  ::std::atomic_size_t ref_cnt_ = 1 + sizeof...(Producers);
+  ::std::atomic_size_t ref_cnt_ = 2 + sizeof...(Fs);
 
   // To guarantee the expected implementation
   static_assert(::std::atomic_bool::is_always_lock_free);
   static_assert(::std::atomic_size_t::is_always_lock_free);
 
  public:
-  First(Producers &&...prods) noexcept
-      : comps_{detail::FirstBuilder{*this, prods}...} {}
+  First(F &&f, Fs &&...fs) noexcept
+      : comps_{detail::FirstBuilder{*this, f},
+               detail::FirstBuilder{*this, fs}...} {}
 
   /* IBoxedThunk */
 
-  void Start(IConsumer<ValueType> &c, Scheduler &s) && noexcept final {
+  void Start(IConsumer<ValueType> &c, Scheduler &s) && noexcept override {
     cons_ = &c;
     sched_ = &s;
 
@@ -92,7 +89,7 @@ class [[nodiscard]] First final
     (..., ::std::move(comps).Start(s));
   }
 
-  void Drop() && noexcept final {
+  void Drop() && noexcept override {
     DestroySelf();
   }
 

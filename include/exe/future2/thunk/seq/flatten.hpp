@@ -14,10 +14,10 @@
 #include <exe/future2/concept/valid_input.hpp>
 #include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/state.hpp>
-#include <exe/future2/model/thunk.hpp>
 #include <exe/future2/trait/computation.hpp>
 #include <exe/future2/trait/make_step.hpp>
 #include <exe/future2/trait/value_of.hpp>
+#include <exe/future2/type/future.hpp>
 
 #include <optional>
 #include <utility>
@@ -39,7 +39,7 @@ class [[nodiscard]] Flatten {
   Flatten() = default;
 
   template <typename InputType>
-  inline static constexpr bool ValidInput = concepts::Thunk<InputType>;
+  inline static constexpr bool ValidInput = concepts::SomeFuture<InputType>;
 
   template <concepts::ValidInput<Flatten> InputType>
   using ValueType = trait::ValueOf<InputType>;

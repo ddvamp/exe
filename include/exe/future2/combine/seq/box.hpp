@@ -13,17 +13,17 @@
 
 #include <exe/future2/pipe.hpp>
 #include <exe/future2/thunk.hpp>
-#include <exe/future2/model/thunk.hpp>
 #include <exe/future2/thunk/seq/box.hpp>
+#include <exe/future2/type/future.hpp>
 
 namespace exe::future {
 
 namespace pipe {
 
 struct Box {
-  template <concepts::Thunk T>
-  auto Pipe(T &&t) {
-    return Thunk(thunk::Box(::std::move(t)));
+  template <concepts::SomeFuture F>
+  concepts::SomeFuture auto Pipe(F &&f) {
+    return Thunk(thunk::Box(::std::move(f)));
   }
 };
 

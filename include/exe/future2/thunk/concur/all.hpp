@@ -17,10 +17,10 @@
 #include <exe/future2/core/proxy.hpp>
 #include <exe/future2/model/consumer.hpp>
 #include <exe/future2/model/state.hpp>
-#include <exe/future2/model/thunk.hpp>
 #include <exe/future2/thunk/seq/box.hpp>
 #include <exe/future2/trait/computation.hpp>
 #include <exe/future2/trait/value_of.hpp>
+#include <exe/future2/type/future.hpp>
 
 #include <util/debug/assert.hpp>
 #include <util/mm/release_sequence.hpp>
@@ -47,56 +47,53 @@ struct AllBuilder {
   }
 };
 
-template <typename ...Thunks>
-using AllResult = ::std::tuple<trait::ValueOf<Thunks>...>;
-
 } // namespace detail
 
-template <concepts::Thunk ...Producers>
-requires (sizeof...(Producers) > 1)
+template <concepts::SomeFuture ...Fs>
+requires (sizeof...(Fs) > 1)
 class [[nodiscard]] All final
-    : public core::IBoxedThunk<detail::AllResult<Producers...>>,
+    : public core::IBoxedThunk<::std::tuple<trait::ValueOf<Fs>...>>,
       private cancel::CancelSource,
       private cancel::HandlerBase {
  private:
-  using ValueType = detail::AllResult<Producers...>;
+  using ValueType = ::std::tuple<trait::ValueOf<Fs>...>;
 
   template <::std::size_t I>
-  using ValueOf = trait::ValueOf<Producers...[I]>;
+  using ValueOf = trait::ValueOf<Fs...[I]>;
 
   template <typename Producer, ::std::size_t I>
   using Comp = trait::Computation<Producer, core::Redirect<All, I>>;
 
   template <::std::size_t ...Is>
-  static ::std::tuple<Comp<Producers, Is>...> MakeComps(
-      ::std::index_sequence<Is...>, All &all, Producers &&...ps) noexcept {
-    return {detail::AllBuilder<Producers, All, Is>{all, ps}...};
+  static ::std::tuple<Comp<Fs, Is>...> MakeComps(
+      ::std::index_sequence<Is...>, All &all, Fs &&...fs) noexcept {
+    return {detail::AllBuilder<Fs, All, Is>{all, fs}...};
   }
 
-  using ISeq = ::std::index_sequence_for<Producers...>;
+  using ISeq = ::std::index_sequence_for<Fs...>;
 
   using Comps = decltype(MakeComps(::std::declval<ISeq>(),
                                    ::std::declval<All &>(),
-                                   ::std::declval<Producers>()...));
+                                   ::std::declval<Fs>()...));
 
   IConsumer<ValueType> *cons_;
   Scheduler *sched_;
-  ::std::tuple<::std::optional<trait::ValueOf<Producers>>...> results_;
+  ::std::tuple<::std::optional<trait::ValueOf<Fs>>...> results_;
 
   // [TODO]: ?Replace with inheritance
   Comps comps_;
 
   ::std::atomic_bool first_ = true;
-  ::std::atomic_size_t live_ = sizeof...(Producers);
-  ::std::atomic_size_t ref_cnt_ = 1 + sizeof...(Producers);
+  ::std::atomic_size_t live_ = sizeof...(Fs);
+  ::std::atomic_size_t ref_cnt_ = 1 + sizeof...(Fs);
 
   // To guarantee the expected implementation
   static_assert(::std::atomic_bool::is_always_lock_free);
   static_assert(::std::atomic_size_t::is_always_lock_free);
 
  public:
-  All(Producers &&...prods) noexcept
-      : comps_(MakeComps(ISeq{}, *this, ::std::move(prods)...)) {}
+  All(Fs &&...fs) noexcept
+      : comps_(MakeComps(ISeq{}, *this, ::std::move(fs)...)) {}
 
   /* IBoxedThunk */
 

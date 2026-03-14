@@ -18,7 +18,6 @@
 #include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/future_value.hpp>
 #include <exe/future2/model/state.hpp>
-#include <exe/future2/model/thunk.hpp>
 #include <exe/future2/trait/computation.hpp>
 #include <exe/future2/trait/value_of.hpp>
 #include <exe/future2/type/future.hpp>
@@ -80,7 +79,7 @@ namespace thunk {
 
 namespace detail {
 
-template <concepts::Thunk Boxed>
+template <concepts::SomeFuture Boxed>
 class Box final : public core::IBoxedThunk<trait::ValueOf<Boxed>> {
  private:
   using ValueType = trait::ValueOf<Boxed>;
@@ -184,7 +183,7 @@ class [[nodiscard]] Box {
   };
 };
 
-template <concepts::Thunk T>
+template <concepts::SomeFuture T>
 Box(T) -> Box<trait::ValueOf<T>>;
 
 } // namespace thunk

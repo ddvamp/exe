@@ -13,14 +13,13 @@
 
 #include <exe/future2/thunk.hpp>
 #include <exe/future2/thunk/seq/sequence.hpp>
-
-#include <util/concepts.hpp>
+#include <exe/future2/type/future.hpp>
 
 namespace exe::future {
 
-template <::util::rvalue_deduced ...Ts>
-inline Thunk<thunk::Sequence<Ts...>> Sequence(Ts &&...ts) {
-  return Thunk(thunk::Sequence(::std::move(ts)...));
+template <concepts::SomeFuture ...Fs>
+inline Thunk<thunk::Sequence<Fs...>> Sequence(Fs &&...fs) {
+  return Thunk(thunk::Sequence(::std::move(fs)...));
 }
 
 } // namespace exe::future
