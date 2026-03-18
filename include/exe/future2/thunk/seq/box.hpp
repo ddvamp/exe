@@ -94,12 +94,12 @@ class Box final : public core::IBoxedThunk<trait::ValueOf<Boxed>> {
 
   /* IBoxedThunk */
 
-  void Start(IConsumer<ValueType> &c, Scheduler &s) && noexcept final {
+  void Start(IConsumer<ValueType> &c, Scheduler &s) && noexcept override {
     cons_ = &c;
     ::std::move(comp_).Start(s);
   }
 
-  void Drop() && noexcept final {
+  void Drop() && noexcept override {
     DestroySelf();
   }
 
@@ -169,15 +169,15 @@ class [[nodiscard]] Box {
 
     /* IConsumer */
 
-    void Continue(V &&v, State s) && noexcept final {
+    void Continue(V &&v, State s) && noexcept override {
       ::std::move(cons_).Continue(::std::move(v), s);
     }
 
-    void Cancel(State s) && noexcept final {
+    void Cancel(State s) && noexcept override {
       ::std::move(cons_).Cancel(s);
     }
 
-    cancel::CancelSource &CancelSource() & noexcept final {
+    cancel::CancelSource &CancelSource() & noexcept override {
       return cons_.CancelSource();
     }
   };
