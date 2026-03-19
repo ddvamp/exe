@@ -25,7 +25,6 @@
 #include <util/mm/release_sequence.hpp>
 
 #include <atomic>
-#include <cstddef>
 #include <optional>
 #include <tuple>
 #include <utility>
@@ -34,84 +33,128 @@ namespace exe::future {
 
 namespace detail {
 
-template <concepts::FutureValue V>
-class [[nodiscard]] SharedState final : public core::IBoxedThunk<V>,
-                                        public cancel::CancelSource,
-                                        private cancel::HandlerBase {
+template <typename T>
+class RendezvousState {
  private:
-  ::std::optional<V> result_;
-  ::std::optional<State> state_;
-  IConsumer<V> *consumer_;
+  struct Consumer {
+    IConsumer<T> &c;
+    State s;
+  };
+
+  ::std::optional<T> producer_;
+  ::std::optional<Consumer> consumer_;
   ::concurrency::Rendezvous rendezvous_;
 
-  ::std::atomic_size_t ref_cnt_ = 3;
+ protected:
+  /* Producer */
+
+  void SetValue(T &&v) {
+    producer_.emplace(::std::move(v));
+    TryContinue();
+  }
+
+  void SetCancel() {
+    // producer_ is empty
+    TryCancel();
+  }
+
+  /* Consumer */
+
+  bool SetConsumer(IConsumer<T> &c, Scheduler &s) {
+    consumer_.emplace(c, State{s});
+    return TryContinue();
+  }
+
+ private:
+  bool TryContinue() {
+    if (!rendezvous_.Arrive()) {
+      return false;
+    }
+
+    auto &v = *producer_;
+    auto &[c, s] = *consumer_;
+    ::std::move(c).Continue(::std::move(v), s);
+    return true;
+  }
+
+  void TryCancel() {
+    if (rendezvous_.Arrive()) {
+      auto &[c, s] = *consumer_;
+      ::std::move(c).Cancel(s);
+    }
+  }
+};
+
+template <concepts::FutureValue V>
+class [[nodiscard]] SharedState final : private RendezvousState<V>,
+                                        public cancel::CancelSource,
+                                        public core::IBoxedThunk<V>,
+                                        private cancel::HandlerBase {
+ private:
+  using Base = RendezvousState<V>;
+
+  ::std::atomic_size_t ref_cnt_ = 2;
 
   // To guarantee the expected implementation
   static_assert(::std::atomic_size_t::is_always_lock_free);
 
  public:
-  /* Producer */
+  /* Promise */
 
   void SetValue(V &&v) noexcept {
-    result_.emplace(::std::move(v));
-    TryConsume();
+    Base::SetValue(::std::move(v));
     RequestCancel(); // ReleaseHandlers();
   }
 
   void SetCancel() noexcept {
-    TryConsume();
+    Base::SetCancel();
     Release();
-  }
-
-  /* IBoxedThunk / Consumer */
-
-  void Start(IConsumer<V> &c, Scheduler &s) && noexcept override {
-    c.CancelSource().AddHandler(*this);
-
-    state_.emplace(State{s});
-    consumer_ = &c;
-    TryConsume();
-    Release();
-  }
-
-  void Drop() && noexcept override {
-    RequestCancel(2);
   }
 
  private:
-  void RequestCancel(::std::size_t cnt = 1) noexcept {
-    cancel::CancelSource::RequestCancel();
-    Release(cnt);
+  /* IBoxedThunk */
+
+  void Start(IConsumer<V> &c, Scheduler &s) && noexcept override {
+    if (Base::SetConsumer(c, s)) {
+      Release();
+      return;
+    }
+
+    c.CancelSource().AddHandler(*this);
   }
 
-  // cancel::IHandler
+  void Drop() && noexcept override {
+    RequestCancel();
+  }
+
+  // cancel::HandlerBase
   void OnCancelRequested() && noexcept override {
     RequestCancel();
   }
 
-  void TryConsume() noexcept {
-    if (!rendezvous_.Arrive()) {
+  void RequestCancel() noexcept {
+    cancel::CancelSource::RequestCancel();
+    Release();
+  }
+
+  /* Lifetime management */
+
+  void Release() noexcept {
+    auto const remains = ref_cnt_.fetch_sub(1, ::std::memory_order_release);
+    if (remains > 1) [[likely]] {
       return;
     }
 
-    if (result_.has_value()) [[likely]] {
-      ::std::move(*consumer_).Continue(*::std::move(result_), *state_);
-    } else {
-      ::std::move(*consumer_).Cancel(*state_);
-    }
-  }
-
-  void Release(::std::size_t cnt = 1) noexcept {
-    if (ref_cnt_.fetch_sub(cnt, ::std::memory_order_release) == cnt) {
-      ::util::sync_with_release_sequences(ref_cnt_);
-      DestroySelf();
-    }
+    UTIL_ASSERT(remains != 0, "Unexpected Release() call");
+    ::util::sync_with_release_sequences(ref_cnt_);
+    DestroySelf();
   }
 
   void DestroySelf() noexcept {
     delete this;
   }
 
+  // Private
   ~SharedState() = default;
 };
 
