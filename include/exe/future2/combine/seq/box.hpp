@@ -14,6 +14,7 @@
 #include <exe/future2/pipe.hpp>
 #include <exe/future2/thunk.hpp>
 #include <exe/future2/thunk/seq/box.hpp>
+#include <exe/future2/trait/value_of.hpp>
 #include <exe/future2/type/future.hpp>
 
 namespace exe::future {
@@ -22,7 +23,7 @@ namespace pipe {
 
 struct Box {
   template <concepts::SomeFuture F>
-  concepts::SomeFuture auto Pipe(F &&f) {
+  concepts::Future<trait::ValueOf<F>> auto Pipe(F &&f) {
     return Thunk(thunk::Box(::std::move(f)));
   }
 };

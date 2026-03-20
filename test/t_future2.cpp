@@ -351,6 +351,38 @@ int TestPipe() {
   return ::std::get<0>(*cons.res) == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
+int TestStart() {
+  using namespace exe::future;
+
+  auto &s = exe::runtime::GetInline();
+
+  Thunk t(thunk::Ready(1),
+          thunk::Via(s),
+          thunk::Map([](int i) { return i * 5; }));
+
+  auto eager = ::std::move(t) | Start(s);
+
+  Consumer<int> cons;
+  auto comp = ::std::move(eager).Materialize(cons);
+  ::std::move(comp).Start(s);
+
+  return cons.res.value_or(0) == 5 ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
+int TestContract() {
+  using namespace exe::future;
+
+  auto [f, p] = Contract<int>();
+
+  Consumer<int> cons;
+  auto comp = ::std::move(f).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  ::std::move(p).Set(42);
+
+  return cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
 } // namespace
 
 #define RUN_TEST(test) UTIL_CHECK(test() == EXIT_SUCCESS, #test);
@@ -369,6 +401,8 @@ int main() {
   RUN_TEST(TestJust);
   RUN_TEST(TestSpawn);
   RUN_TEST(TestPipe);
+  RUN_TEST(TestStart);
+  RUN_TEST(TestContract);
 
   return EXIT_SUCCESS;
 }
