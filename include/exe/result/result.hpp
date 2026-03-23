@@ -14,6 +14,8 @@
 #include <exe/result/trait/result.hpp>
 
 #include <expected>
+#include <type_traits>
+#include <utility>
 
 namespace exe {
 
@@ -22,6 +24,22 @@ using Result = ::std::expected<Value, Error>;
 
 template <typename V, typename E>
 inline constexpr bool trait::Result<Result<V, E>> = true;
+
+namespace result {
+
+template <typename V, typename E>
+[[nodiscard]] inline constexpr Result<V, E> Ok(V v)
+    noexcept (::std::is_nothrow_move_constructible_v<V>) {
+  return Result<V, E>(::std::move(v));
+}
+
+template <typename V, typename E>
+[[nodiscard]] inline constexpr Result<V, E> Err(E e)
+    noexcept (::std::is_nothrow_move_constructible_v<E>) {
+  return Result<V, E>(::std::unexpect_t{}, ::std::move(e));
+}
+
+} // namespace result
 
 } // namespace exe
 

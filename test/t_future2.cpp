@@ -16,6 +16,7 @@
 
 #include <util/abort.hpp>
 #include <util/debug.hpp>
+#include <util/macro.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -383,6 +384,24 @@ int TestContract() {
   return cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
+int TestSafeContract() {
+  using namespace exe::future;
+
+  auto [f, p] = SafeContract<int>();
+
+  Consumer<exe::Result<int, BrokenPromise>> cons;
+  auto comp = ::std::move(f).Materialize(cons);
+  ::std::move(comp).Start(exe::runtime::GetInline());
+
+  UTIL_IGNORE(auto(::std::move(p)));
+
+  if (!cons.res.has_value()) {
+    return EXIT_FAILURE;
+  }
+
+  return !cons.res->has_value() ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
 } // namespace
 
 #define RUN_TEST(test) UTIL_CHECK(test() == EXIT_SUCCESS, #test);
@@ -403,6 +422,7 @@ int main() {
   RUN_TEST(TestPipe);
   RUN_TEST(TestStart);
   RUN_TEST(TestContract);
+  RUN_TEST(TestSafeContract);
 
   return EXIT_SUCCESS;
 }
