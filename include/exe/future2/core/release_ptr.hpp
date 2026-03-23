@@ -11,29 +11,25 @@
 #ifndef DDVAMP_EXE_FUTURE_CORE_RELEASE_PTR_HPP_INCLUDED_
 #define DDVAMP_EXE_FUTURE_CORE_RELEASE_PTR_HPP_INCLUDED_ 1
 
-#include <util/debug.hpp>
+#include <exe/future2/core/ptr.hpp>
+
+#include <util/debug/assert.hpp>
 
 #include <string_view>
-#include <utility>
 
 namespace exe::future::core {
 
-// [TODO]: ?
-[[noreturn]] consteval void CompileError(::std::string_view msg) noexcept {
-  throw msg;
-}
-
 // [TODO]: ?Move to util
 template <typename T>
-class [[nodiscard]] ReleasePtr {
+class [[nodiscard]] ReleasePtr : protected Ptr<T> {
  private:
-  T *ptr_;
+  using Base = Ptr<T>;
 
  public:
   constexpr ~ReleasePtr() {
     // [TODO]: Make util debug marcos constexpr
     constexpr ::std::string_view msg
-        = "ReleasePtr is not used at the time of destruction";
+        = "core::ReleasePtr is not used at the time of destruction";
     if consteval {
       if (IsValid()) {
         CompileError(msg);
@@ -47,64 +43,21 @@ class [[nodiscard]] ReleasePtr {
   void operator= (ReleasePtr const &) = delete;
 
   // Move-out only
-  constexpr ReleasePtr(ReleasePtr &&that) noexcept : ptr_(that.Release()) {}
+  constexpr ReleasePtr(ReleasePtr &&that) noexcept : Base(that.Release()) {}
   void operator= (ReleasePtr &&) = delete;
 
  public:
-  constexpr explicit ReleasePtr(T *state) noexcept : ptr_(state) {}
-
   constexpr static ReleasePtr Invalid() noexcept {
     return ReleasePtr(nullptr);
   }
 
-  constexpr bool IsValid() const noexcept {
-    return ptr_;
-  }
+  using Base::Base;
 
-  /* Unchecked access */
-
-  constexpr T *Get() noexcept {
-    return ptr_;
-  }
-
-  constexpr T const *Get() const noexcept {
-    return ptr_;
-  }
-
-  [[nodiscard]] constexpr T *Release() noexcept {
-    return ::std::exchange(ptr_, nullptr);
-  }
-
-  /* Checked access */
-
-  constexpr T *GetChecked() noexcept {
-    Check();
-    return ptr_;
-  }
-
-  constexpr T const *GetChecked() const noexcept {
-    Check();
-    return ptr_;
-  }
-
-  [[nodiscard]] constexpr T *ReleaseChecked() noexcept {
-    Check();
-    return Release();
-  }
-
- private:
-  constexpr void Check() const noexcept {
-    // [TODO]: Make util debug marcos constexpr
-    constexpr ::std::string_view msg
-        = "ReleasePtr does not hold pointer when it is expected";
-    if consteval {
-      if (!IsValid()) {
-        CompileError(msg);
-      }
-    } else {
-      UTIL_ASSERT(IsValid(), msg);
-    }
-  }
+  using Base::IsValid;
+  using Base::Get;
+  using Base::GetChecked;
+  using Base::Release;
+  using Base::ReleaseChecked;
 };
 
 } // namespace exe::future::core

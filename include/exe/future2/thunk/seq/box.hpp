@@ -14,6 +14,7 @@
 #include <exe/future2/cancel.hpp>
 #include <exe/future2/scheduler.hpp>
 #include <exe/future2/core/proxy.hpp>
+#include <exe/future2/core/ptr.hpp>
 #include <exe/future2/model/consumer.hpp>
 #include <exe/future2/model/continuation.hpp>
 #include <exe/future2/model/future_value.hpp>
@@ -43,14 +44,14 @@ struct IBoxedThunk {
 };
 
 template <future::concepts::FutureValue V>
-class [[nodiscard]] BoxHolder {
+class [[nodiscard]] BoxHolder : private Ptr<IBoxedThunk<V>> {
  private:
-  IBoxedThunk<V> *box_;
+  using Base = BoxHolder::Ptr;
 
  public:
   ~BoxHolder() {
-    if (box_) [[unlikely]] {
-      ::std::move(*box_).Drop();
+    if (IsValid()) [[unlikely]] {
+      ::std::move(*Base::Get()).Drop();
     }
   }
 
@@ -58,19 +59,14 @@ class [[nodiscard]] BoxHolder {
   void operator= (BoxHolder const &) = delete;
 
   // Move-out only
-  BoxHolder(BoxHolder &&that) noexcept : box_(that.Release()) {}
+  BoxHolder(BoxHolder &&that) noexcept : Base(that.Release()) {}
   void operator= (BoxHolder &&) = delete;
 
  public:
-  explicit BoxHolder(IBoxedThunk<V> *box) noexcept : box_(box) {}
+  using Base::Base;
 
-  bool HasValue() noexcept {
-    return box_;
-  }
-
-  [[nodiscard]] IBoxedThunk<V> *Release() noexcept {
-    return ::std::exchange(box_, nullptr);
-  }
+  using Base::IsValid;
+  using Base::Release;
 };
 
 } // namespace core
@@ -160,7 +156,7 @@ class [[nodiscard]] Box {
     MakeStep(Consumer &&c, Box &b) noexcept
         : cons_(::std::forward<Consumer>(c))
         , box_(::std::move(b).box_) {
-      UTIL_ASSERT(box_.HasValue(), "Empty BoxHolder");
+      UTIL_ASSERT(box_.IsValid(), "BoxHolder is empty");
     }
 
     void Start(Scheduler &sched) && noexcept {
