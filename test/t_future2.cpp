@@ -23,15 +23,6 @@
 
 namespace {
 
-template <typename From, typename To>
-struct Mapper {
-  To to;
-
-  To operator() (From &&) && noexcept {
-    return ::std::move(to);
-  }
-};
-
 int TestUnify() {
   using namespace exe::future;
 
@@ -184,13 +175,7 @@ int TestAll() {
                Thunk(thunk::Ready(5)));
 
   auto res = ::std::move(t) | Get();
-
-  auto success = [&res]<::std::size_t ...Is>(::std::index_sequence<Is...>) {
-    auto &[...val] = res;
-    return (... && (val == Is));
-  }(::std::make_index_sequence<6>{});
-
-  return success ? EXIT_SUCCESS : EXIT_FAILURE;
+  return res == std::tuple{0, 1, 2, 3, 4, 5} ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestReady() {
@@ -256,7 +241,7 @@ int TestStart() {
 
   auto eager = ::std::move(t) | Start(s);
 
-  auto res = ::std::move(t) | Get();
+  auto res = ::std::move(eager) | Get();
   return res == 5 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
