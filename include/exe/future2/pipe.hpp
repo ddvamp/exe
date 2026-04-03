@@ -21,7 +21,7 @@ namespace exe::future::pipe {
 
 // [TODO]: Better design
 template <concepts::SomeFuture F, ::util::rvalue_deduced Combinator>
-concepts::SomeFuture auto operator| (F &&f, Combinator &&c) {
+auto operator| (F &&f, Combinator &&c) {
   return ::std::move(c).Pipe(::std::move(f));
 }
 

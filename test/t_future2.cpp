@@ -19,52 +19,7 @@
 #include <util/macro.hpp>
 
 #include <cstdlib>
-#include <iostream>
 #include <utility>
-
-namespace exe::future {
-
-namespace {
-
-struct AnyConsumer {
-  int success = -1;
-  cancel::CancelSource source;
-
-  void Continue(auto &&, State) && noexcept {
-    success = 1;
-  }
-
-  void Cancel(State) && noexcept {
-    success = 0;
-  }
-
-  auto &CancelSource() & noexcept {
-    return source;
-  }
-};
-
-template <concepts::FutureValue V>
-struct Consumer {
-  ::std::optional<V> res;
-  cancel::CancelSource source;
-
-  void Continue(V &&v, State) && noexcept {
-    res.emplace(::std::move(v));
-    source.RequestCancel();
-  }
-
-  void Cancel(State) && noexcept {
-    UTIL_ABORT("Unexpected upstream Cancel() call");
-  }
-
-  cancel::CancelSource &CancelSource() & noexcept {
-    return source;
-  }
-};
-
-} // namespace
-
-} // namespace exe::future
 
 namespace {
 
@@ -134,25 +89,6 @@ int TestUnify() {
 int TestFuture() {
   using namespace exe::future;
 
-  struct Consumer {
-    int result = 0;
-    cancel::CancelSource source;
-
-    void Continue(int r, State) && noexcept {
-      result = r;
-    }
-
-    void Cancel(State) && noexcept {
-      result = -1;
-    }
-
-    cancel::CancelSource &CancelSource() & noexcept {
-      return source;
-    }
-  };
-
-  Consumer cons;
-
   static_assert(concepts::Combinator<thunk::Via, int>);
 
   Thunk t(thunk::Ready(0),
@@ -163,12 +99,8 @@ int TestFuture() {
           thunk::Via(exe::runtime::GetInline()),
           thunk::Map([](int v) { return v + 50; }));
 
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  ::std::cout << cons.result;
-
-  return EXIT_SUCCESS;
+  auto res = ::std::move(t) | Get();
+  return res == 52? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestFuture2() {
@@ -202,13 +134,10 @@ int TestSequence() {
 
   auto t = Sequence(Thunk(thunk::Ready(0)),
                     Thunk(thunk::Ready(0.0)),
-                    Thunk(thunk::Ready(nullptr)));
+                    Thunk(thunk::Ready<void *>(nullptr)));
 
-  AnyConsumer cons;
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  return (cons.success == 1 ? EXIT_SUCCESS : EXIT_FAILURE);
+  auto res = ::std::move(t) | Get();
+  return res == nullptr ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestFlatten() {
@@ -217,11 +146,8 @@ int TestFlatten() {
   Thunk t(thunk::Ready(Thunk(thunk::Ready(42))),
           thunk::Flatten{});
 
-  Consumer<int> cons;
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+  auto res = ::std::move(t) | Get();
+  return res == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestBox() {
@@ -229,17 +155,12 @@ int TestBox() {
 
   Thunk t(thunk::Box(Thunk(thunk::Ready(42))));
 
-  Consumer<int> cons;
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+  auto res = ::std::move(t) | Get();
+  return res == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestFirst() {
   using namespace exe::future;
-
-  Consumer<int> cons;
 
   auto t = First(Thunk(thunk::Ready(0)),
                  Thunk(thunk::Ready(0)),
@@ -248,10 +169,8 @@ int TestFirst() {
                  Thunk(thunk::Ready(0)),
                  Thunk(thunk::Ready(0)));
 
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  return (cons.res.value_or(1) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+  auto res = ::std::move(t) | Get();
+  return res == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestAll() {
@@ -264,18 +183,10 @@ int TestAll() {
                Thunk(thunk::Ready(4)),
                Thunk(thunk::Ready(5)));
 
-  using R = trait::ValueOf<decltype(t)>;
+  auto res = ::std::move(t) | Get();
 
-  Consumer<R> cons;
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  if (!cons.res.has_value()) {
-    return EXIT_FAILURE;
-  }
-
-  auto success = [&cons]<::std::size_t ...Is>(::std::index_sequence<Is...>) {
-    auto &[...val] = *cons.res;
+  auto success = [&res]<::std::size_t ...Is>(::std::index_sequence<Is...>) {
+    auto &[...val] = res;
     return (... && (val == Is));
   }(::std::make_index_sequence<6>{});
 
@@ -287,11 +198,8 @@ int TestReady() {
 
   auto t = Ready(42);
 
-  Consumer<int> cons;
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+  auto res = ::std::move(t) | Get();
+  return res == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestValue() {
@@ -299,11 +207,8 @@ int TestValue() {
 
   auto t = Value(42);
 
-  Consumer<int> cons;
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+  auto res = ::std::move(t) | Get();
+  return res == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestJust() {
@@ -311,11 +216,9 @@ int TestJust() {
 
   auto t = Just();
 
-  Consumer<exe::Unit> cons;
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  return (cons.res.has_value() ? EXIT_SUCCESS : EXIT_FAILURE);
+  auto res = ::std::move(t) | Get();
+  static_assert(::std::is_same_v<exe::Unit, decltype(res)>);
+  return EXIT_SUCCESS;
 }
 
 int TestSpawn() {
@@ -323,11 +226,8 @@ int TestSpawn() {
 
   auto t = Spawn(exe::runtime::GetInline(), []{ return 42; });
 
-  Consumer<int> cons;
-  auto comp = ::std::move(t).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
-  return (cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE);
+  auto res = ::std::move(t) | Get();
+  return res == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestPipe() {
@@ -341,15 +241,8 @@ int TestPipe() {
   auto t4 = First(::std::move(t1), ::std::move(t2), ::std::move(t3));
   auto t5 = All(::std::move(t4), Just());
 
-  Consumer<::std::tuple<int, exe::Unit>> cons;
-  auto comp = ::std::move(t5).Materialize(cons);
-  ::std::move(comp).Start(sched);
-
-  if (!cons.res.has_value()) {
-    return EXIT_FAILURE;
-  }
-
-  return ::std::get<0>(*cons.res) == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
+  auto res = ::std::move(t5) | Get();
+  return ::std::get<0>(res) == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestStart() {
@@ -363,11 +256,8 @@ int TestStart() {
 
   auto eager = ::std::move(t) | Start(s);
 
-  Consumer<int> cons;
-  auto comp = ::std::move(eager).Materialize(cons);
-  ::std::move(comp).Start(s);
-
-  return cons.res.value_or(0) == 5 ? EXIT_SUCCESS : EXIT_FAILURE;
+  auto res = ::std::move(t) | Get();
+  return res == 5 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestContract() {
@@ -375,13 +265,10 @@ int TestContract() {
 
   auto [f, p] = Contract<int>();
 
-  Consumer<int> cons;
-  auto comp = ::std::move(f).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
   ::std::move(p).Set(42);
 
-  return cons.res.value_or(0) == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
+  auto res = ::std::move(f) | Get();
+  return res == 42 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int TestSafeContract() {
@@ -389,17 +276,10 @@ int TestSafeContract() {
 
   auto [f, p] = SafeContract<int>();
 
-  Consumer<exe::Result<int, BrokenPromise>> cons;
-  auto comp = ::std::move(f).Materialize(cons);
-  ::std::move(comp).Start(exe::runtime::GetInline());
-
   UTIL_IGNORE(auto(::std::move(p)));
 
-  if (!cons.res.has_value()) {
-    return EXIT_FAILURE;
-  }
-
-  return !cons.res->has_value() ? EXIT_SUCCESS : EXIT_FAILURE;
+  auto res = ::std::move(f) | Get();
+  return !res.has_value() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 } // namespace
